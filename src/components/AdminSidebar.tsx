@@ -7,7 +7,7 @@ import {
   Wallet, 
   Settings,
   BarChart3,
-  Plus,
+  MessageSquare,
   UserCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -46,7 +46,7 @@ const sidebarItems = [
   {
     title: "ORG Chat",
     url: "/admin-dashboard?tab=org-chat",
-    icon: Plus,
+    icon: MessageSquare,
   }
 ];
 
