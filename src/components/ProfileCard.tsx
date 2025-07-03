@@ -33,7 +33,7 @@ const ProfileCard = ({ formData, isEditing, onInputChange }: ProfileCardProps) =
             id="username"
             value={formData.username}
             disabled={true}
-            className="opacity-60"
+            className="opacity-60 mt-2"
           />
           <p className="text-xs text-muted-foreground mt-1">Username cannot be changed</p>
         </div>
@@ -45,7 +45,7 @@ const ProfileCard = ({ formData, isEditing, onInputChange }: ProfileCardProps) =
             type="email"
             value={formData.email}
             disabled={true}
-            className="opacity-60"
+            className="opacity-60 mt-2"
             placeholder="Enter your email"
           />
           <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
@@ -60,6 +60,7 @@ const ProfileCard = ({ formData, isEditing, onInputChange }: ProfileCardProps) =
             onChange={(e) => onInputChange('phone', e.target.value)}
             disabled={!isEditing}
             placeholder="Enter your phone number"
+            className="mt-2"
           />
         </div>
         
@@ -71,6 +72,7 @@ const ProfileCard = ({ formData, isEditing, onInputChange }: ProfileCardProps) =
             onChange={(e) => onInputChange('bgmiId', e.target.value)}
             disabled={!isEditing}
             placeholder="Enter your BGMI player ID"
+            className="mt-2"
           />
         </div>
       </CardContent>
