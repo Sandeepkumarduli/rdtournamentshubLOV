@@ -7,28 +7,28 @@
 @layer base {
   :root {
     /* Background & Surface Colors */
-    --background: 240 10% 3.9%;              /* Very dark background */
+    --background: 0 0% 0%;                   /* Pure black background */
     --foreground: 0 0% 98%;                  /* Almost white text */
     
-    --surface: 240 10% 6%;                   /* Slightly lighter surface */
+    --surface: 0 0% 8%;                      /* Dark gray surface */
     --surface-foreground: 0 0% 95%;
     
-    --card: 240 10% 6%;                      /* Card background */
+    --card: 0 0% 8%;                         /* Card background */
     --card-foreground: 0 0% 95%;
     
-    --popover: 240 10% 6%;
+    --popover: 0 0% 8%;
     --popover-foreground: 0 0% 95%;
     
-    /* Brand Colors - Purple/Violet theme inspired by Tournafest */
-    --primary: 270 70% 60%;                  /* Vibrant purple */
+    /* Brand Colors - Simple dark theme */
+    --primary: 0 0% 20%;                     /* Dark gray primary */
     --primary-foreground: 0 0% 98%;
-    --primary-glow: 270 70% 70%;             /* Lighter purple for effects */
+    --primary-glow: 0 0% 25%;                /* Slightly lighter gray */
     
-    --secondary: 240 10% 12%;                /* Dark secondary */
+    --secondary: 0 0% 12%;                   /* Dark secondary */
     --secondary-foreground: 0 0% 90%;
     
     /* Accent Colors */
-    --accent: 280 100% 70%;                  /* Bright magenta accent */
+    --accent: 0 0% 15%;                      /* Dark gray accent */
     --accent-foreground: 0 0% 98%;
     
     --muted: 240 10% 10%;                    /* Muted background */
@@ -57,15 +57,14 @@
     --rdcoin-foreground: 0 0% 10%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(270 70% 60%), hsl(280 100% 70%));
-    --gradient-gaming: linear-gradient(135deg, hsl(270 70% 60%), hsl(45 100% 60%));
-    --gradient-card: linear-gradient(135deg, hsl(240 10% 6%), hsl(240 10% 8%));
-    --gradient-hero: linear-gradient(135deg, hsl(240 10% 3.9%), hsl(270 70% 20%));
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 20%), hsl(0 0% 15%));
+    --gradient-gaming: linear-gradient(135deg, hsl(0 0% 20%), hsl(45 100% 60%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 8%), hsl(0 0% 10%));
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 0%), hsl(0 0% 5%));
     
     /* Shadows */
-    --shadow-glow: 0 0 40px hsl(270 70% 60% / 0.3);
-    --shadow-card: 0 10px 30px -10px hsl(240 10% 0% / 0.5);
-    --shadow-gaming: 0 0 30px hsl(45 100% 60% / 0.4);
+    --shadow-card: 0 10px 30px -10px hsl(0 0% 0% / 0.8);
+    --shadow-gaming: 0 4px 15px hsl(45 100% 60% / 0.2);
     
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

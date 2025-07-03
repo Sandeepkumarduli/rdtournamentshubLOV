@@ -6,9 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, GamepadIcon, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_CREDENTIALS } from "@/config/auth";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -16,15 +19,20 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Simple demo authentication
-    if (formData.username && formData.password) {
+    if (formData.username === DEFAULT_CREDENTIALS.user.username && 
+        formData.password === DEFAULT_CREDENTIALS.user.password) {
       localStorage.setItem("userAuth", JSON.stringify({
         username: formData.username,
         role: "user",
-        loginTime: new Date().toISOString()
+        email: DEFAULT_CREDENTIALS.user.email,
+        wallet: { balance: 100 },
+        teams: []
       }));
       
       toast({
@@ -36,10 +44,11 @@ const Login = () => {
     } else {
       toast({
         title: "Login Failed",
-        description: "Please enter valid credentials",
+        description: "Use 1234/1234 for demo access",
         variant: "destructive",
       });
     }
+    setIsLoading(false);
   };
 
   return (
