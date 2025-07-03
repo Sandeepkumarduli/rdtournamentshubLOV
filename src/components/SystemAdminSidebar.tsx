@@ -1,0 +1,102 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { 
+  Crown, 
+  Users, 
+  Database, 
+  Activity, 
+  Settings,
+  BarChart3,
+  Shield,
+  UserCheck,
+  DollarSign
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const sidebarItems = [
+  {
+    title: "Dashboard",
+    url: "/system-admin-dashboard",
+    icon: BarChart3,
+  },
+  {
+    title: "User Management",
+    url: "/system-admin-dashboard?tab=users",
+    icon: Users,
+  },
+  {
+    title: "Transactions",
+    url: "/system-admin-dashboard?tab=transactions", 
+    icon: DollarSign,
+  },
+  {
+    title: "Admin Requests",
+    url: "/system-admin-dashboard?tab=admin-requests",
+    icon: UserCheck,
+  },
+  {
+    title: "Analytics",
+    url: "/system-admin-dashboard?tab=analytics",
+    icon: Activity,
+  },
+  {
+    title: "System Config",
+    url: "/system-admin-dashboard?tab=system",
+    icon: Settings,
+  }
+];
+
+const SystemAdminSidebar = () => {
+  const location = useLocation();
+  const currentPath = location.pathname + location.search;
+
+  const isActive = (path: string) => {
+    if (path === "/system-admin-dashboard" && location.pathname === "/system-admin-dashboard" && !location.search) {
+      return true;
+    }
+    return currentPath === path;
+  };
+
+  return (
+    <div className="w-64 bg-card border-r border-border h-screen flex flex-col">
+      {/* Logo/Brand */}
+      <div className="p-6 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Crown className="h-8 w-8 text-gaming-gold" />
+          <div>
+            <h1 className="text-xl font-bold">System Control</h1>
+            <p className="text-muted-foreground">Master Administration</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4">
+        <ul className="space-y-2">
+          {sidebarItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.url);
+            
+            return (
+              <li key={item.title}>
+                <Link
+                  to={item.url}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+                    active 
+                      ? "bg-primary text-primary-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.title}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
+  );
+};
+
+export default SystemAdminSidebar;

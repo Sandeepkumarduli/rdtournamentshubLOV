@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,12 +26,17 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import SystemAdminSidebar from "@/components/SystemAdminSidebar";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const SystemAdminDashboard = () => {
   const [systemAdminData, setSystemAdminData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const activeTab = searchParams.get('tab') || 'overview';
 
   useEffect(() => {
     const auth = localStorage.getItem("userAuth");
@@ -67,11 +72,7 @@ const SystemAdminDashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   const mockTransactions = [
@@ -99,40 +100,45 @@ const SystemAdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Crown className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="text-xl font-bold">System Administration</h1>
-                <p className="text-sm text-muted-foreground">Master Control Panel</p>
+    <div className="min-h-screen flex bg-background">
+      {/* Sidebar */}
+      <SystemAdminSidebar />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div>
+                  <h1 className="text-xl font-bold">System Administration</h1>
+                  <p className="text-muted-foreground">Master Control Panel</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="border-primary text-primary">
-                <Crown className="h-3 w-3 mr-1" />
-                System Admin
-              </Badge>
-              <div className="flex items-center gap-1 text-sm">
-                <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-                System Healthy
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="border-primary text-primary">
+                  <Crown className="h-3 w-3 mr-1" />
+                  System Admin
+                </Badge>
+                <div className="flex items-center gap-1 text-sm">
+                  <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                  System Healthy
+                </div>
+                <Button variant="ghost" size="icon" onClick={refreshData}>
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
               </div>
-              <Button variant="ghost" size="icon" onClick={refreshData}>
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="container mx-auto px-4 py-8">
+        {/* Page Content */}
+        <main className="flex-1 p-6">
         {/* System Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="gaming-card-glow">
@@ -235,15 +241,16 @@ const SystemAdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Content */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="admin-requests">Admin Requests</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
-          </TabsList>
+          {/* Main Content */}
+          <Tabs value={activeTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="users">Users</TabsTrigger>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="admin-requests">Admin Requests</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="system">System</TabsTrigger>
+            </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="flex items-center justify-between">
@@ -316,6 +323,72 @@ const SystemAdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">User Management</h2>
+              <Button variant="gaming" onClick={refreshData}>
+                <RefreshCw className="h-4 w-4" />
+                Refresh Users
+              </Button>
+            </div>
+            
+            <div className="grid gap-4">
+              {[
+                { id: 1, username: "PlayerOne", email: "player1@example.com", status: "Active", joinDate: "2024-01-15", wallet: 450, role: "User" },
+                { id: 2, username: "GamerPro", email: "gamer@example.com", status: "Active", joinDate: "2024-01-20", wallet: 1200, role: "User" },
+                { id: 3, username: "SquadLeader", email: "squad@example.com", status: "Banned", joinDate: "2024-01-10", wallet: 800, role: "User" },
+                { id: 4, username: "AdminUser", email: "admin@example.com", status: "Active", joinDate: "2024-01-05", wallet: 2000, role: "Admin" },
+              ].map((user) => (
+                <Card key={user.id} className="gaming-card">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold">{user.username}</h3>
+                          <Badge variant={
+                            user.status === "Active" ? "default" : 
+                            user.status === "Banned" ? "destructive" : "secondary"
+                          }>
+                            {user.status}
+                          </Badge>
+                          <Badge variant="outline">
+                            {user.role}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
+                          <div>Email: {user.email}</div>
+                          <div>Wallet: ₹{user.wallet}</div>
+                          <div>Joined: {user.joinDate}</div>
+                          <div>Role: {user.role}</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {user.status === "Active" && (
+                          <Button variant="destructive" size="sm">
+                            Ban User
+                          </Button>
+                        )}
+                        {user.status === "Banned" && (
+                          <Button variant="default" size="sm">
+                            Unban User
+                          </Button>
+                        )}
+                        {user.role === "User" && (
+                          <Button variant="gaming" size="sm">
+                            Make Admin
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </TabsContent>
 
@@ -584,7 +657,8 @@ const SystemAdminDashboard = () => {
               </Card>
             </div>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </main>
       </div>
     </div>
   );
