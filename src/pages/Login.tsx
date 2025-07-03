@@ -52,8 +52,8 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <GamepadIcon className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-slate-50">
-              BGMI Tournament Hub
+            <h1 className="text-2xl font-bold text-primary">
+              RDTH - RD Tournaments Hub
             </h1>
           </div>
           <p className="text-muted-foreground">Login to access your gaming dashboard</p>
@@ -99,19 +99,13 @@ const Login = () => {
                 </Link>
               </div>
               
-              <div className="flex gap-2">
-                <Button variant="gaming-outline" size="sm" asChild className="flex-1">
-                  <Link to="/adminlogin">
-                    <Shield className="h-4 w-4" />
-                    Admin Login
-                  </Link>
-                </Button>
-                <Button variant="gaming-outline" size="sm" asChild className="flex-1">
-                  <Link to="/systemadminlogin">
-                    <Shield className="h-4 w-4" />
-                    System Admin
-                  </Link>
-                </Button>
+              <div className="text-center">
+                <Link 
+                  to="/" 
+                  className="text-primary hover:underline text-sm"
+                >
+                  ← Back to Homepage
+                </Link>
               </div>
             </div>
           </CardContent>

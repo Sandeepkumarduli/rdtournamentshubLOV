@@ -10,17 +10,25 @@ import {
   Eye, 
   UserPlus, 
   Trash2,
-  RefreshCw 
+  RefreshCw,
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import ChatDialog from "@/components/ChatDialog";
 
 const SystemUserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [chatUser, setChatUser] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const usersPerPage = 20;
 
   useEffect(() => {
     const auth = localStorage.getItem("userAuth");
@@ -57,44 +65,24 @@ const SystemUserManagement = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  const mockUsers = [
-    { 
-      id: 1, 
-      username: "PlayerOne", 
-      email: "player1@example.com", 
-      bgmiId: "BGMI123456", 
-      phone: "+91 9876543210", 
-      createdAt: "2024-01-15",
-      status: "Active"
-    },
-    { 
-      id: 2, 
-      username: "GamerPro", 
-      email: "gamer@example.com", 
-      bgmiId: "BGMI789012", 
-      phone: "+91 9876543211", 
-      createdAt: "2024-01-20",
-      status: "Active"
-    },
-    { 
-      id: 3, 
-      username: "SquadLeader", 
-      email: "squad@example.com", 
-      bgmiId: "BGMI345678", 
-      phone: "+91 9876543212", 
-      createdAt: "2024-01-10",
-      status: "Inactive"
-    },
-    { 
-      id: 4, 
-      username: "NightOwl", 
-      email: "night@example.com", 
-      bgmiId: "BGMI901234", 
-      phone: "+91 9876543213", 
-      createdAt: "2024-01-25",
-      status: "Active"
-    },
-  ];
+  // Generate more mock users for pagination testing
+  const generateMockUsers = () => {
+    const users = [];
+    for (let i = 1; i <= 50; i++) {
+      users.push({
+        id: i,
+        username: `Player${i}`,
+        email: `player${i}@example.com`,
+        bgmiId: `BGMI${100000 + i}`,
+        phone: `+91 98765432${10 + i}`,
+        createdAt: new Date(2024, 0, i % 30 + 1).toISOString().split('T')[0],
+        status: i % 5 === 0 ? "Inactive" : "Active"
+      });
+    }
+    return users;
+  };
+  
+  const mockUsers = generateMockUsers();
 
   const filteredUsers = mockUsers.filter(user =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,6 +90,15 @@ const SystemUserManagement = () => {
     user.bgmiId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.phone.includes(searchTerm)
   );
+
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
+
+  const handleChatWithUser = (username: string) => {
+    setChatUser(username);
+  };
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -154,7 +151,7 @@ const SystemUserManagement = () => {
 
           {/* Users List */}
           <div className="space-y-4">
-            {filteredUsers.map((user) => (
+            {paginatedUsers.map((user) => (
               <Card key={user.id}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -193,6 +190,13 @@ const SystemUserManagement = () => {
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleChatWithUser(user.username)}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                      <Button 
                         variant="destructive" 
                         size="sm"
                         onClick={() => handleDeleteUser(user.id)}
@@ -206,7 +210,7 @@ const SystemUserManagement = () => {
             ))}
           </div>
 
-          {filteredUsers.length === 0 && (
+          {paginatedUsers.length === 0 && (
             <Card>
               <CardContent className="p-8 text-center">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -215,7 +219,47 @@ const SystemUserManagement = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <p className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to {Math.min(startIndex + usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </main>
+
+        {/* Chat Dialog */}
+        <ChatDialog
+          isOpen={!!chatUser}
+          onClose={() => setChatUser(null)}
+          recipientName={chatUser || ''}
+          recipientType="user"
+        />
       </div>
     </div>
   );

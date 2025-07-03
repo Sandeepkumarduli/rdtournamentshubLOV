@@ -15,6 +15,8 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    bgmiId: "",
+    phone: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -62,8 +64,8 @@ const Signup = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <GamepadIcon className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              BGMI Tournament Hub
+            <h1 className="text-2xl font-bold text-primary">
+              RDTH - RD Tournaments Hub
             </h1>
           </div>
           <p className="text-muted-foreground">Create your gaming account</p>
@@ -133,6 +135,30 @@ const Signup = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="bgmiId">BGMI ID</Label>
+                <Input
+                  id="bgmiId"
+                  type="text"
+                  value={formData.bgmiId || ''}
+                  onChange={(e) => setFormData({ ...formData, bgmiId: e.target.value })}
+                  placeholder="Enter your BGMI ID"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone || ''}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+91 9876543210"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -157,16 +183,41 @@ const Signup = () => {
                 </div>
               </div>
 
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  required
+                  className="h-4 w-4 text-primary bg-background border-border rounded focus:ring-primary"
+                />
+                <Label htmlFor="terms" className="text-sm">
+                  I agree to the{" "}
+                  <Link to="/rules" className="text-primary hover:underline">
+                    Terms and Conditions
+                  </Link>
+                </Label>
+              </div>
+
               <Button type="submit" variant="gaming" className="w-full">
                 Create Account
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">
-                Login here
-              </Link>
+            <div className="mt-6 space-y-3 text-center text-sm text-muted-foreground">
+              <div>
+                Already have an account?{" "}
+                <Link to="/login" className="text-primary hover:underline">
+                  Login here
+                </Link>
+              </div>
+              <div>
+                <Link 
+                  to="/" 
+                  className="text-primary hover:underline"
+                >
+                  ← Back to Homepage
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

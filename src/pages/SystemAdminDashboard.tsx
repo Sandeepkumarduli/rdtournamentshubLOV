@@ -103,10 +103,6 @@ const SystemAdminDashboard = () => {
                 <Button variant="ghost" size="icon" onClick={refreshData}>
                   <RefreshCw className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
               </div>
             </div>
           </div>
@@ -114,7 +110,7 @@ const SystemAdminDashboard = () => {
 
         <main className="flex-1 p-6">
           {/* Primary Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -147,18 +143,6 @@ const SystemAdminDashboard = () => {
                     <p className="text-2xl font-bold text-accent">{systemMetrics.dailyActiveUsers}</p>
                   </div>
                   <Activity className="h-8 w-8 text-accent" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">System Health</p>
-                    <p className="text-2xl font-bold text-success">{systemMetrics.systemHealth}%</p>
-                  </div>
-                  <Shield className="h-8 w-8 text-success" />
                 </div>
               </CardContent>
             </Card>
@@ -271,10 +255,6 @@ const SystemAdminDashboard = () => {
                 <div className="flex justify-between">
                   <span>Open Reports</span>
                   <span className="font-semibold text-destructive">{systemMetrics.openReports}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>System Uptime</span>
-                  <span className="font-semibold text-success">99.8%</span>
                 </div>
               </CardContent>
             </Card>

@@ -9,7 +9,9 @@ import {
   Search, 
   RefreshCw,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
@@ -18,8 +20,11 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 const SystemTransactions = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const transactionsPerPage = 20;
 
   useEffect(() => {
     const auth = localStorage.getItem("userAuth");
@@ -41,53 +46,27 @@ const SystemTransactions = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  const mockTransactions = [
-    { 
-      id: 1, 
-      date: "2024-02-01 14:30", 
-      amount: 500, 
-      sender: "PlayerOne", 
-      receiver: "Team Alpha", 
-      type: "Team Entry Fee",
-      status: "Completed" 
-    },
-    { 
-      id: 2, 
-      date: "2024-02-01 12:15", 
-      amount: 1000, 
-      sender: "OrgAdmin1", 
-      receiver: "Tournament Prize Pool", 
-      type: "Prize Contribution",
-      status: "Completed" 
-    },
-    { 
-      id: 3, 
-      date: "2024-01-31 18:45", 
-      amount: 250, 
-      sender: "GamerPro", 
-      receiver: "Squad Elite", 
-      type: "Membership Fee",
-      status: "Pending" 
-    },
-    { 
-      id: 4, 
-      date: "2024-01-31 16:20", 
-      amount: 750, 
-      sender: "SquadLeader", 
-      receiver: "PlayerTwo", 
-      type: "Prize Sharing",
-      status: "Completed" 
-    },
-    { 
-      id: 5, 
-      date: "2024-01-30 11:10", 
-      amount: 300, 
-      sender: "NightOwl", 
-      receiver: "Tournament Entry", 
-      type: "Tournament Fee",
-      status: "Failed" 
-    },
-  ];
+  // Generate more mock transactions for pagination
+  const generateMockTransactions = () => {
+    const transactions = [];
+    const types = ["Team Entry Fee", "Prize Contribution", "Membership Fee", "Prize Sharing", "Tournament Fee"];
+    const statuses = ["Completed", "Pending", "Failed"];
+    
+    for (let i = 1; i <= 50; i++) {
+      transactions.push({
+        id: i,
+        date: new Date(2024, 1, i % 28 + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toLocaleString(),
+        amount: Math.floor(Math.random() * 1000) + 100,
+        sender: `Player${i}`,
+        receiver: i % 3 === 0 ? `Team Alpha${i}` : `Player${i + 1}`,
+        type: types[i % types.length],
+        status: statuses[i % statuses.length]
+      });
+    }
+    return transactions;
+  };
+  
+  const mockTransactions = generateMockTransactions();
 
   const filteredTransactions = mockTransactions.filter(transaction =>
     transaction.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,6 +74,11 @@ const SystemTransactions = () => {
     transaction.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     transaction.amount.toString().includes(searchTerm)
   );
+
+  // Pagination
+  const totalPages = Math.ceil(filteredTransactions.length / transactionsPerPage);
+  const startIndex = (currentPage - 1) * transactionsPerPage;
+  const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + transactionsPerPage);
 
   const totalAmount = mockTransactions.reduce((sum, t) => sum + t.amount, 0);
   const completedTransactions = mockTransactions.filter(t => t.status === "Completed").length;
@@ -174,7 +158,7 @@ const SystemTransactions = () => {
 
           {/* Transactions List */}
           <div className="space-y-4">
-            {filteredTransactions.map((transaction) => (
+            {paginatedTransactions.map((transaction) => (
               <Card key={transaction.id}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -221,7 +205,7 @@ const SystemTransactions = () => {
             ))}
           </div>
 
-          {filteredTransactions.length === 0 && (
+          {paginatedTransactions.length === 0 && (
             <Card>
               <CardContent className="p-8 text-center">
                 <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -229,6 +213,38 @@ const SystemTransactions = () => {
                 <p className="text-muted-foreground">Try adjusting your search criteria</p>
               </CardContent>
             </Card>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <p className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to {Math.min(startIndex + transactionsPerPage, filteredTransactions.length)} of {filteredTransactions.length} transactions
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </main>
       </div>
