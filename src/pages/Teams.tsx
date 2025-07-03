@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { RefreshCw, Plus, Users, Copy, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
 interface Team {
   id: string;
   name: string;
@@ -15,7 +14,6 @@ interface Team {
   creator: string;
   createdDate: string;
 }
-
 const Teams = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -23,10 +21,10 @@ const Teams = () => {
   const [joinTeamId, setJoinTeamId] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const currentUser = JSON.parse(localStorage.getItem('userAuth') || '{}');
-
   useEffect(() => {
     // Load teams from localStorage
     const savedTeams = localStorage.getItem('userTeams');
@@ -34,26 +32,22 @@ const Teams = () => {
       setTeams(JSON.parse(savedTeams));
     }
   }, []);
-
   const saveTeams = (updatedTeams: Team[]) => {
     setTeams(updatedTeams);
     localStorage.setItem('userTeams', JSON.stringify(updatedTeams));
   };
-
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     setIsRefreshing(false);
     toast({
       title: "Data Refreshed",
-      description: "Latest team information loaded",
+      description: "Latest team information loaded"
     });
   };
-
   const generateTeamId = () => {
     return Math.random().toString(36).substr(2, 8).toUpperCase();
   };
-
   const handleCreateTeam = () => {
     if (!teamName.trim()) {
       toast({
@@ -74,7 +68,6 @@ const Teams = () => {
       });
       return;
     }
-
     const newTeam: Team = {
       id: generateTeamId(),
       name: teamName,
@@ -82,18 +75,15 @@ const Teams = () => {
       creator: currentUser.username,
       createdDate: new Date().toISOString().split('T')[0]
     };
-
     const updatedTeams = [...teams, newTeam];
     saveTeams(updatedTeams);
     setTeamName('');
     setIsCreateDialogOpen(false);
-
     toast({
       title: "Team Created",
-      description: `Team "${teamName}" created successfully! Team ID: ${newTeam.id}`,
+      description: `Team "${teamName}" created successfully! Team ID: ${newTeam.id}`
     });
   };
-
   const handleJoinTeam = () => {
     if (!joinTeamId.trim()) {
       toast({
@@ -103,7 +93,6 @@ const Teams = () => {
       });
       return;
     }
-
     const team = teams.find(t => t.id === joinTeamId.toUpperCase());
     if (!team) {
       toast({
@@ -113,7 +102,6 @@ const Teams = () => {
       });
       return;
     }
-
     if (team.members.includes(currentUser.username)) {
       toast({
         title: "Already a Member",
@@ -122,7 +110,6 @@ const Teams = () => {
       });
       return;
     }
-
     if (team.members.length >= 5) {
       toast({
         title: "Team Full",
@@ -131,35 +118,27 @@ const Teams = () => {
       });
       return;
     }
-
-    const updatedTeams = teams.map(t => 
-      t.id === team.id 
-        ? { ...t, members: [...t.members, currentUser.username] }
-        : t
-    );
-
+    const updatedTeams = teams.map(t => t.id === team.id ? {
+      ...t,
+      members: [...t.members, currentUser.username]
+    } : t);
     saveTeams(updatedTeams);
     setJoinTeamId('');
     setIsJoinDialogOpen(false);
-
     toast({
       title: "Joined Team",
-      description: `Successfully joined team "${team.name}"`,
+      description: `Successfully joined team "${team.name}"`
     });
   };
-
   const copyTeamId = (teamId: string) => {
     navigator.clipboard.writeText(teamId);
     toast({
       title: "Copied",
-      description: "Team ID copied to clipboard",
+      description: "Team ID copied to clipboard"
     });
   };
-
   const userTeams = teams.filter(team => team.members.includes(currentUser.username));
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -189,13 +168,8 @@ const Teams = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="teamName">Team Name</Label>
-                <Input
-                  id="teamName"
-                  value={teamName}
-                  onChange={(e) => setTeamName(e.target.value)}
-                  placeholder="Enter team name"
-                />
+                <Label htmlFor="teamName" className="my-0 py-0">Team Name</Label>
+                <Input id="teamName" value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="Enter team name" className="py-0 my-[8px]" />
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleCreateTeam} className="flex-1">
@@ -223,12 +197,7 @@ const Teams = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="teamId">Team ID</Label>
-                <Input
-                  id="teamId"
-                  value={joinTeamId}
-                  onChange={(e) => setJoinTeamId(e.target.value)}
-                  placeholder="Enter team ID"
-                />
+                <Input id="teamId" value={joinTeamId} onChange={e => setJoinTeamId(e.target.value)} placeholder="Enter team ID" />
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleJoinTeam} className="flex-1">
@@ -245,8 +214,7 @@ const Teams = () => {
 
       {/* Teams List */}
       <div className="space-y-4">
-        {userTeams.length === 0 ? (
-          <Card className="gaming-card">
+        {userTeams.length === 0 ? <Card className="gaming-card">
             <CardContent className="p-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Teams Yet</h3>
@@ -262,23 +230,14 @@ const Teams = () => {
                 </Button>
               </div>
             </CardContent>
-          </Card>
-        ) : (
-          userTeams.map((team) => (
-            <Card key={team.id} className="gaming-card">
+          </Card> : userTeams.map(team => <Card key={team.id} className="gaming-card">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-3">
                     {team.name}
-                    {team.creator === currentUser.username && (
-                      <Badge variant="default">Creator</Badge>
-                    )}
+                    {team.creator === currentUser.username && <Badge variant="default">Creator</Badge>}
                   </CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => copyTeamId(team.id)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => copyTeamId(team.id)}>
                     <Copy className="h-4 w-4" />
                     {team.id}
                   </Button>
@@ -304,21 +263,15 @@ const Teams = () => {
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Team Members</p>
                     <div className="flex flex-wrap gap-2">
-                      {team.members.map((member, index) => (
-                        <Badge key={index} variant="secondary">
+                      {team.members.map((member, index) => <Badge key={index} variant="secondary">
                           {member}
-                        </Badge>
-                      ))}
+                        </Badge>)}
                     </div>
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          ))
-        )}
+            </Card>)}
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Teams;
