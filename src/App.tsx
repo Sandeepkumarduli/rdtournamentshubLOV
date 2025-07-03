@@ -28,7 +28,7 @@ import Rules from "./pages/Rules";
 import Contact from "./pages/Contact";
 import WalletSystem from "./pages/WalletSystem";
 import UserChat from "./components/UserChat";
-import SystemChat from "./components/SystemChat";
+import SystemChatPage from "./pages/SystemChatPage";
 import Report from "./pages/Report";
 
 const queryClient = new QueryClient();
@@ -62,7 +62,7 @@ const App = () => (
           <Route path="/system-admin-requests" element={<SystemAdminRequests />} />
           <Route path="/system-teams" element={<SystemTeams />} />
           <Route path="/system-reports" element={<SystemReports />} />
-          <Route path="/system-chat" element={<SystemChat />} />
+          <Route path="/system-chat" element={<SystemChatPage />} />
           <Route path="/tournament-guide" element={<TournamentGuide />} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/contact" element={<Contact />} />

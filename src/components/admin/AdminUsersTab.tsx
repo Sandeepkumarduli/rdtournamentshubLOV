@@ -4,42 +4,33 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { RefreshCw, Ban, UserCheck, UserX } from 'lucide-react';
+import { useAdminUsers } from '@/hooks/useAdminUsers';
+import LoadingSpinner from '@/components/LoadingSpinner';
+
 interface AdminUsersTabProps {
   onRefresh: () => void;
 }
-const AdminUsersTab = ({
-  onRefresh
-}: AdminUsersTabProps) => {
+
+const AdminUsersTab = ({ onRefresh }: AdminUsersTabProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const mockUsers = [{
-    id: 1,
-    username: "PlayerOne",
-    email: "player1@example.com",
-    status: "Active",
-    joinDate: "2024-01-15",
-    wallet: 450
-  }, {
-    id: 2,
-    username: "GamerPro",
-    email: "gamer@example.com",
-    status: "Active",
-    joinDate: "2024-01-20",
-    wallet: 1200
-  }, {
-    id: 3,
-    username: "SquadLeader",
-    email: "squad@example.com",
-    status: "Suspended",
-    joinDate: "2024-01-10",
-    wallet: 800
-  }];
-  const filteredUsers = mockUsers.filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const { users, loading, refetch } = useAdminUsers();
+  const filteredUsers = users.filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const handleRefresh = () => {
+    refetch();
+    onRefresh();
+  };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">ORG Members</h2>
         <div className="flex gap-2">
           <Input placeholder="Search users..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-64" />
-          <Button variant="outline" onClick={onRefresh}>
+          <Button variant="outline" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>

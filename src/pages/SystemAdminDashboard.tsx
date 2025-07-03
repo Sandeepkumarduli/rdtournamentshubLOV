@@ -21,6 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useSystemStats } from '@/hooks/useSystemStats';
 
 const SystemAdminDashboard = () => {
   const [systemAdminData, setSystemAdminData] = useState<any>(null);
@@ -56,17 +57,16 @@ const SystemAdminDashboard = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  const systemMetrics = {
-    totalUsers: 1247,
-    totalAdmins: 8,
-    totalTransactions: 5689,
-    totalRevenue: 2450000,
-    activeTournaments: 12,
-    pendingRequests: 5,
-    dailyActiveUsers: 892,
-    totalTeams: 156,
-    openReports: 8
+  const { stats: systemMetrics, loading: statsLoading, refetch } = useSystemStats();
+
+  const handleRefresh = () => {
+    refetch();
+    refreshData();
   };
+
+  if (loading || statsLoading) {
+    return <LoadingSpinner fullScreen />;
+  }
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -91,7 +91,7 @@ const SystemAdminDashboard = () => {
                   <Crown className="h-3 w-3 mr-1" />
                   System Admin
                 </Badge>
-                <Button variant="ghost" size="icon" onClick={refreshData}>
+                <Button variant="ghost" size="icon" onClick={handleRefresh}>
                   <RefreshCw className="h-4 w-4" />
                 </Button>
               </div>
@@ -298,7 +298,7 @@ const SystemAdminDashboard = () => {
               <Button 
                 variant="outline" 
                 className="h-20 flex-col gap-2"
-                onClick={refreshData}
+                onClick={handleRefresh}
               >
                 <RefreshCw className="h-6 w-6" />
                 Refresh Data
