@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ChatDialog from "@/components/ChatDialog";
+import { useSystemUsers } from "@/hooks/useSystemUsers";
 
 const SystemUserManagement = () => {
   const [loading, setLoading] = useState(true);
@@ -27,6 +28,7 @@ const SystemUserManagement = () => {
   const [chatUser, setChatUser] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { users, loading: usersLoading, refetch, deleteUser } = useSystemUsers();
   
   const usersPerPage = 20;
 
@@ -46,12 +48,21 @@ const SystemUserManagement = () => {
     setLoading(false);
   }, [navigate]);
 
-  const handleDeleteUser = (userId: number) => {
-    toast({
-      title: "User Deleted",
-      description: "User has been permanently removed from the platform",
-      variant: "destructive"
-    });
+  const handleDeleteUser = async (userId: string) => {
+    const result = await deleteUser(userId);
+    if (result.success) {
+      toast({
+        title: "User Deleted",
+        description: "User has been permanently removed from the platform",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to delete user",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAddUser = () => {
@@ -61,30 +72,15 @@ const SystemUserManagement = () => {
     });
   };
 
-  if (loading) {
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  if (loading || usersLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
-  // Generate more mock users for pagination testing
-  const generateMockUsers = () => {
-    const users = [];
-    for (let i = 1; i <= 50; i++) {
-      users.push({
-        id: i,
-        username: `Player${i}`,
-        email: `player${i}@example.com`,
-        bgmiId: `BGMI${100000 + i}`,
-        phone: `+91 98765432${10 + i}`,
-        createdAt: new Date(2024, 0, i % 30 + 1).toISOString().split('T')[0],
-        status: i % 5 === 0 ? "Inactive" : "Active"
-      });
-    }
-    return users;
-  };
-  
-  const mockUsers = generateMockUsers();
-
-  const filteredUsers = mockUsers.filter(user =>
+  const filteredUsers = users.filter(user =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.bgmiId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,7 +113,7 @@ const SystemUserManagement = () => {
                   <UserPlus className="h-4 w-4" />
                   Add User
                 </Button>
-                <Button variant="outline">
+                <Button variant="outline" onClick={handleRefresh}>
                   <RefreshCw className="h-4 w-4" />
                   Refresh
                 </Button>
@@ -143,7 +139,7 @@ const SystemUserManagement = () => {
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
                   <span className="text-sm text-muted-foreground">Total Users:</span>
-                  <span className="font-bold">{mockUsers.length}</span>
+                  <span className="font-bold">{users.length}</span>
                 </div>
               </Card>
             </div>

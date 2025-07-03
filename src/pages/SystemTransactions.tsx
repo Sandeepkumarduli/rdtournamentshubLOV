@@ -16,6 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useSystemTransactions } from "@/hooks/useSystemTransactions";
 
 const SystemTransactions = () => {
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ const SystemTransactions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { transactions, loading: transactionsLoading, refetch, getTotalStats } = useSystemTransactions();
   
   const transactionsPerPage = 20;
 
@@ -42,33 +44,15 @@ const SystemTransactions = () => {
     setLoading(false);
   }, [navigate]);
 
-  if (loading) {
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  if (loading || transactionsLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
-  // Generate more mock transactions for pagination
-  const generateMockTransactions = () => {
-    const transactions = [];
-    const types = ["Team Entry Fee", "Prize Contribution", "Membership Fee", "Prize Sharing", "Tournament Fee"];
-    const statuses = ["Completed", "Pending", "Failed"];
-    
-    for (let i = 1; i <= 50; i++) {
-      transactions.push({
-        id: i,
-        date: new Date(2024, 1, i % 28 + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toLocaleString(),
-        amount: Math.floor(Math.random() * 1000) + 100,
-        sender: `Player${i}`,
-        receiver: i % 3 === 0 ? `Team Alpha${i}` : `Player${i + 1}`,
-        type: types[i % types.length],
-        status: statuses[i % statuses.length]
-      });
-    }
-    return transactions;
-  };
-  
-  const mockTransactions = generateMockTransactions();
-
-  const filteredTransactions = mockTransactions.filter(transaction =>
+  const filteredTransactions = transactions.filter(transaction =>
     transaction.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
     transaction.receiver.toLowerCase().includes(searchTerm.toLowerCase()) ||
     transaction.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,8 +64,7 @@ const SystemTransactions = () => {
   const startIndex = (currentPage - 1) * transactionsPerPage;
   const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + transactionsPerPage);
 
-  const totalAmount = mockTransactions.reduce((sum, t) => sum + t.amount, 0);
-  const completedTransactions = mockTransactions.filter(t => t.status === "Completed").length;
+  const stats = getTotalStats();
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -95,7 +78,7 @@ const SystemTransactions = () => {
                 <h1 className="text-xl font-bold">Transaction Management</h1>
                 <p className="text-muted-foreground">Monitor all platform transactions</p>
               </div>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4" />
                 Refresh
               </Button>
@@ -111,7 +94,7 @@ const SystemTransactions = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Volume</p>
-                    <p className="text-2xl font-bold text-primary">₹{totalAmount.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-primary">₹{stats.totalAmount.toLocaleString()}</p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-primary" />
                 </div>
@@ -123,7 +106,7 @@ const SystemTransactions = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Transactions</p>
-                    <p className="text-2xl font-bold">{mockTransactions.length}</p>
+                    <p className="text-2xl font-bold">{stats.totalCount}</p>
                   </div>
                   <DollarSign className="h-8 w-8 text-accent" />
                 </div>
@@ -136,7 +119,7 @@ const SystemTransactions = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Success Rate</p>
                     <p className="text-2xl font-bold text-success">
-                      {Math.round((completedTransactions / mockTransactions.length) * 100)}%
+                      {stats.successRate}%
                     </p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-success" />

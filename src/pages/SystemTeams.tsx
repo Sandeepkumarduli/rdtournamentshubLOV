@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useSystemTeams } from "@/hooks/useSystemTeams";
 
 const SystemTeams = () => {
   const [loading, setLoading] = useState(true);
@@ -27,6 +28,7 @@ const SystemTeams = () => {
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { teams, loading: teamsLoading, refetch, deleteTeam } = useSystemTeams();
   
   const teamsPerPage = 20;
 
@@ -46,90 +48,36 @@ const SystemTeams = () => {
     setLoading(false);
   }, [navigate]);
 
-  const handleDeleteTeam = (teamId: number) => {
-    toast({
-      title: "Team Deleted",
-      description: "Team has been permanently removed from the platform",
-      variant: "destructive"
-    });
+  const handleDeleteTeam = async (teamId: string) => {
+    const result = await deleteTeam(teamId);
+    if (result.success) {
+      toast({
+        title: "Team Deleted",
+        description: "Team has been permanently removed from the platform",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to delete team",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleViewTeam = (team: any) => {
     setSelectedTeam(team);
   };
 
-  if (loading) {
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  if (loading || teamsLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
-  // Generate more mock teams for pagination
-  const generateMockTeams = () => {
-    const teams = [];
-    for (let i = 1; i <= 50; i++) {
-      teams.push({
-        id: i,
-        name: `Team ${i}`,
-        leader: `Leader${i}`,
-        members: [`Leader${i}`, `Player${i}A`, `Player${i}B`, `Player${i}C`].slice(0, Math.floor(Math.random() * 4) + 1),
-        tournaments: Math.floor(Math.random() * 20) + 1,
-        wins: Math.floor(Math.random() * 15),
-        created: new Date(2024, 0, i % 30 + 1).toISOString().split('T')[0],
-        status: i % 6 === 0 ? "Inactive" : "Active",
-        totalEarnings: Math.floor(Math.random() * 50000) + 1000
-      });
-    }
-    return teams;
-  };
-
-  const mockTeams = [
-    { 
-      id: 1, 
-      name: "Thunder Squads", 
-      leader: "PlayerOne", 
-      members: ["PlayerOne", "PlayerTwo", "PlayerThree", "PlayerFour"], 
-      tournaments: 12, 
-      wins: 8, 
-      created: "2024-01-15",
-      status: "Active",
-      totalEarnings: 15000
-    },
-    { 
-      id: 2, 
-      name: "Elite Legends", 
-      leader: "GamerPro", 
-      members: ["GamerPro", "SquadMate1", "SquadMate2"], 
-      tournaments: 8, 
-      wins: 5, 
-      created: "2024-01-20",
-      status: "Active",
-      totalEarnings: 8500
-    },
-    { 
-      id: 3, 
-      name: "Night Hunters", 
-      leader: "NightOwl", 
-      members: ["NightOwl", "Hunter1"], 
-      tournaments: 15, 
-      wins: 12, 
-      created: "2024-01-10",
-      status: "Active",
-      totalEarnings: 22000
-    },
-    { 
-      id: 4, 
-      name: "Victory Kings", 
-      leader: "KingPlayer", 
-      members: ["KingPlayer"], 
-      tournaments: 5, 
-      wins: 2, 
-      created: "2024-01-25",
-      status: "Inactive",
-      totalEarnings: 3000
-    },
-    ...generateMockTeams()
-  ];
-
-  const filteredTeams = mockTeams.filter(team =>
+  const filteredTeams = teams.filter(team =>
     team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     team.leader.toLowerCase().includes(searchTerm.toLowerCase()) ||
     team.members.some(member => member.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -140,9 +88,10 @@ const SystemTeams = () => {
   const startIndex = (currentPage - 1) * teamsPerPage;
   const paginatedTeams = filteredTeams.slice(startIndex, startIndex + teamsPerPage);
 
-  const totalTeams = mockTeams.length;
-  const activeTeams = mockTeams.filter(team => team.status === "Active").length;
-  const totalTournaments = mockTeams.reduce((sum, team) => sum + team.tournaments, 0);
+  const totalTeams = teams.length;
+  const activeTeams = teams.filter(team => team.status === "Active").length;
+  const totalTournaments = teams.reduce((sum, team) => sum + team.tournaments, 0);
+  const avgTeamSize = totalTeams > 0 ? teams.reduce((sum, team) => sum + team.members.length, 0) / totalTeams : 0;
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -156,7 +105,7 @@ const SystemTeams = () => {
                 <h1 className="text-xl font-bold">Teams Management</h1>
                 <p className="text-muted-foreground">Monitor all platform teams</p>
               </div>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4" />
                 Refresh
               </Button>
@@ -208,9 +157,7 @@ const SystemTeams = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Avg Team Size</p>
-                    <p className="text-2xl font-bold">
-                      {(mockTeams.reduce((sum, team) => sum + team.members.length, 0) / totalTeams).toFixed(1)}
-                    </p>
+                    <p className="text-2xl font-bold">{avgTeamSize.toFixed(1)}</p>
                   </div>
                   <Users className="h-8 w-8 text-gaming-gold" />
                 </div>

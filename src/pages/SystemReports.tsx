@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useReports } from "@/hooks/useReports";
 
 const SystemReports = () => {
   const [loading, setLoading] = useState(true);
@@ -30,6 +31,7 @@ const SystemReports = () => {
   const [dateFilter, setDateFilter] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { reports, loading: reportsLoading, refetch, resolveReport } = useReports();
 
   useEffect(() => {
     const auth = localStorage.getItem("userAuth");
@@ -47,7 +49,7 @@ const SystemReports = () => {
     setLoading(false);
   }, [navigate]);
 
-  const handleResolve = (reportId: string) => {
+  const handleResolve = async (reportId: string) => {
     if (!resolution.trim()) {
       toast({
         title: "Resolution Required",
@@ -57,13 +59,22 @@ const SystemReports = () => {
       return;
     }
 
-    toast({
-      title: "Report Resolved",
-      description: "Issue has been marked as resolved with your solution",
-      variant: "default"
-    });
-    setSelectedReport(null);
-    setResolution("");
+    const result = await resolveReport(reportId, resolution);
+    if (result.success) {
+      toast({
+        title: "Report Resolved",
+        description: "Issue has been marked as resolved with your solution",
+        variant: "default"
+      });
+      setSelectedReport(null);
+      setResolution("");
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to resolve report",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDeleteReport = (reportId: string) => {
@@ -74,7 +85,11 @@ const SystemReports = () => {
     });
   };
 
-  if (loading) {
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  if (loading || reportsLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -172,10 +187,10 @@ const SystemReports = () => {
                   <AlertTriangle className="h-3 w-3 mr-1" />
                   {openReports} Open
                 </Badge>
-                <Button variant="outline">
-                  <RefreshCw className="h-4 w-4" />
-                  Refresh
-                </Button>
+              <Button variant="outline" onClick={handleRefresh}>
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </Button>
               </div>
             </div>
           </div>
