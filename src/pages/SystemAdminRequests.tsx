@@ -3,19 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   UserCheck, 
   CheckCircle, 
   XCircle, 
   RefreshCw,
-  Clock
+  Clock,
+  MessageCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import ChatDialog from "@/components/ChatDialog";
 
 const SystemAdminRequests = () => {
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [chatAdmin, setChatAdmin] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -109,8 +114,8 @@ const SystemAdminRequests = () => {
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-bold">Admin Requests</h1>
-                <p className="text-muted-foreground">Review and manage admin access requests</p>
+                <h1 className="text-xl font-bold">Org Admin Requests</h1>
+                <p className="text-muted-foreground">Review and manage organization admin access requests</p>
               </div>
               <div className="flex items-center gap-3">
                 <Badge variant="outline" className="border-warning text-warning">
@@ -127,6 +132,21 @@ const SystemAdminRequests = () => {
         </header>
 
         <main className="flex-1 p-6 space-y-6">
+          {/* Filter */}
+          <div className="flex items-center gap-4">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Requests</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Approved">Approved</SelectItem>
+                <SelectItem value="Rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card>
@@ -184,7 +204,9 @@ const SystemAdminRequests = () => {
 
           {/* Requests List */}
           <div className="space-y-4">
-            {mockAdminRequests.map((request) => (
+            {mockAdminRequests
+              .filter(request => statusFilter === "All" || request.status === statusFilter)
+              .map((request) => (
               <Card key={request.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -241,6 +263,18 @@ const SystemAdminRequests = () => {
                         </Button>
                       </div>
                     )}
+                    {request.status === "Approved" && (
+                      <div className="flex gap-2 ml-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setChatAdmin(request.username)}
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          Chat
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -257,6 +291,14 @@ const SystemAdminRequests = () => {
             </Card>
           )}
         </main>
+
+        {/* Chat Dialog */}
+        <ChatDialog
+          isOpen={!!chatAdmin}
+          onClose={() => setChatAdmin(null)}
+          recipientName={chatAdmin || ''}
+          recipientType="admin"
+        />
       </div>
     </div>
   );

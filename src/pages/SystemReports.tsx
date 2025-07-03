@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   AlertTriangle, 
   Search, 
@@ -12,7 +13,9 @@ import {
   RefreshCw,
   MessageSquare,
   Flag,
-  Clock
+  Clock,
+  Trash2,
+  CalendarDays
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
@@ -21,8 +24,10 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 const SystemReports = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedReport, setSelectedReport] = useState<number | null>(null);
+  const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [resolution, setResolution] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [dateFilter, setDateFilter] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -42,7 +47,7 @@ const SystemReports = () => {
     setLoading(false);
   }, [navigate]);
 
-  const handleResolve = (reportId: number) => {
+  const handleResolve = (reportId: string) => {
     if (!resolution.trim()) {
       toast({
         title: "Resolution Required",
@@ -61,37 +66,45 @@ const SystemReports = () => {
     setResolution("");
   };
 
+  const handleDeleteReport = (reportId: string) => {
+    toast({
+      title: "Report Deleted",
+      description: "Report has been permanently removed from the system",
+      variant: "destructive"
+    });
+  };
+
   if (loading) {
     return <LoadingSpinner fullScreen />;
   }
 
   const mockReports = [
     { 
-      id: 1, 
+      id: "RPT001", 
       type: "Tournament Issue", 
       title: "Prize distribution delayed", 
       description: "Tournament winners haven't received their prizes after 3 days", 
       reporter: "PlayerOne", 
       reportedEntity: "Summer Championship", 
       date: "2024-02-01", 
-      status: "Open",
+      status: "Pending",
       priority: "High",
       category: "Tournament"
     },
     { 
-      id: 2, 
+      id: "RPT002", 
       type: "ORG Complaint", 
       title: "Unfair team selection", 
       description: "Admin showing favoritism in team selections for major tournaments", 
       reporter: "GamerPro", 
       reportedEntity: "Elite Gaming Org", 
       date: "2024-01-31", 
-      status: "Under Review",
+      status: "Pending",
       priority: "Medium",
       category: "Organization"
     },
     { 
-      id: 3, 
+      id: "RPT003", 
       type: "Tournament Issue", 
       title: "Server lag during finals", 
       description: "Multiple players experienced severe lag during championship finals", 
@@ -103,39 +116,43 @@ const SystemReports = () => {
       category: "Tournament"
     },
     { 
-      id: 4, 
+      id: "RPT004", 
       type: "ORG Complaint", 
       title: "Inappropriate conduct", 
       description: "Admin using inappropriate language in team communications", 
       reporter: "NightOwl", 
       reportedEntity: "Pro Gaming Hub", 
       date: "2024-01-29", 
-      status: "Open",
+      status: "Pending",
       priority: "Medium",
       category: "Organization"
     },
     { 
-      id: 5, 
+      id: "RPT005", 
       type: "Technical Issue", 
       title: "Payment gateway error", 
       description: "Unable to process tournament entry fees, payment keeps failing", 
       reporter: "TeamCaptain", 
       reportedEntity: "Platform Payment System", 
       date: "2024-01-28", 
-      status: "Open",
+      status: "Pending",
       priority: "High",
       category: "Technical"
     },
   ];
 
-  const filteredReports = mockReports.filter(report =>
-    report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.reporter.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.reportedEntity.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredReports = mockReports
+    .filter(report =>
+      report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.reporter.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.reportedEntity.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(report => statusFilter === "All" || report.status === statusFilter)
+    .filter(report => !dateFilter || report.date === dateFilter)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const openReports = mockReports.filter(report => report.status === "Open").length;
+  const openReports = mockReports.filter(report => report.status === "Pending").length;
   const highPriorityReports = mockReports.filter(report => report.priority === "High").length;
 
   return (
@@ -165,6 +182,29 @@ const SystemReports = () => {
         </header>
 
         <main className="flex-1 p-6 space-y-6">
+          {/* Filters */}
+          <div className="flex items-center gap-4">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Reports</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Resolved">Resolved</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="relative">
+              <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="pl-10 w-48"
+              />
+            </div>
+          </div>
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card>
@@ -183,7 +223,7 @@ const SystemReports = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Open Reports</p>
+                    <p className="text-sm text-muted-foreground">Pending Reports</p>
                     <p className="text-2xl font-bold text-warning">{openReports}</p>
                   </div>
                   <Clock className="h-8 w-8 text-warning" />
@@ -236,11 +276,11 @@ const SystemReports = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
+                     <div className="flex items-center gap-3 mb-3">
+                        <span className="text-sm text-muted-foreground">#{report.id}</span>
                         <h3 className="text-lg font-semibold">{report.title}</h3>
                         <Badge variant={
-                          report.status === "Open" ? "destructive" :
-                          report.status === "Under Review" ? "secondary" : "default"
+                          report.status === "Pending" ? "destructive" : "default"
                         }>
                           {report.status}
                         </Badge>
@@ -311,6 +351,14 @@ const SystemReports = () => {
                         >
                           <MessageSquare className="h-4 w-4" />
                           Resolve
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => handleDeleteReport(report.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
                         </Button>
                       </div>
                     )}

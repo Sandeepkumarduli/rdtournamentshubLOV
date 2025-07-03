@@ -44,15 +44,6 @@ const SystemAdminDashboard = () => {
     setLoading(false);
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("userAuth");
-    toast({
-      title: "System Admin logged out",
-      description: "System admin session ended",
-    });
-    navigate("/");
-  };
-
   const refreshData = () => {
     toast({
       title: "System Data Refreshed",
@@ -70,7 +61,6 @@ const SystemAdminDashboard = () => {
     totalTransactions: 5689,
     totalRevenue: 2450000,
     activeTournaments: 12,
-    systemHealth: 99.8,
     pendingRequests: 5,
     dailyActiveUsers: 892,
     totalTeams: 156,
@@ -96,10 +86,6 @@ const SystemAdminDashboard = () => {
                   <Crown className="h-3 w-3 mr-1" />
                   System Admin
                 </Badge>
-                <div className="flex items-center gap-1 text-sm">
-                  <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-                  System Healthy
-                </div>
                 <Button variant="ghost" size="icon" onClick={refreshData}>
                   <RefreshCw className="h-4 w-4" />
                 </Button>
