@@ -2,11 +2,17 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Trophy, Calendar, Users } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RefreshCw, Trophy, Calendar, Users, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Tournaments = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [dateFilter, setDateFilter] = useState('');
+  const [timeFilter, setTimeFilter] = useState('');
   const { toast } = useToast();
 
   // Mock registered tournaments - would come from API
@@ -17,10 +23,46 @@ const Tournaments = () => {
       status: "Active",
       registrationDate: "2024-01-15",
       matchDate: "2024-01-20",
+      matchTime: "18:00",
       prize: "₹50,000",
-      type: "Squad"
+      type: "Squad",
+      participants: 156,
+      maxSlots: 200,
+      entryFee: 100,
+      minTeamSize: 4,
+      roomId: "",
+      password: ""
+    },
+    {
+      id: 2,
+      name: "Weekly Championship",
+      status: "Upcoming",
+      registrationDate: "2024-01-16",
+      matchDate: "2024-01-25",
+      matchTime: "20:00",
+      prize: "₹25,000",
+      type: "Duo",
+      participants: 89,
+      maxSlots: 150,
+      entryFee: 50,
+      minTeamSize: 2,
+      roomId: "",
+      password: ""
     }
   ];
+
+  const filteredTournaments = registeredTournaments.filter(tournament => {
+    if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
+    if (dateFilter && tournament.matchDate !== dateFilter) return false;
+    if (timeFilter && tournament.matchTime !== timeFilter) return false;
+    return true;
+  });
+
+  const clearFilters = () => {
+    setStatusFilter('All');
+    setDateFilter('');
+    setTimeFilter('');
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -47,55 +89,133 @@ const Tournaments = () => {
       </div>
 
       {/* Registered Tournaments */}
-      <div className="space-y-4">
-        {registeredTournaments.length === 0 ? (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">My Registered Tournaments</h2>
+          
+          {/* Filters */}
+          <div className="flex items-center gap-4">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Upcoming">Upcoming</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-40"
+              placeholder="Date Filter"
+            />
+            
+            <Input
+              type="time"
+              value={timeFilter}
+              onChange={(e) => setTimeFilter(e.target.value)}
+              className="w-32"
+              placeholder="Time Filter"
+            />
+            
+            <Button variant="outline" onClick={clearFilters} size="sm">
+              <X className="h-4 w-4 mr-2" />
+              Clear All
+            </Button>
+          </div>
+        </div>
+
+        {filteredTournaments.length === 0 ? (
           <Card className="gaming-card">
             <CardContent className="p-8 text-center">
               <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Tournaments Registered</h3>
+              <h3 className="text-lg font-semibold mb-2">No Tournaments Found</h3>
               <p className="text-muted-foreground mb-4">
-                You haven't registered for any tournaments yet. Go to Dashboard to join available tournaments.
+                {statusFilter !== 'All' || dateFilter || timeFilter 
+                  ? "No tournaments match your current filters."
+                  : "You haven't registered for any tournaments yet. Go to Dashboard to join available tournaments."
+                }
               </p>
-              <Button variant="gaming">Browse Tournaments</Button>
+              <Button variant="default">Browse Tournaments</Button>
             </CardContent>
           </Card>
         ) : (
-          registeredTournaments.map((tournament) => (
-            <Card key={tournament.id} className="gaming-card">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-3">
-                    {tournament.name}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTournaments.map((tournament) => (
+              <Card key={tournament.id} className="gaming-card h-full">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold">{tournament.name}</CardTitle>
                     <Badge variant={tournament.status === "Active" ? "default" : "secondary"}>
                       {tournament.status}
                     </Badge>
-                    <Badge variant="outline">{tournament.type}</Badge>
-                  </CardTitle>
-                  <Button variant="gaming-outline">View Details</Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Registered</p>
-                    <p className="font-semibold">{tournament.registrationDate}</p>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Match Date</p>
-                    <p className="font-semibold">{tournament.matchDate}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Prize Pool:</span>
+                      <span className="font-semibold text-gaming-gold">{tournament.prize}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Date & Time:</span>
+                      <span className="font-medium">{tournament.matchDate} at {tournament.matchTime}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Slots:</span>
+                      <span className="font-medium">{tournament.participants}/{tournament.maxSlots}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Entry Fee:</span>
+                      <span className="font-medium">{tournament.entryFee} rdCoins</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Type:</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{tournament.type}</Badge>
+                        {tournament.minTeamSize > 0 && (
+                          <span className="text-xs text-muted-foreground">Min: {tournament.minTeamSize}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Prize Pool</p>
-                    <p className="font-semibold text-gaming-gold">{tournament.prize}</p>
+                  
+                  {/* Room Details */}
+                  <div className="space-y-3 pt-2 border-t border-border">
+                    <div className="space-y-2">
+                      <Label htmlFor={`roomId-${tournament.id}`} className="text-sm font-medium">Room ID</Label>
+                      <Input
+                        id={`roomId-${tournament.id}`}
+                        value={tournament.roomId}
+                        placeholder="Will be provided by admin"
+                        disabled
+                        className="text-center font-mono"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`password-${tournament.id}`} className="text-sm font-medium">Password</Label>
+                      <Input
+                        id={`password-${tournament.id}`}
+                        value={tournament.password}
+                        placeholder="Will be provided by admin"
+                        disabled
+                        className="text-center font-mono"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Status</p>
-                    <p className="font-semibold text-success">Confirmed</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     </div>

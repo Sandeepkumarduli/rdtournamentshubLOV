@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Phone, Gamepad } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { User, Mail, Phone, Gamepad, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const userData = JSON.parse(localStorage.getItem('userAuth') || '{}');
@@ -18,7 +20,9 @@ const Profile = () => {
   });
   
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -72,6 +76,29 @@ const Profile = () => {
     setIsEditing(false);
   };
 
+  const handleDeleteAccount = () => {
+    const currentBalance = userData.wallet?.balance || 0;
+    
+    if (currentBalance > 0) {
+      toast({
+        title: "Cannot Delete Account",
+        description: `You must withdraw your entire balance of ${currentBalance} rdCoins before deleting your account.`,
+        variant: "destructive"
+      });
+      setIsDeleteDialogOpen(false);
+      return;
+    }
+
+    // Delete account (clear localStorage and redirect)
+    localStorage.removeItem('userAuth');
+    setIsDeleteDialogOpen(false);
+    toast({
+      title: "Account Deleted",
+      description: "Your account has been permanently deleted.",
+    });
+    navigate('/');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -111,9 +138,10 @@ const Profile = () => {
               <Input
                 id="username"
                 value={formData.username}
-                onChange={(e) => handleInputChange('username', e.target.value)}
-                disabled={!isEditing}
+                disabled={true}
+                className="opacity-60"
               />
+              <p className="text-xs text-muted-foreground mt-1">Username cannot be changed</p>
             </div>
             
             <div>
@@ -122,10 +150,11 @@ const Profile = () => {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={!isEditing}
+                disabled={true}
+                className="opacity-60"
                 placeholder="Enter your email"
               />
+              <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
             </div>
             
             <div>
@@ -197,6 +226,39 @@ const Profile = () => {
                   <p className="text-muted-foreground">Earnings</p>
                   <p className="text-xl font-bold">₹0</p>
                 </div>
+              </div>
+            </div>
+
+            {/* Delete Account Section */}
+            <div className="pt-4 border-t border-destructive/20">
+              <Label className="text-sm font-medium text-destructive">Danger Zone</Label>
+              <div className="mt-2">
+                <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Account
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Delete Account</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        This action cannot be undone. You must withdraw your entire wallet balance before deleting your account.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button variant="destructive" onClick={handleDeleteAccount} className="flex-1">
+                          Confirm Delete
+                        </Button>
+                        <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </CardContent>

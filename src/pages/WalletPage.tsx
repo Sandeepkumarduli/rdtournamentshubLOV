@@ -141,7 +141,7 @@ const WalletPage = () => {
       </div>
 
       {/* Wallet Balance Card */}
-      <Card className="gaming-card-glow">
+      <Card className="gaming-card-gold">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Wallet className="h-6 w-6 text-gaming-gold" />
