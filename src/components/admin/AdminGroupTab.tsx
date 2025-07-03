@@ -6,32 +6,37 @@ import { Label } from '@/components/ui/label';
 import { Edit, Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminStats } from '@/hooks/useAdminStats';
+import { useOrgProfile } from '@/hooks/useOrgProfile';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const AdminGroupTab = () => {
   const [isEditingOrgName, setIsEditingOrgName] = useState(false);
   const { stats, loading } = useAdminStats();
+  const { profile, updateOrgProfile } = useOrgProfile();
   
-  // Get organization name from localStorage
-  const auth = localStorage.getItem("userAuth");
-  const adminData = auth ? JSON.parse(auth) : null;
-  const defaultOrgName = adminData?.organization || "FireStorm ORG";
-  
-  const [orgName, setOrgName] = useState(defaultOrgName);
-  const [tempOrgName, setTempOrgName] = useState(defaultOrgName);
+  const [tempOrgName, setTempOrgName] = useState(profile?.organization || "FireStorm ORG");
   const { toast } = useToast();
 
-  const handleSaveOrgName = () => {
-    setOrgName(tempOrgName);
-    setIsEditingOrgName(false);
-    toast({
-      title: "ORG Name Updated",
-      description: `Organization name changed to ${tempOrgName}`,
-    });
+  const handleSaveOrgName = async () => {
+    const result = await updateOrgProfile({ organization: tempOrgName });
+    
+    if (result.success) {
+      setIsEditingOrgName(false);
+      toast({
+        title: "ORG Name Updated",
+        description: `Organization name changed to ${tempOrgName}`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to update organization name",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleCancelEdit = () => {
-    setTempOrgName(orgName);
+    setTempOrgName(profile?.organization || "FireStorm ORG");
     setIsEditingOrgName(false);
   };
 
@@ -70,7 +75,7 @@ const AdminGroupTab = () => {
                   </>
                 ) : (
                   <>
-                    <Input value={orgName} readOnly className="flex-1" />
+                    <Input value={profile?.organization || "FireStorm ORG"} readOnly className="flex-1" />
                     <Button size="sm" onClick={() => setIsEditingOrgName(true)}>
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -80,7 +85,11 @@ const AdminGroupTab = () => {
             </div>
             <div className="space-y-2">
               <Label>Admin Username</Label>
-              <Input value={adminData?.username || "Unknown"} readOnly />
+              <Input value={profile?.display_name || "Unknown"} readOnly />
+            </div>
+            <div className="space-y-2">
+              <Label>Admin Email</Label>
+              <Input value={profile?.email || "Unknown"} readOnly />
             </div>
             <div className="space-y-2">
               <Label>Total Members</Label>

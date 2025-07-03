@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Ban, UserX } from 'lucide-react';
-import { useTeams } from '@/hooks/useTeams';
+import { useOrgTeams } from '@/hooks/useOrgTeams';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface AdminTeamsTabProps {
@@ -11,11 +11,11 @@ interface AdminTeamsTabProps {
 }
 
 const AdminTeamsTab = ({ onRefresh }: AdminTeamsTabProps) => {
-  const { teams, loading } = useTeams();
+  const { teams, loading, refetch } = useOrgTeams();
 
   const handleRefresh = () => {
     onRefresh();
-    // Teams hook automatically refreshes via real-time subscription
+    refetch();
   };
 
   if (loading) {
@@ -43,7 +43,7 @@ const AdminTeamsTab = ({ onRefresh }: AdminTeamsTabProps) => {
                     </Badge>
                   </div>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                    <div>Leader: {team.leader_id}</div>
+                    <div>Leader: {team.leader_name}</div>
                     <div>Tournaments: {team.tournaments_played || 0}</div>
                     <div>Wins: {team.wins || 0}</div>
                     <div>Earnings: ₹{team.total_earnings || 0}</div>

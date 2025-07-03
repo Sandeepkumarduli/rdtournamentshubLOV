@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Mail, Phone, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useReportSubmission } from '@/hooks/useReportSubmission';
 
 const Report = () => {
   const [reportData, setReportData] = useState({
@@ -16,23 +17,47 @@ const Report = () => {
     priority: 'medium'
   });
   const { toast } = useToast();
+  const { loading, submitReport } = useReportSubmission();
 
-  const handleSubmitReport = (e: React.FormEvent) => {
+  const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Generate unique ID for report
-    const reportId = Math.random().toString(36).substring(2, 8).toUpperCase();
     
-    toast({
-      title: "Report Submitted",
-      description: `Your report #${reportId} has been submitted and will be reviewed by our team.`,
+    if (!reportData.type || !reportData.subject || !reportData.description) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const result = await submitReport({
+      type: reportData.type,
+      title: reportData.subject,
+      description: reportData.description,
+      priority: reportData.priority,
+      category: reportData.type,
     });
-    
-    setReportData({
-      type: '',
-      subject: '',
-      description: '',
-      priority: 'medium'
-    });
+
+    if (result.success) {
+      toast({
+        title: "Report Submitted",
+        description: "Your report has been submitted and will be reviewed by our team.",
+      });
+      
+      setReportData({
+        type: '',
+        subject: '',
+        description: '',
+        priority: 'medium'
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to submit report",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -107,8 +132,8 @@ const Report = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full">
-                Submit Report
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Submitting..." : "Submit Report"}
               </Button>
             </form>
           </CardContent>

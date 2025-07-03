@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useTournamentCreation } from '@/hooks/useTournamentCreation';
 
 const tournamentSchema = z.object({
   name: z.string().min(1, "Tournament name is required"),
@@ -39,6 +40,7 @@ interface CreateTournamentDialogProps {
 const CreateTournamentDialog = ({ onTournamentCreated }: CreateTournamentDialogProps) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { loading, createTournament } = useTournamentCreation();
 
   const form = useForm<TournamentFormData>({
     resolver: zodResolver(tournamentSchema),
@@ -52,31 +54,36 @@ const CreateTournamentDialog = ({ onTournamentCreated }: CreateTournamentDialogP
     },
   });
 
-  const onSubmit = (data: TournamentFormData) => {
-    // Create tournament logic here
-    const newTournament = {
-      id: Date.now(),
+  const onSubmit = async (data: TournamentFormData) => {
+    const tournamentData = {
       name: data.name,
-      prizePool: data.prizePool,
-      date: format(data.date, "yyyy-MM-dd"),
-      time: data.time,
-      slots: data.slots,
-      roomId: data.roomId || "",
-      roomPass: data.roomPass || "",
-      gameMode: data.gameMode,
-      status: "Upcoming",
-      participants: 0,
-      org: "FireStorm",
+      description: `Prize Pool: ₹${data.prizePool} | Game Mode: ${data.gameMode}`,
+      game_type: data.gameMode,
+      entry_fee: 0,
+      prize_pool: data.prizePool,
+      max_teams: data.slots,
+      start_date: data.date ? new Date(`${format(data.date, "yyyy-MM-dd")}T${data.time}:00`).toISOString() : undefined,
+      rules: data.roomId ? `Room ID: ${data.roomId}, Password: ${data.roomPass}` : undefined,
     };
 
-    toast({
-      title: "Tournament Created!",
-      description: `${data.name} has been created successfully.`,
-    });
+    const result = await createTournament(tournamentData);
 
-    onTournamentCreated?.(newTournament);
-    setOpen(false);
-    form.reset();
+    if (result.success) {
+      toast({
+        title: "Tournament Created!",
+        description: `${data.name} has been created successfully.`,
+      });
+
+      onTournamentCreated?.(result.data);
+      setOpen(false);
+      form.reset();
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to create tournament",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -268,8 +275,8 @@ const CreateTournamentDialog = ({ onTournamentCreated }: CreateTournamentDialogP
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button type="submit" className="flex-1">
-                Create Tournament
+              <Button type="submit" className="flex-1" disabled={loading}>
+                {loading ? "Creating..." : "Create Tournament"}
               </Button>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
