@@ -30,7 +30,7 @@ const UserSidebar = () => {
         <div className="flex items-center gap-3">
           <GamepadIcon className="h-8 w-8 text-gaming-gold" />
           <div>
-            <h1 className="text-xl font-bold">BGMI Hub</h1>
+            <h1 className="text-xl font-bold">RDTH</h1>
             <p className="text-muted-foreground">Tournament Platform</p>
           </div>
         </div>

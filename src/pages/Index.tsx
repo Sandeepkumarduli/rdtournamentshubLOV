@@ -55,9 +55,23 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <GamepadIcon className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                BGMI Tournament Hub
+              <span className="text-xl font-bold">
+                RDTH - RD Tournaments Hub
               </span>
+            </div>
+            <div className="hidden md:flex items-center gap-6">
+              <Link to="/tournament-guide" className="text-muted-foreground hover:text-primary">
+                Tournament Guide
+              </Link>
+              <Link to="/rules" className="text-muted-foreground hover:text-primary">
+                Rules
+              </Link>
+              <Link to="/contact" className="text-muted-foreground hover:text-primary">
+                Contact
+              </Link>
+              <Link to="/wallet-system" className="text-muted-foreground hover:text-primary">
+                rdCoin Wallet
+              </Link>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="gaming-outline" asChild>
@@ -170,7 +184,7 @@ const Index = () => {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <GamepadIcon className="h-6 w-6 text-primary" />
-                <span className="font-bold">BGMI Hub</span>
+                <span className="font-bold">RDTH</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 The ultimate destination for competitive BGMI tournaments.
@@ -179,10 +193,10 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-3">Platform</h4>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <div>Tournaments</div>
-                <div>Teams</div>
-                <div>Leaderboards</div>
-                <div>Rewards</div>
+                <Link to="/tournament-guide" className="block hover:text-primary">Tournament Guide</Link>
+                <Link to="/rules" className="block hover:text-primary">Rules & Regulations</Link>
+                <Link to="/contact" className="block hover:text-primary">Contact Us</Link>
+                <Link to="/wallet-system" className="block hover:text-primary">rdCoin Wallet</Link>
               </div>
             </div>
             <div>
@@ -198,12 +212,11 @@ const Index = () => {
               <h4 className="font-semibold mb-3">Admin</h4>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <Link to="/adminlogin" className="block hover:text-primary">Admin Portal</Link>
-                <Link to="/systemadminlogin" className="block hover:text-primary">System Admin</Link>
               </div>
             </div>
           </div>
           <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 BGMI Tournament Hub. All rights reserved.</p>
+            <p>&copy; 2024 RDTH - RD Tournaments Hub. All rights reserved.</p>
           </div>
         </div>
       </footer>

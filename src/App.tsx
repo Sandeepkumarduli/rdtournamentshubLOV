@@ -23,6 +23,10 @@ import Teams from "./pages/Teams";
 import WalletPage from "./pages/WalletPage";
 import Groups from "./pages/Groups";
 import Profile from "./pages/Profile";
+import TournamentGuide from "./pages/TournamentGuide";
+import Rules from "./pages/Rules";
+import Contact from "./pages/Contact";
+import WalletSystem from "./pages/WalletSystem";
 
 const queryClient = new QueryClient();
 
@@ -53,7 +57,10 @@ const App = () => (
           <Route path="/system-admin-requests" element={<SystemAdminRequests />} />
           <Route path="/system-teams" element={<SystemTeams />} />
           <Route path="/system-reports" element={<SystemReports />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/tournament-guide" element={<TournamentGuide />} />
+          <Route path="/rules" element={<Rules />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/wallet-system" element={<WalletSystem />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
