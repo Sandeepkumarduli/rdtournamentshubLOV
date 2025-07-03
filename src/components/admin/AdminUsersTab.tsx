@@ -46,7 +46,7 @@ const AdminUsersTab = ({
         </div>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-6">
         {filteredUsers.map(user => <Card key={user.id} className="gaming-card px-0 py-px my-0">
             <CardContent className="p-4 px-[10px] py-[10px] mx-0 gap-10 my-0">
               <div className="flex items-center justify-between">
