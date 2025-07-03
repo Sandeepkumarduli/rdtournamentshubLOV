@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import TopBar from "@/components/TopBar";
 import { 
   Crown, 
   Users, 
@@ -81,6 +82,10 @@ const SystemAdminDashboard = () => {
                   <p className="text-muted-foreground">Master Control Panel</p>
                 </div>
               </div>
+              
+              {/* Page Links in Center */}
+              <TopBar userType="system" />
+              
               <div className="flex items-center gap-3">
                 <Badge variant="outline" className="border-primary text-primary">
                   <Crown className="h-3 w-3 mr-1" />

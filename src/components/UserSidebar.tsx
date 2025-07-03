@@ -7,7 +7,9 @@ import {
   Wallet, 
   User,
   GamepadIcon,
-  LogOut
+  LogOut,
+  MessageSquare,
+  Flag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +20,8 @@ const sidebarItems = [
   { path: '/dashboard/wallet', label: 'Wallet', icon: Wallet },
   { path: '/dashboard/groups', label: 'Groups', icon: GamepadIcon },
   { path: '/dashboard/profile', label: 'Profile', icon: User },
+  { path: '/dashboard/chat', label: 'Chat', icon: MessageSquare },
+  { path: '/dashboard/report', label: 'Report', icon: Flag },
 ];
 
 const UserSidebar = () => {

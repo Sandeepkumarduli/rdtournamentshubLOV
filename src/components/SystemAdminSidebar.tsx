@@ -10,7 +10,8 @@ import {
   Shield,
   UserCheck,
   DollarSign,
-  LogOut
+  LogOut,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -44,6 +45,11 @@ const sidebarItems = [
     title: "Reports",
     url: "/system-reports",
     icon: Activity,
+  },
+  {
+    title: "Chat Center",
+    url: "/system-chat",
+    icon: MessageSquare,
   }
 ];
 

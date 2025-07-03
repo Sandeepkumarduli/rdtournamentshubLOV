@@ -11,6 +11,10 @@ import AdminTournamentsTab from "@/components/admin/AdminTournamentsTab";
 import AdminTeamsTab from "@/components/admin/AdminTeamsTab";
 import AdminWalletsTab from "@/components/admin/AdminWalletsTab";
 import AdminGroupTab from "@/components/admin/AdminGroupTab";
+import AdminChat from "@/components/AdminChat";
+import AdminReportPage from "@/components/AdminReportPage";
+import TopBar from "@/components/TopBar";
+import PageTransition from "@/components/PageTransition";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -87,11 +91,11 @@ const AdminDashboard = () => {
       case 'admin-group':
         return <AdminGroupTab />;
       case 'chat':
-        return <div className="p-6"><h2 className="text-2xl font-bold">Chat with Users & System Admin</h2><p className="text-muted-foreground">Feature coming soon...</p></div>;
+        return <AdminChat />;
       case 'org-chat':
         return <OrgChat />;
       case 'report':
-        return <div className="p-6"><h2 className="text-2xl font-bold">Report Issues</h2><p className="text-muted-foreground">Report bugs, members, or other issues. Feature coming soon...</p></div>;
+        return <AdminReportPage />;
       default:
         return <AdminDashboardStats onRefresh={refreshData} />;
     }
@@ -112,6 +116,10 @@ const AdminDashboard = () => {
                 <h1 className="text-xl font-bold">Welcome back, Admin!</h1>
                 <p className="text-muted-foreground">Manage your ORG tournaments</p>
               </div>
+              
+              {/* Page Links in Center */}
+              <TopBar userType="admin" />
+              
               <div className="flex items-center gap-3">
                 <Badge variant="outline" className="border-primary text-primary">
                   ORG Administrator
@@ -123,7 +131,9 @@ const AdminDashboard = () => {
 
         {/* Page Content */}
         <main className="flex-1 p-6">
-          {renderContent()}
+          <PageTransition trigger={activeTab}>
+            {renderContent()}
+          </PageTransition>
         </main>
       </div>
     </div>

@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
+import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UserSidebar from "@/components/UserSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import TopBar from "@/components/TopBar";
+import PageTransition from "@/components/PageTransition";
 
 const DashboardLayout = () => {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -60,15 +63,15 @@ const DashboardLayout = () => {
                   <p className="text-muted-foreground">Ready for some action?</p>
                 </div>
               </div>
+              
+              {/* Page Links in Center */}
+              <TopBar userType="user" />
+              
               <div className="flex items-center gap-3">
                 <div className="rdcoin-badge">
                   <Wallet className="h-4 w-4" />
                   {userData?.wallet?.balance || 100} rdCoins
                 </div>
-                <Button variant="outline" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
               </div>
             </div>
           </div>
@@ -76,7 +79,9 @@ const DashboardLayout = () => {
 
         {/* Page Content */}
         <main className="flex-1 p-6">
-          <Outlet />
+          <PageTransition trigger={location.pathname}>
+            <Outlet />
+          </PageTransition>
         </main>
       </div>
     </div>
