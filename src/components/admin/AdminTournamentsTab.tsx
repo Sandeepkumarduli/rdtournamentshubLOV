@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, Plus, Edit, Trash2, X } from 'lucide-react';
+import { RefreshCw, Edit, Trash2, X } from 'lucide-react';
+import CreateTournamentDialog from '@/components/CreateTournamentDialog';
 
 interface AdminTournamentsTabProps {
   onRefresh: () => void;
@@ -37,10 +38,7 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">ORG Tournaments</h2>
         <div className="flex gap-2">
-          <Button variant="default">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Tournament
-          </Button>
+          <CreateTournamentDialog />
           <Button variant="outline" onClick={onRefresh}>
             <RefreshCw className="h-4 w-4" />
             Refresh

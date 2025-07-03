@@ -12,7 +12,7 @@ const AdminDashboardStats = ({ onRefresh }: AdminDashboardStatsProps) => {
   const navigate = useNavigate();
 
   const handleSendMoney = () => {
-    navigate('/admin-dashboard?tab=wallets');
+    navigate('/org-dashboard?tab=wallets');
   };
 
   return (

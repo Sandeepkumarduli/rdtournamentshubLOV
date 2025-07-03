@@ -41,7 +41,7 @@ const App = () => (
             <Route path="groups" element={<Groups />} />
             <Route path="profile" element={<Profile />} />
           </Route>
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/org-dashboard" element={<AdminDashboard />} />
           <Route path="/system-admin-dashboard" element={<SystemAdminDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -15,37 +15,37 @@ import { cn } from '@/lib/utils';
 const sidebarItems = [
   {
     title: "Dashboard",
-    url: "/admin-dashboard",
+    url: "/org-dashboard",
     icon: BarChart3,
   },
   {
     title: "Users",
-    url: "/admin-dashboard?tab=users",
+    url: "/org-dashboard?tab=users",
     icon: Users,
   },
   {
     title: "Tournaments",
-    url: "/admin-dashboard?tab=tournaments", 
+    url: "/org-dashboard?tab=tournaments", 
     icon: Trophy,
   },
   {
     title: "Teams",
-    url: "/admin-dashboard?tab=teams",
+    url: "/org-dashboard?tab=teams",
     icon: UserCheck,
   },
   {
     title: "Wallets",
-    url: "/admin-dashboard?tab=wallets",
+    url: "/org-dashboard?tab=wallets",
     icon: Wallet,
   },
   {
     title: "Admin Group",
-    url: "/admin-dashboard?tab=admin-group",
+    url: "/org-dashboard?tab=admin-group",
     icon: Settings,
   },
   {
     title: "ORG Chat",
-    url: "/admin-dashboard?tab=org-chat",
+    url: "/org-dashboard?tab=org-chat",
     icon: MessageSquare,
   }
 ];
@@ -55,7 +55,7 @@ const AdminSidebar = () => {
   const currentPath = location.pathname + location.search;
 
   const isActive = (path: string) => {
-    if (path === "/admin-dashboard" && location.pathname === "/admin-dashboard" && !location.search) {
+    if (path === "/org-dashboard" && location.pathname === "/org-dashboard" && !location.search) {
       return true;
     }
     return currentPath === path;

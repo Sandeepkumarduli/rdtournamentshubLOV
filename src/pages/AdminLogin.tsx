@@ -32,7 +32,7 @@ const AdminLogin = () => {
         description: "Welcome to the admin dashboard",
       });
       
-      navigate("/admin-dashboard");
+      navigate("/org-dashboard");
     } else {
       toast({
         title: "Login Failed",
