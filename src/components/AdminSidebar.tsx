@@ -10,16 +10,7 @@ import {
   Plus,
   UserCheck
 } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 
 const sidebarItems = [
   {
@@ -48,8 +39,13 @@ const sidebarItems = [
     icon: Wallet,
   },
   {
-    title: "Create",
-    url: "/admin-dashboard?tab=create",
+    title: "Admin Group",
+    url: "/admin-dashboard?tab=admin-group",
+    icon: Settings,
+  },
+  {
+    title: "ORG Chat",
+    url: "/admin-dashboard?tab=org-chat",
     icon: Plus,
   }
 ];
@@ -66,45 +62,44 @@ const AdminSidebar = () => {
   };
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarContent>
-        {/* Header */}
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            <div className="group-data-[collapsible=icon]:hidden">
-              <h2 className="font-bold text-base">Admin Panel</h2>
-              <p className="text-xs text-muted-foreground">Tournament Hub</p>
-            </div>
+    <div className="w-64 bg-card border-r border-border h-screen flex flex-col">
+      {/* Logo/Brand */}
+      <div className="p-6 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Shield className="h-8 w-8 text-gaming-gold" />
+          <div>
+            <h1 className="text-xl font-bold">ORG Panel</h1>
+            <p className="text-muted-foreground">Tournament Management</p>
           </div>
         </div>
+      </div>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {sidebarItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link 
-                      to={item.url} 
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                        isActive(item.url) 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'hover:bg-accent hover:text-accent-foreground'
-                      }`}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span className="text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+      {/* Navigation */}
+      <nav className="flex-1 p-4">
+        <ul className="space-y-2">
+          {sidebarItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.url);
+            
+            return (
+              <li key={item.title}>
+                <Link
+                  to={item.url}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+                    active 
+                      ? "bg-primary text-primary-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.title}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
   );
 };
 

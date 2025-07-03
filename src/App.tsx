@@ -16,6 +16,7 @@ import DashboardHome from "./pages/DashboardHome";
 import Tournaments from "./pages/Tournaments";
 import Teams from "./pages/Teams";
 import WalletPage from "./pages/WalletPage";
+import Groups from "./pages/Groups";
 import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="tournaments" element={<Tournaments />} />
             <Route path="teams" element={<Teams />} />
             <Route path="wallet" element={<WalletPage />} />
+            <Route path="groups" element={<Groups />} />
             <Route path="profile" element={<Profile />} />
           </Route>
           <Route path="/admin-dashboard" element={<AdminDashboard />} />

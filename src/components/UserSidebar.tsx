@@ -15,6 +15,7 @@ const sidebarItems = [
   { path: '/dashboard/tournaments', label: 'Tournaments', icon: Trophy },
   { path: '/dashboard/teams', label: 'Teams', icon: Users },
   { path: '/dashboard/wallet', label: 'Wallet', icon: Wallet },
+  { path: '/dashboard/groups', label: 'Groups', icon: GamepadIcon },
   { path: '/dashboard/profile', label: 'Profile', icon: User },
 ];
 

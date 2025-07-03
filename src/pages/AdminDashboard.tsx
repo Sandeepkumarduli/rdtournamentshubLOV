@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AdminSidebar from "@/components/AdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import SendMoneyDialog from "@/components/SendMoneyDialog";
+import OrgChat from "@/components/OrgChat";
 import { 
   Shield, 
   Users, 
@@ -25,7 +27,8 @@ import {
   Edit,
   Trash2,
   UserCheck,
-  TrendingUp
+  TrendingUp,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -98,13 +101,23 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-          <p className="text-lg text-muted-foreground">Tournament Management System</p>
+          <h1 className="text-4xl font-bold">ORG Dashboard</h1>
+          <p className="text-lg text-muted-foreground">FireStorm ORG Management</p>
         </div>
-        <Button variant="outline" onClick={refreshData}>
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <SendMoneyDialog 
+            trigger={
+              <Button variant="default">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Send Prize Money
+              </Button>
+            } 
+          />
+          <Button variant="outline" onClick={refreshData}>
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -113,8 +126,8 @@ const AdminDashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-2xl font-bold text-slate-50">1,247</p>
+                <p className="text-sm text-muted-foreground">ORG Members</p>
+                <p className="text-2xl font-bold text-slate-50">156</p>
               </div>
               <Users className="h-8 w-8 text-primary" />
             </div>
@@ -125,8 +138,8 @@ const AdminDashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Active Tournaments</p>
-                <p className="text-2xl font-bold text-slate-50">8</p>
+                <p className="text-sm text-muted-foreground">ORG Tournaments</p>
+                <p className="text-2xl font-bold text-slate-50">3</p>
               </div>
               <Trophy className="h-8 w-8 text-accent" />
             </div>
@@ -172,91 +185,171 @@ const AdminDashboard = () => {
         return renderTeamsContent();
       case 'wallets':
         return renderWalletsContent();
-      case 'create':
-        return renderCreateContent();
+      case 'admin-group':
+        return renderAdminGroupContent();
+      case 'org-chat':
+        return <OrgChat />;
       default:
         return renderDashboardStats();
     }
   };
 
-  const renderUsersContent = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">User Management</h2>
-        <Button variant="outline" onClick={refreshData}>
-          <RefreshCw className="h-4 w-4" />
-          Refresh Users
-        </Button>
-      </div>
-      
-      <div className="grid gap-4">
-        {mockUsers.map((user) => (
-          <Card key={user.id} className="gaming-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+  const renderUsersContent = () => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const filteredUsers = mockUsers.filter(user =>
+      user.username.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">ORG Members</h2>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-64"
+            />
+            <Button variant="outline" onClick={refreshData}>
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          {filteredUsers.map((user) => (
+            <Card key={user.id} className="gaming-card">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
                     <h3 className="text-lg font-semibold">{user.username}</h3>
                     <Badge variant={user.status === "Active" ? "default" : "destructive"}>
                       {user.status}
                     </Badge>
                   </div>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                    <div>Email: {user.email}</div>
-                    <div>Joined: {user.joinDate}</div>
-                    <div>Wallet: {user.wallet} rdCoins</div>
-                    <div>Status: {user.status}</div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4" />
+                  <Button 
+                    variant={user.status === "Active" ? "destructive" : "default"} 
+                    size="sm"
+                  >
+                    {user.status === "Active" ? (
+                      <>
+                        <Ban className="h-4 w-4 mr-2" />
+                        Ban User
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        Unban User
+                      </>
+                    )}
                   </Button>
-                  <Button variant={user.status === "Active" ? "destructive" : "default"} size="sm">
-                    {user.status === "Active" ? <Ban className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
-  const renderTournamentsContent = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Tournament Management</h2>
-        <Button variant="outline" onClick={refreshData}>
-          <RefreshCw className="h-4 w-4" />
-          Refresh Tournaments
-        </Button>
-      </div>
-      
-      <div className="grid gap-4">
-        {mockTournaments.map((tournament) => (
-          <Card key={tournament.id} className="gaming-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold">{tournament.name}</h3>
-                    <Badge variant={tournament.status === "Active" ? "default" : tournament.status === "Upcoming" ? "secondary" : "outline"}>
-                      {tournament.status}
-                    </Badge>
+  const renderTournamentsContent = () => {
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [dateFilter, setDateFilter] = useState('');
+    const [timeFilter, setTimeFilter] = useState('');
+
+    const orgTournaments = mockTournaments.filter(tournament => tournament.status !== "Completed");
+    const filteredTournaments = orgTournaments.filter(tournament => {
+      if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
+      if (dateFilter && tournament.startDate !== dateFilter) return false;
+      return true;
+    });
+
+    const clearFilters = () => {
+      setStatusFilter('All');
+      setDateFilter('');
+      setTimeFilter('');
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">ORG Tournaments</h2>
+          <div className="flex gap-2">
+            <Button variant="default">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Tournament
+            </Button>
+            <Button variant="outline" onClick={refreshData}>
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex items-center gap-4">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Upcoming">Upcoming</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="w-40"
+            placeholder="Date Filter"
+          />
+          
+          <Button variant="outline" onClick={clearFilters} size="sm">
+            <X className="h-4 w-4 mr-2" />
+            Clear All
+          </Button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTournaments.map((tournament) => (
+            <Card key={tournament.id} className="gaming-card h-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold">{tournament.name}</CardTitle>
+                  <Badge variant={tournament.status === "Active" ? "destructive" : "secondary"}>
+                    {tournament.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Prize Pool:</span>
+                    <span className="font-semibold text-gaming-gold">₹{tournament.prize.toLocaleString()}</span>
                   </div>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                    <div>Prize: ₹{tournament.prize.toLocaleString()}</div>
-                    <div>Participants: {tournament.participants}</div>
-                    <div>Start Date: {tournament.startDate}</div>
-                    <div>Status: {tournament.status}</div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Date:</span>
+                    <span className="font-medium">{tournament.startDate}</span>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Participants:</span>
+                    <span className="font-medium">{tournament.participants}</span>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">ORG:</span>
+                    <span className="font-medium text-primary">FireStorm</span>
                   </div>
                 </div>
+                
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
                   <Button variant="outline" size="sm">
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -264,13 +357,13 @@ const AdminDashboard = () => {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderTeamsContent = () => (
     <div className="space-y-6">
@@ -373,111 +466,98 @@ const AdminDashboard = () => {
     </div>
   );
 
-  const renderCreateContent = () => (
+  const renderAdminGroupContent = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Create New Tournament</h2>
+        <h2 className="text-2xl font-bold">Admin Group Management</h2>
       </div>
       
-      <Card className="gaming-card max-w-2xl">
-        <CardHeader>
-          <CardTitle>Tournament Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="gaming-card">
+          <CardHeader>
+            <CardTitle>ORG Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="tournamentName">Tournament Name</Label>
-              <Input
-                id="tournamentName"
-                placeholder="Enter tournament name"
-              />
+              <Label>Organization Name</Label>
+              <Input value="FireStorm ORG" readOnly />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="prizePool">Prize Pool (₹)</Label>
-              <Input
-                id="prizePool"
-                type="number"
-                placeholder="50000"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-              />
+              <Label>Admin Username</Label>
+              <Input value="AdminStorm" readOnly />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="entryFee">Entry Fee (rdCoins)</Label>
-              <Input
-                id="entryFee"
-                type="number"
-                placeholder="50"
-              />
+              <Label>Total Members</Label>
+              <Input value="156" readOnly />
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Tournament description and rules..."
-              rows={4}
-            />
-          </div>
-          
-          <Button variant="default" className="w-full">
-            <Plus className="h-4 w-4" />
-            Create Tournament
-          </Button>
-        </CardContent>
-      </Card>
+            <div className="space-y-2">
+              <Label>Active Tournaments</Label>
+              <Input value="3" readOnly />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="gaming-card">
+          <CardHeader>
+            <CardTitle>ORG Statistics</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total Prize Pool Distributed:</span>
+              <span className="font-semibold text-gaming-gold">₹2,45,000</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Tournaments Completed:</span>
+              <span className="font-semibold">12</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Success Rate:</span>
+              <span className="font-semibold text-success">95%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Member Satisfaction:</span>
+              <span className="font-semibold text-primary">4.8/5</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex bg-background w-full">
-        {/* Sidebar */}
-        <AdminSidebar />
-        
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-            <div className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <SidebarTrigger />
-                  <div>
-                    <h1 className="text-xl font-bold">Welcome back, Admin!</h1>
-                    <p className="text-muted-foreground">Manage your tournament platform</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="border-primary text-primary">
-                    Administrator
-                  </Badge>
-                  <Button variant="outline" onClick={handleLogout}>
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </Button>
-                </div>
+    <div className="min-h-screen flex bg-background">
+      {/* Sidebar */}
+      <AdminSidebar />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold">Welcome back, Admin!</h1>
+                <p className="text-muted-foreground">Manage your ORG tournaments</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="border-primary text-primary">
+                  ORG Administrator
+                </Badge>
+                <Button variant="outline" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
               </div>
             </div>
-          </header>
+          </div>
+        </header>
 
-          {/* Page Content */}
-          <main className="flex-1 p-6">
-            {renderContent()}
-          </main>
-        </div>
+        {/* Page Content */}
+        <main className="flex-1 p-6">
+          {renderContent()}
+        </main>
       </div>
-    </SidebarProvider>
-
+    </div>
   );
 };
 

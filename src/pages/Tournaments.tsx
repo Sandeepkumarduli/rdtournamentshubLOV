@@ -186,6 +186,11 @@ const Tournaments = () => {
                         )}
                       </div>
                     </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">ORG:</span>
+                      <span className="font-medium text-primary">FireStorm</span>
+                    </div>
                   </div>
                   
                   {/* Room Details */}
