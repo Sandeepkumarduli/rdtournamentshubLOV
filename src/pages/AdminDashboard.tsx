@@ -86,8 +86,12 @@ const AdminDashboard = () => {
         return <AdminWalletsTab onRefresh={refreshData} />;
       case 'admin-group':
         return <AdminGroupTab />;
+      case 'chat':
+        return <div className="p-6"><h2 className="text-2xl font-bold">Chat with Users & System Admin</h2><p className="text-muted-foreground">Feature coming soon...</p></div>;
       case 'org-chat':
         return <OrgChat />;
+      case 'report':
+        return <div className="p-6"><h2 className="text-2xl font-bold">Report Issues</h2><p className="text-muted-foreground">Report bugs, members, or other issues. Feature coming soon...</p></div>;
       default:
         return <AdminDashboardStats onRefresh={refreshData} />;
     }
@@ -112,10 +116,6 @@ const AdminDashboard = () => {
                 <Badge variant="outline" className="border-primary text-primary">
                   ORG Administrator
                 </Badge>
-                <Button variant="outline" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
               </div>
             </div>
           </div>

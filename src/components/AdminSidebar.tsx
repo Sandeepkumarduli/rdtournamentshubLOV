@@ -8,7 +8,9 @@ import {
   Settings,
   BarChart3,
   MessageSquare,
-  UserCheck
+  UserCheck,
+  Flag,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -44,9 +46,19 @@ const sidebarItems = [
     icon: Settings,
   },
   {
+    title: "Chat",
+    url: "/org-dashboard?tab=chat",
+    icon: MessageSquare,
+  },
+  {
     title: "ORG Chat",
     url: "/org-dashboard?tab=org-chat",
     icon: MessageSquare,
+  },
+  {
+    title: "Report",
+    url: "/org-dashboard?tab=report",
+    icon: Flag,
   }
 ];
 
@@ -99,6 +111,20 @@ const AdminSidebar = () => {
           })}
         </ul>
       </nav>
+
+      {/* Logout Button at Bottom */}
+      <div className="p-4 border-t border-border">
+        <button
+          onClick={() => {
+            localStorage.removeItem("userAuth");
+            window.location.href = "/";
+          }}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 text-muted-foreground hover:text-foreground hover:bg-accent w-full"
+        >
+          <LogOut className="h-5 w-5" />
+          <span>Logout</span>
+        </button>
+      </div>
     </div>
   );
 };
