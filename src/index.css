@@ -2,41 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* BGMI Tournament Hub Design System - Tournafest Inspired Dark Theme */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    /* Background & Surface Colors */
+    --background: 240 10% 3.9%;              /* Very dark background */
+    --foreground: 0 0% 98%;                  /* Almost white text */
+    
+    --surface: 240 10% 6%;                   /* Slightly lighter surface */
+    --surface-foreground: 0 0% 95%;
+    
+    --card: 240 10% 6%;                      /* Card background */
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 95%;
+    
+    /* Brand Colors - Purple/Violet theme inspired by Tournafest */
+    --primary: 270 70% 60%;                  /* Vibrant purple */
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 270 70% 70%;             /* Lighter purple for effects */
+    
+    --secondary: 240 10% 12%;                /* Dark secondary */
+    --secondary-foreground: 0 0% 90%;
+    
+    /* Accent Colors */
+    --accent: 280 100% 70%;                  /* Bright magenta accent */
+    --accent-foreground: 0 0% 98%;
+    
+    --muted: 240 10% 10%;                    /* Muted background */
+    --muted-foreground: 240 5% 64.9%;       /* Muted text */
+    
+    /* Status Colors */
+    --destructive: 0 84.2% 60.2%;           /* Red for errors */
+    --destructive-foreground: 0 0% 98%;
+    
+    --success: 142 71% 45%;                  /* Green for success */
+    --success-foreground: 0 0% 98%;
+    
+    --warning: 38 92% 50%;                   /* Orange for warnings */
+    --warning-foreground: 0 0% 98%;
+    
+    /* Border & Input */
+    --border: 240 10% 18%;                   /* Subtle border */
+    --input: 240 10% 12%;                    /* Input background */
+    --ring: 270 70% 60%;                     /* Focus ring matches primary */
+    
+    /* Gaming-specific colors */
+    --gaming-gold: 45 100% 60%;              /* Gold for rewards */
+    --gaming-gold-foreground: 0 0% 10%;
+    
+    --rdcoin: 45 100% 60%;                   /* RD Coin color (gold) */
+    --rdcoin-foreground: 0 0% 10%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(270 70% 60%), hsl(280 100% 70%));
+    --gradient-gaming: linear-gradient(135deg, hsl(270 70% 60%), hsl(45 100% 60%));
+    --gradient-card: linear-gradient(135deg, hsl(240 10% 6%), hsl(240 10% 8%));
+    --gradient-hero: linear-gradient(135deg, hsl(240 10% 3.9%), hsl(270 70% 20%));
+    
+    /* Shadows */
+    --shadow-glow: 0 0 40px hsl(270 70% 60% / 0.3);
+    --shadow-card: 0 10px 30px -10px hsl(240 10% 0% / 0.5);
+    --shadow-gaming: 0 0 30px hsl(45 100% 60% / 0.4);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -55,42 +89,27 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
+  /* Dark theme is the default for gaming platform */
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 270 70% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 280 100% 70%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 270 70% 60%;
   }
 }
 
@@ -100,6 +119,58 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-outfit;
+    background: var(--gradient-hero);
+    background-attachment: fixed;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary rounded-lg;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-glow;
+  }
+}
+
+@layer components {
+  /* Gaming UI Components */
+  .gaming-card {
+    @apply bg-card border border-border rounded-xl p-6;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-card);
+  }
+  
+  .gaming-card-glow {
+    @apply gaming-card;
+    box-shadow: var(--shadow-glow), var(--shadow-card);
+  }
+  
+  .rdcoin-badge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold;
+    background: var(--gradient-gaming);
+    color: hsl(var(--rdcoin-foreground));
+    box-shadow: var(--shadow-gaming);
+  }
+  
+  .hero-text {
+    @apply text-4xl md:text-6xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+  
+  .nav-link {
+    @apply text-foreground/80 hover:text-foreground transition-colors duration-200;
+  }
+  
+  .nav-link-active {
+    @apply text-primary font-medium;
   }
 }
