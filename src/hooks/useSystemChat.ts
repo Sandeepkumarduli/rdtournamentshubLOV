@@ -89,8 +89,14 @@ export const useSystemChat = () => {
 
   const sendMessage = async (recipientId: string, message: string) => {
     try {
-      // Get current system admin user ID (in a real app, this would come from auth)
-      const systemAdminId = 'system-admin-id'; // This should be the actual system admin's user_id
+      // Get current system admin user ID from localStorage
+      const auth = localStorage.getItem("userAuth");
+      const user = auth ? JSON.parse(auth) : null;
+      const systemAdminId = user?.user_id;
+
+      if (!systemAdminId) {
+        return { error: 'Not authenticated' };
+      }
 
       const { error } = await supabase
         .from('chat_messages')

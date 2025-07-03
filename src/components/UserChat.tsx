@@ -4,65 +4,56 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Send, User, Shield, Crown, MessageSquare } from 'lucide-react';
+import { Send, User, Shield, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Message {
-  id: number;
-  text: string;
-  sender: string;
-  senderType: 'user' | 'admin' | 'system';
-  timestamp: string;
-  isMe: boolean;
-}
+import { useUserChat } from '@/hooks/useUserChat';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const UserChat = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Welcome to RDTH Chat! How can we help you today?",
-      sender: 'System Admin',
-      senderType: 'system',
-      timestamp: new Date().toLocaleTimeString(),
-      isMe: false
-    }
-  ]);
   const [newMessage, setNewMessage] = useState('');
+  const { messages, loading, canChat, sendMessage } = useUserChat();
   const { toast } = useToast();
 
-  const handleSendMessage = () => {
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  if (!canChat) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold">Chat Support</h1>
+            <p className="text-lg text-muted-foreground">Get help from our admin team</p>
+          </div>
+        </div>
+        <div className="text-center p-8">
+          <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Chat Not Available</h3>
+          <p className="text-muted-foreground">
+            You need to join an organization or participate in tournaments to access chat support.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleSendMessage = async () => {
     if (newMessage.trim()) {
-      const message: Message = {
-        id: messages.length + 1,
-        text: newMessage,
-        sender: 'You',
-        senderType: 'user',
-        timestamp: new Date().toLocaleTimeString(),
-        isMe: true
-      };
-      setMessages([...messages, message]);
-      setNewMessage('');
-      
-      // Simulate response from admin/system
-      setTimeout(() => {
-        const responses = [
-          "Thanks for your message! We'll get back to you soon.",
-          "Your query has been received. An admin will respond shortly.",
-          "We're looking into your request. Please wait a moment.",
-          "Thank you for contacting support. How else can we help?"
-        ];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        
-        const response: Message = {
-          id: messages.length + 2,
-          text: randomResponse,
-          sender: Math.random() > 0.5 ? 'ORG Admin' : 'System Admin',
-          senderType: Math.random() > 0.5 ? 'admin' : 'system',
-          timestamp: new Date().toLocaleTimeString(),
-          isMe: false
-        };
-        setMessages(prev => [...prev, response]);
-      }, 1000 + Math.random() * 2000);
+      const result = await sendMessage(newMessage);
+      if (result?.success) {
+        setNewMessage('');
+        toast({
+          title: "Message Sent",
+          description: "Your message has been sent to the admin team",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result?.error || "Failed to send message",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -70,8 +61,6 @@ const UserChat = () => {
     switch (senderType) {
       case 'admin':
         return <Shield className="h-4 w-4" />;
-      case 'system':
-        return <Crown className="h-4 w-4" />;
       default:
         return <User className="h-4 w-4" />;
     }
@@ -81,8 +70,6 @@ const UserChat = () => {
     switch (senderType) {
       case 'admin':
         return 'default';
-      case 'system':
-        return 'destructive';
       default:
         return 'secondary';
     }
@@ -112,7 +99,13 @@ const UserChat = () => {
         <CardContent className="flex-1 flex flex-col p-0">
           <ScrollArea className="flex-1 p-4">
             <div className="space-y-4">
-              {messages.map((message) => (
+              {messages.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Start a conversation with our admin team!</p>
+                </div>
+              ) : (
+                messages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${message.isMe ? 'justify-end' : 'justify-start'}`}
@@ -139,7 +132,8 @@ const UserChat = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </ScrollArea>
           

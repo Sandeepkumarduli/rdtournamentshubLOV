@@ -90,6 +90,15 @@ const Teams = () => {
       return;
     }
 
+    if (teamMembers.length >= 5) {
+      toast({
+        title: "Team Full",
+        description: "Maximum 5 members allowed per team",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // In a real app, you'd look up user by email first
     // For now, we'll show that feature is not implemented
     toast({

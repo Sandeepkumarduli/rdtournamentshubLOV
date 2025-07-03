@@ -6,60 +6,35 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Send, Users, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Message {
-  id: number;
-  username: string;
-  message: string;
-  timestamp: string;
-  isAdmin: boolean;
-}
+import { useOrgChat } from '@/hooks/useOrgChat';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const OrgChat = () => {
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      username: "Admin",
-      message: "Welcome to FireStorm ORG! Tournament starts in 30 minutes.",
-      timestamp: "2024-01-20 17:30",
-      isAdmin: true
-    },
-    {
-      id: 2,
-      username: "PlayerOne",
-      message: "Ready for the tournament! Team is prepared.",
-      timestamp: "2024-01-20 17:35",
-      isAdmin: false
-    },
-    {
-      id: 3,
-      username: "GamerPro",
-      message: "Good luck everyone! Let's dominate!",
-      timestamp: "2024-01-20 17:40",
-      isAdmin: false
-    }
-  ]);
+  const { messages, loading, sendMessage } = useOrgChat();
   const { toast } = useToast();
 
-  const handleSendMessage = () => {
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  const handleSendMessage = async () => {
     if (!message.trim()) return;
 
-    const newMessage: Message = {
-      id: messages.length + 1,
-      username: "Admin", // This would be dynamic based on logged in user
-      message: message.trim(),
-      timestamp: new Date().toLocaleString(),
-      isAdmin: true // This would be based on user role
-    };
-
-    setMessages([...messages, newMessage]);
-    setMessage('');
-    
-    toast({
-      title: "Message Sent",
-      description: "Your message has been sent to the group",
-    });
+    const result = await sendMessage(message);
+    if (result?.success) {
+      setMessage('');
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to the group",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result?.error || "Failed to send message",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -76,7 +51,7 @@ const OrgChat = () => {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            FireStorm ORG Group Chat
+            Organization Chat
           </CardTitle>
         </CardHeader>
         
@@ -84,25 +59,32 @@ const OrgChat = () => {
           {/* Messages Area */}
           <ScrollArea className="flex-1 p-6">
             <div className="space-y-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className="flex gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className={msg.isAdmin ? "bg-primary text-primary-foreground" : "bg-accent"}>
-                      {msg.username.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-sm font-medium ${msg.isAdmin ? "text-primary" : "text-foreground"}`}>
-                        {msg.username}
-                        {msg.isAdmin && <span className="text-xs text-gaming-gold ml-1">(Admin)</span>}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{msg.timestamp}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{msg.message}</p>
-                  </div>
+              {messages.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No messages yet. Start the conversation!</p>
                 </div>
-              ))}
+              ) : (
+                messages.map((msg) => (
+                  <div key={msg.id} className="flex gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className={msg.isAdmin ? "bg-primary text-primary-foreground" : "bg-accent"}>
+                        {msg.username.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-sm font-medium ${msg.isAdmin ? "text-primary" : "text-foreground"}`}>
+                          {msg.username}
+                          {msg.isAdmin && <span className="text-xs text-gaming-gold ml-1">(Admin)</span>}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{msg.timestamp}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{msg.message}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </ScrollArea>
 

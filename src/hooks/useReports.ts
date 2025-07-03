@@ -56,10 +56,14 @@ export const useReports = () => {
 
   const resolveReport = async (reportId: string, resolution: string) => {
     try {
-      // Get current system admin user ID (in a real app, this would come from auth)
+      // Get current system admin user ID from localStorage
       const auth = localStorage.getItem("userAuth");
       const user = auth ? JSON.parse(auth) : null;
-      const systemAdminId = user?.user_id || 'system-admin-id';
+      const systemAdminId = user?.user_id;
+
+      if (!systemAdminId) {
+        return { error: 'Not authenticated' };
+      }
 
       const { error } = await supabase
         .from('reports')

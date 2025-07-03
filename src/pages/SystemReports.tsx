@@ -93,70 +93,7 @@ const SystemReports = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  const mockReports = [
-    { 
-      id: "RPT001", 
-      type: "Tournament Issue", 
-      title: "Prize distribution delayed", 
-      description: "Tournament winners haven't received their prizes after 3 days", 
-      reporter: "PlayerOne", 
-      reportedEntity: "Summer Championship", 
-      date: "2024-02-01", 
-      status: "Pending",
-      priority: "High",
-      category: "Tournament"
-    },
-    { 
-      id: "RPT002", 
-      type: "ORG Complaint", 
-      title: "Unfair team selection", 
-      description: "Admin showing favoritism in team selections for major tournaments", 
-      reporter: "GamerPro", 
-      reportedEntity: "Elite Gaming Org", 
-      date: "2024-01-31", 
-      status: "Pending",
-      priority: "Medium",
-      category: "Organization"
-    },
-    { 
-      id: "RPT003", 
-      type: "Tournament Issue", 
-      title: "Server lag during finals", 
-      description: "Multiple players experienced severe lag during championship finals", 
-      reporter: "SquadLeader", 
-      reportedEntity: "Winter Cup Finals", 
-      date: "2024-01-30", 
-      status: "Resolved",
-      priority: "High",
-      category: "Tournament"
-    },
-    { 
-      id: "RPT004", 
-      type: "ORG Complaint", 
-      title: "Inappropriate conduct", 
-      description: "Admin using inappropriate language in team communications", 
-      reporter: "NightOwl", 
-      reportedEntity: "Pro Gaming Hub", 
-      date: "2024-01-29", 
-      status: "Pending",
-      priority: "Medium",
-      category: "Organization"
-    },
-    { 
-      id: "RPT005", 
-      type: "Technical Issue", 
-      title: "Payment gateway error", 
-      description: "Unable to process tournament entry fees, payment keeps failing", 
-      reporter: "TeamCaptain", 
-      reportedEntity: "Platform Payment System", 
-      date: "2024-01-28", 
-      status: "Pending",
-      priority: "High",
-      category: "Technical"
-    },
-  ];
-
-  const filteredReports = mockReports
+  const filteredReports = reports
     .filter(report =>
       report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,8 +104,8 @@ const SystemReports = () => {
     .filter(report => !dateFilter || report.date === dateFilter)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const openReports = mockReports.filter(report => report.status === "Pending").length;
-  const highPriorityReports = mockReports.filter(report => report.priority === "High").length;
+  const openReports = reports.filter(report => report.status === "Pending").length;
+  const highPriorityReports = reports.filter(report => report.priority === "High").length;
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -227,7 +164,7 @@ const SystemReports = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Reports</p>
-                    <p className="text-2xl font-bold text-primary">{mockReports.length}</p>
+                    <p className="text-2xl font-bold text-primary">{reports.length}</p>
                   </div>
                   <Flag className="h-8 w-8 text-primary" />
                 </div>
@@ -264,7 +201,7 @@ const SystemReports = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Resolved</p>
                     <p className="text-2xl font-bold text-success">
-                      {mockReports.filter(report => report.status === "Resolved").length}
+                      {reports.filter(report => report.status === "Resolved").length}
                     </p>
                   </div>
                   <CheckCircle className="h-8 w-8 text-success" />

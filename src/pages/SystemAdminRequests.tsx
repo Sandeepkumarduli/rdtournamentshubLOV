@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ChatDialog from "@/components/ChatDialog";
+import { useAdminRequests } from "@/hooks/useAdminRequests";
 
 const SystemAdminRequests = () => {
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ const SystemAdminRequests = () => {
   const [chatAdmin, setChatAdmin] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { requests, loading: requestsLoading, refetch, approveRequest, rejectRequest } = useAdminRequests();
 
   useEffect(() => {
     const auth = localStorage.getItem("userAuth");
@@ -40,70 +42,49 @@ const SystemAdminRequests = () => {
     setLoading(false);
   }, [navigate]);
 
-  const handleApprove = (requestId: number) => {
-    toast({
-      title: "Request Approved",
-      description: "Admin access has been granted to the user",
-      variant: "default"
-    });
+  const handleApprove = async (requestId: string) => {
+    const result = await approveRequest(requestId);
+    if (result.success) {
+      toast({
+        title: "Request Approved",
+        description: "Admin access has been granted to the user",
+        variant: "default"
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to approve request",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleReject = (requestId: number) => {
-    toast({
-      title: "Request Rejected",
-      description: "Admin request has been denied",
-      variant: "destructive"
-    });
+  const handleReject = async (requestId: string) => {
+    const result = await rejectRequest(requestId);
+    if (result.success) {
+      toast({
+        title: "Request Rejected",
+        description: "Admin request has been denied",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to reject request",
+        variant: "destructive"
+      });
+    }
   };
 
-  if (loading) {
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  if (loading || requestsLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
-  const mockAdminRequests = [
-    { 
-      id: 1, 
-      username: "ModeratorOne", 
-      email: "mod1@example.com", 
-      reason: "Experienced tournament organizer with 3+ years in esports management", 
-      status: "Pending", 
-      date: "2024-01-30",
-      bgmiId: "MOD123456",
-      experience: "3 years"
-    },
-    { 
-      id: 2, 
-      username: "EventManager", 
-      email: "event@example.com", 
-      reason: "Community leader with 2+ years experience organizing local tournaments", 
-      status: "Pending", 
-      date: "2024-01-29",
-      bgmiId: "EVT789012",
-      experience: "2 years"
-    },
-    { 
-      id: 3, 
-      username: "TourneyHost", 
-      email: "host@example.com", 
-      reason: "Professional esports organizer working with major brands", 
-      status: "Approved", 
-      date: "2024-01-28",
-      bgmiId: "HST345678",
-      experience: "5 years"
-    },
-    { 
-      id: 4, 
-      username: "GameMaster", 
-      email: "master@example.com", 
-      reason: "Former professional player turned tournament coordinator", 
-      status: "Rejected", 
-      date: "2024-01-27",
-      bgmiId: "MST901234",
-      experience: "4 years"
-    },
-  ];
-
-  const pendingRequests = mockAdminRequests.filter(req => req.status === "Pending");
+  const pendingRequests = requests.filter(req => req.status === "pending");
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -122,7 +103,7 @@ const SystemAdminRequests = () => {
                   <Clock className="h-3 w-3 mr-1" />
                   {pendingRequests.length} Pending
                 </Badge>
-                <Button variant="outline">
+                <Button variant="outline" onClick={handleRefresh}>
                   <RefreshCw className="h-4 w-4" />
                   Refresh
                 </Button>
@@ -154,7 +135,7 @@ const SystemAdminRequests = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Requests</p>
-                    <p className="text-2xl font-bold">{mockAdminRequests.length}</p>
+                    <p className="text-2xl font-bold">{requests.length}</p>
                   </div>
                   <UserCheck className="h-8 w-8 text-primary" />
                 </div>
@@ -179,7 +160,7 @@ const SystemAdminRequests = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Approved</p>
                     <p className="text-2xl font-bold text-success">
-                      {mockAdminRequests.filter(req => req.status === "Approved").length}
+                      {requests.filter(req => req.status === "approved").length}
                     </p>
                   </div>
                   <CheckCircle className="h-8 w-8 text-success" />
@@ -193,7 +174,7 @@ const SystemAdminRequests = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Rejected</p>
                     <p className="text-2xl font-bold text-destructive">
-                      {mockAdminRequests.filter(req => req.status === "Rejected").length}
+                      {requests.filter(req => req.status === "rejected").length}
                     </p>
                   </div>
                   <XCircle className="h-8 w-8 text-destructive" />
@@ -204,7 +185,7 @@ const SystemAdminRequests = () => {
 
           {/* Requests List */}
           <div className="space-y-4">
-            {mockAdminRequests
+            {requests
               .filter(request => statusFilter === "All" || request.status === statusFilter)
               .map((request) => (
               <Card key={request.id}>
@@ -214,10 +195,10 @@ const SystemAdminRequests = () => {
                       <div className="flex items-center gap-3 mb-3">
                         <h3 className="text-lg font-semibold">{request.username}</h3>
                         <Badge variant={
-                          request.status === "Pending" ? "secondary" :
-                          request.status === "Approved" ? "default" : "destructive"
+                          request.status === "pending" ? "secondary" :
+                          request.status === "approved" ? "default" : "destructive"
                         }>
-                          {request.status}
+                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-4">
@@ -243,7 +224,7 @@ const SystemAdminRequests = () => {
                         <p className="mt-1 text-sm">{request.reason}</p>
                       </div>
                     </div>
-                    {request.status === "Pending" && (
+                    {request.status === "pending" && (
                       <div className="flex gap-2 ml-4">
                         <Button 
                           variant="default" 
@@ -263,7 +244,7 @@ const SystemAdminRequests = () => {
                         </Button>
                       </div>
                     )}
-                    {request.status === "Approved" && (
+                    {request.status === "approved" && (
                       <div className="flex gap-2 ml-4">
                         <Button 
                           variant="outline" 
@@ -281,7 +262,7 @@ const SystemAdminRequests = () => {
             ))}
           </div>
 
-          {mockAdminRequests.length === 0 && (
+          {requests.length === 0 && (
             <Card>
               <CardContent className="p-8 text-center">
                 <UserCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
