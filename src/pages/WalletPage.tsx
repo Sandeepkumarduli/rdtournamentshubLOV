@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { RefreshCw, Wallet, CreditCard, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { RefreshCw, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import WalletBalance from '@/components/WalletBalance';
+import WalletDialog from '@/components/WalletDialog';
+import WalletTransaction from '@/components/WalletTransaction';
 const WalletPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [addAmount, setAddAmount] = useState('');
@@ -19,19 +19,19 @@ const WalletPage = () => {
   const currentBalance = userData.wallet?.balance || 100;
   const transactions = [{
     id: 1,
-    type: 'credit',
+    type: 'credit' as const,
     amount: 100,
     description: 'Welcome Bonus',
     date: '2024-01-15'
   }, {
     id: 2,
-    type: 'debit',
+    type: 'debit' as const,
     amount: 50,
     description: 'Tournament Entry - BGMI Pro League',
     date: '2024-01-16'
   }, {
     id: 3,
-    type: 'credit',
+    type: 'credit' as const,
     amount: 200,
     description: 'Prize Money - Squad Showdown',
     date: '2024-01-17'
@@ -131,8 +131,8 @@ const WalletPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Wallet</h1>
-          <p className="text-muted-foreground">Manage your rdCoins and transactions</p>
+          <h1 className="text-4xl font-bold">Wallet</h1>
+          <p className="text-lg text-muted-foreground">Manage your rdCoins and transactions</p>
         </div>
         <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -141,82 +141,36 @@ const WalletPage = () => {
       </div>
 
       {/* Wallet Balance Card */}
-      <Card className="gaming-card-gold">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wallet className="h-6 w-6 text-gaming-gold" />
-            Current Balance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold text-gaming-gold mb-2">
-            {currentBalance} rdCoins
-          </div>
-          <p className="text-muted-foreground mb-6">
-            = ₹{currentBalance} (1 rdCoin = ₹1)
-          </p>
-          <div className="flex gap-4">
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="rdcoin" className="flex-1">
-                  <ArrowUpCircle className="h-4 w-4" />
-                  Add Funds
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Funds to Wallet</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="addAmount" className="px-0 py-0 my-[10px]">Amount (₹)</Label>
-                    <Input id="addAmount" type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)} placeholder="Enter amount (min ₹10)" min="10" className="my-px" />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleAddFunds} className="flex-1">
-                      Add Funds
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+      <WalletBalance balance={currentBalance}>
+        <WalletDialog
+          type="add"
+          isOpen={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          amount={addAmount}
+          onAmountChange={setAddAmount}
+          onConfirm={handleAddFunds}
+        >
+          <Button variant="rdcoin" className="flex-1">
+            <ArrowUpCircle className="h-4 w-4" />
+            Add Funds
+          </Button>
+        </WalletDialog>
 
-            <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="flex-1">
-                  <ArrowDownCircle className="h-4 w-4" />
-                  Withdraw
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Withdraw Funds</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="withdrawAmount">Amount (₹)</Label>
-                    <Input id="withdrawAmount" type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="Enter amount (min ₹50)" min="50" max={currentBalance} />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Available: ₹{currentBalance}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleWithdraw} className="flex-1">
-                      Withdraw
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsWithdrawDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardContent>
-      </Card>
+        <WalletDialog
+          type="withdraw"
+          isOpen={isWithdrawDialogOpen}
+          onOpenChange={setIsWithdrawDialogOpen}
+          amount={withdrawAmount}
+          onAmountChange={setWithdrawAmount}
+          onConfirm={handleWithdraw}
+          currentBalance={currentBalance}
+        >
+          <Button variant="outline" className="flex-1">
+            <ArrowDownCircle className="h-4 w-4" />
+            Withdraw
+          </Button>
+        </WalletDialog>
+      </WalletBalance>
 
       {/* Transaction History */}
       <Card className="gaming-card">
@@ -225,18 +179,9 @@ const WalletPage = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {transactions.map(transaction => <div key={transaction.id} className="flex justify-between items-center p-3 rounded-lg bg-muted/20">
-                <div className="flex items-center gap-3">
-                  {transaction.type === 'credit' ? <ArrowUpCircle className="h-5 w-5 text-success" /> : <ArrowDownCircle className="h-5 w-5 text-destructive" />}
-                  <div>
-                    <p className="font-medium">{transaction.description}</p>
-                    <p className="text-sm text-muted-foreground">{transaction.date}</p>
-                  </div>
-                </div>
-                <div className={`font-semibold ${transaction.type === 'credit' ? 'text-success' : 'text-destructive'}`}>
-                  {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount}
-                </div>
-              </div>)}
+            {transactions.map(transaction => (
+              <WalletTransaction key={transaction.id} transaction={transaction} />
+            ))}
           </div>
         </CardContent>
       </Card>

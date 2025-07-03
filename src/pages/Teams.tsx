@@ -163,8 +163,8 @@ const Teams = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Teams</h1>
-          <p className="text-muted-foreground">Create and manage your gaming teams</p>
+          <h1 className="text-4xl font-bold">My Teams</h1>
+          <p className="text-lg text-muted-foreground">Create and manage your gaming teams</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
@@ -178,7 +178,7 @@ const Teams = () => {
       <div className="flex gap-4">
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="gaming">
+            <Button variant="default">
               <Plus className="h-4 w-4" />
               Create Team
             </Button>
@@ -211,7 +211,7 @@ const Teams = () => {
 
         <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="gaming-outline">
+            <Button variant="outline">
               <UserPlus className="h-4 w-4" />
               Join Team
             </Button>
@@ -254,10 +254,10 @@ const Teams = () => {
                 Create a team or join an existing one to start competing in tournaments.
               </p>
               <div className="flex gap-2 justify-center">
-                <Button variant="gaming" onClick={() => setIsCreateDialogOpen(true)}>
+                <Button variant="default" onClick={() => setIsCreateDialogOpen(true)}>
                   Create Team
                 </Button>
-                <Button variant="gaming-outline" onClick={() => setIsJoinDialogOpen(true)}>
+                <Button variant="outline" onClick={() => setIsJoinDialogOpen(true)}>
                   Join Team
                 </Button>
               </div>

@@ -18,7 +18,7 @@ const buttonVariants = cva(
         gaming: "bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 shadow-lg transition-all duration-300",
         "gaming-outline": "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300",
         hero: "bg-gradient-to-r from-primary via-accent to-primary-glow text-primary-foreground shadow-2xl transition-all duration-300 font-bold",
-        rdcoin: "bg-gradient-to-r from-gaming-gold to-rdcoin text-rdcoin-foreground shadow-lg transition-all duration-300 font-semibold",
+        rdcoin: "bg-gaming-gold text-rdcoin-foreground shadow-lg transition-all duration-300 font-semibold",
         success: "bg-success text-success-foreground hover:bg-success/90",
         warning: "bg-warning text-warning-foreground hover:bg-warning/90",
       },

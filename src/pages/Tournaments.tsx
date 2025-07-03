@@ -79,8 +79,8 @@ const Tournaments = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Tournaments</h1>
-          <p className="text-muted-foreground">View and manage your tournament registrations</p>
+          <h1 className="text-4xl font-bold">My Tournaments</h1>
+          <p className="text-lg text-muted-foreground">View and manage your tournament registrations</p>
         </div>
         <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -189,27 +189,29 @@ const Tournaments = () => {
                   </div>
                   
                   {/* Room Details */}
-                  <div className="space-y-3 pt-2 border-t border-border">
-                    <div className="space-y-2">
-                      <Label htmlFor={`roomId-${tournament.id}`} className="text-sm font-medium">Room ID</Label>
-                      <Input
-                        id={`roomId-${tournament.id}`}
-                        value={tournament.roomId}
-                        placeholder="Will be provided by admin"
-                        disabled
-                        className="text-center font-mono"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor={`password-${tournament.id}`} className="text-sm font-medium">Password</Label>
-                      <Input
-                        id={`password-${tournament.id}`}
-                        value={tournament.password}
-                        placeholder="Will be provided by admin"
-                        disabled
-                        className="text-center font-mono"
-                      />
+                  <div className="pt-2 border-t border-border">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={`roomId-${tournament.id}`} className="font-medium">Room ID</Label>
+                        <Input
+                          id={`roomId-${tournament.id}`}
+                          value={tournament.roomId}
+                          placeholder="Will be provided by admin"
+                          disabled
+                          className="text-center font-mono"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor={`password-${tournament.id}`} className="font-medium">Password</Label>
+                        <Input
+                          id={`password-${tournament.id}`}
+                          value={tournament.password}
+                          placeholder="Will be provided by admin"
+                          disabled
+                          className="text-center font-mono"
+                        />
+                      </div>
                     </div>
                   </div>
                 </CardContent>

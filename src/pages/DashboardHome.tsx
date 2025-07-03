@@ -125,8 +125,8 @@ const DashboardHome = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Ready for some action?</p>
+          <h1 className="text-4xl font-bold">Dashboard</h1>
+          <p className="text-lg text-muted-foreground">Welcome back! Ready for some action?</p>
         </div>
         <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -276,7 +276,7 @@ const DashboardHome = () => {
                   className="w-full"
                   onClick={() => handleJoinTournament(tournament)}
                 >
-                  {tournament.status === "Live" ? "Join Now" : "Register"}
+                  Join Now
                 </Button>
               </CardContent>
             </Card>

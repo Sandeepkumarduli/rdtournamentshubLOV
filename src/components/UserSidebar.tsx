@@ -29,7 +29,7 @@ const UserSidebar = () => {
           <GamepadIcon className="h-8 w-8 text-gaming-gold" />
           <div>
             <h1 className="text-xl font-bold">BGMI Hub</h1>
-            <p className="text-sm text-muted-foreground">Tournament Platform</p>
+            <p className="text-muted-foreground">Tournament Platform</p>
           </div>
         </div>
       </div>

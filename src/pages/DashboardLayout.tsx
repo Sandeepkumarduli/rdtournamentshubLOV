@@ -57,7 +57,7 @@ const DashboardLayout = () => {
               <div className="flex items-center gap-4">
                 <div>
                   <h1 className="text-xl font-bold">Welcome back, {userData?.username}!</h1>
-                  <p className="text-sm text-muted-foreground">Ready for some action?</p>
+                  <p className="text-muted-foreground">Ready for some action?</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
