@@ -28,6 +28,9 @@ const SystemAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Call hooks first, before any conditional logic
+  const { stats: systemMetrics, loading: statsLoading, refetch } = useSystemStats();
 
   useEffect(() => {
     const auth = localStorage.getItem("userAuth");
@@ -52,12 +55,6 @@ const SystemAdminDashboard = () => {
       description: "Latest system metrics loaded",
     });
   };
-
-  if (loading) {
-    return <LoadingSpinner fullScreen />;
-  }
-
-  const { stats: systemMetrics, loading: statsLoading, refetch } = useSystemStats();
 
   const handleRefresh = () => {
     refetch();

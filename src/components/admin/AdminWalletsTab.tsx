@@ -4,38 +4,36 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, ArrowUpCircle, ArrowDownCircle, Search, Send, Users } from 'lucide-react';
+import { RefreshCw, ArrowUpCircle, ArrowDownCircle, Search, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminWallets } from '@/hooks/useAdminWallets';
+import LoadingSpinner from '@/components/LoadingSpinner';
+
 interface AdminWalletsTabProps {
   onRefresh: () => void;
 }
-const AdminWalletsTab = ({
-  onRefresh
-}: AdminWalletsTabProps) => {
-  const [rdBalance] = useState(50000);
+
+const AdminWalletsTab = ({ onRefresh }: AdminWalletsTabProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
   const [amount, setAmount] = useState('');
   const [sendType, setSendType] = useState('individual');
-  const {
-    toast
-  } = useToast();
-  const mockUsers = [{
-    id: 1,
-    username: "PlayerOne",
-    wallet: 450
-  }, {
-    id: 2,
-    username: "GamerPro",
-    wallet: 1200
-  }, {
-    id: 3,
-    username: "SquadLeader",
-    wallet: 800
-  }];
-  const filteredUsers = mockUsers.filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()));
-  const handleSendMoney = () => {
-    if (!selectedUser || !amount) {
+  const { toast } = useToast();
+  
+  const { wallets, orgBalance, loading, refetch, sendMoney } = useAdminWallets();
+
+  const filteredUsers = wallets.filter(user => 
+    user.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleRefresh = () => {
+    refetch();
+    onRefresh();
+  };
+
+  const handleSendMoney = async () => {
+    if (!selectedUserId || !amount) {
       toast({
         title: "Missing Information",
         description: "Please select a user and enter an amount",
@@ -43,18 +41,34 @@ const AdminWalletsTab = ({
       });
       return;
     }
-    toast({
-      title: "Money Sent Successfully",
-      description: `₹${amount} sent to ${selectedUser}`
-    });
-    setSearchTerm('');
-    setSelectedUser('');
-    setAmount('');
+
+    const result = await sendMoney(selectedUserId, parseInt(amount), sendType as 'individual' | 'team');
+    
+    if (result.success) {
+      toast({
+        title: "Money Sent Successfully",
+        description: `₹${amount} sent to ${selectedUser}`
+      });
+      setSearchTerm('');
+      setSelectedUser('');
+      setSelectedUserId('');
+      setAmount('');
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to send money",
+        variant: "destructive"
+      });
+    }
   };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Wallet Management</h2>
-        <Button variant="outline" onClick={onRefresh}>
+        <Button variant="outline" onClick={handleRefresh}>
           <RefreshCw className="h-4 w-4" />
           Refresh Wallets
         </Button>
@@ -68,8 +82,7 @@ const AdminWalletsTab = ({
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-gaming-gold/10 rounded-lg">
             <div>
-              <p className="text-sm text-muted-foreground">Available Balance</p>
-              <p className="text-2xl font-bold text-gaming-gold">₹{rdBalance.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gaming-gold">₹{orgBalance.toLocaleString()}</p>
             </div>
             <div className="flex gap-2">
               <Button variant="rdcoin">
@@ -115,12 +128,23 @@ const AdminWalletsTab = ({
           {searchTerm && <div className="space-y-2">
               <Label>Select User/Team</Label>
               <div className="max-h-32 overflow-y-auto space-y-1">
-                {filteredUsers.map(user => <div key={user.id} className={`p-2 rounded cursor-pointer transition-colors ${selectedUser === user.username ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`} onClick={() => setSelectedUser(user.username)}>
+                {filteredUsers.map(user => (
+                  <div 
+                    key={user.id} 
+                    className={`p-2 rounded cursor-pointer transition-colors ${
+                      selectedUser === user.username ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
+                    }`} 
+                    onClick={() => {
+                      setSelectedUser(user.username);
+                      setSelectedUserId(user.id);
+                    }}
+                  >
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{user.username}</span>
                       <span className="text-sm text-muted-foreground">₹{user.wallet}</span>
                     </div>
-                  </div>)}
+                  </div>
+                ))}
               </div>
             </div>}
 
@@ -138,7 +162,8 @@ const AdminWalletsTab = ({
 
       {/* User Wallets List */}
       <div className="grid gap-4">
-        {mockUsers.map(user => <Card key={user.id} className="gaming-card my-0 py-0">
+        {wallets.map(user => (
+          <Card key={user.id} className="gaming-card my-0 py-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -150,13 +175,14 @@ const AdminWalletsTab = ({
                   </div>
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
                     <div>Balance: ₹{user.wallet}</div>
-                    <div>Status: Active</div>
-                    <div>Last Activity: Recent</div>
+                    <div>Status: {user.status}</div>
+                    <div>Last Activity: {user.lastActivity}</div>
                   </div>
                 </div>
               </div>
             </CardContent>
-          </Card>)}
+          </Card>
+        ))}
       </div>
     </div>;
 };

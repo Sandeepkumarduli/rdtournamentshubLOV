@@ -5,11 +5,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Edit, Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminStats } from '@/hooks/useAdminStats';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const AdminGroupTab = () => {
   const [isEditingOrgName, setIsEditingOrgName] = useState(false);
-  const [orgName, setOrgName] = useState("FireStorm ORG");
-  const [tempOrgName, setTempOrgName] = useState("FireStorm ORG");
+  const { stats, loading } = useAdminStats();
+  
+  // Get organization name from localStorage
+  const auth = localStorage.getItem("userAuth");
+  const adminData = auth ? JSON.parse(auth) : null;
+  const defaultOrgName = adminData?.organization || "FireStorm ORG";
+  
+  const [orgName, setOrgName] = useState(defaultOrgName);
+  const [tempOrgName, setTempOrgName] = useState(defaultOrgName);
   const { toast } = useToast();
 
   const handleSaveOrgName = () => {
@@ -25,6 +34,10 @@ const AdminGroupTab = () => {
     setTempOrgName(orgName);
     setIsEditingOrgName(false);
   };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="space-y-6">
@@ -67,15 +80,15 @@ const AdminGroupTab = () => {
             </div>
             <div className="space-y-2">
               <Label>Admin Username</Label>
-              <Input value="AdminStorm" readOnly />
+              <Input value={adminData?.username || "Unknown"} readOnly />
             </div>
             <div className="space-y-2">
               <Label>Total Members</Label>
-              <Input value="156" readOnly />
+              <Input value={stats.orgMembers.toString()} readOnly />
             </div>
             <div className="space-y-2">
               <Label>Active Tournaments</Label>
-              <Input value="3" readOnly />
+              <Input value={stats.orgTournaments.toString()} readOnly />
             </div>
           </CardContent>
         </Card>
@@ -86,20 +99,20 @@ const AdminGroupTab = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Total Prize Pool Distributed:</span>
-              <span className="font-semibold text-gaming-gold">₹2,45,000</span>
+              <span className="text-muted-foreground">Total Prize Pool:</span>
+              <span className="font-semibold text-gaming-gold">₹{stats.totalPrizePool.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Tournaments Completed:</span>
-              <span className="font-semibold">12</span>
+              <span className="font-semibold">{stats.orgTournaments}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Success Rate:</span>
-              <span className="font-semibold text-success">95%</span>
+              <span className="text-muted-foreground">Pending Reviews:</span>
+              <span className="font-semibold text-warning">{stats.pendingReviews}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Member Satisfaction:</span>
-              <span className="font-semibold text-primary">4.8/5</span>
+              <span className="text-muted-foreground">Organization Status:</span>
+              <span className="font-semibold text-success">Active</span>
             </div>
           </CardContent>
         </Card>
