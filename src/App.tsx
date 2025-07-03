@@ -11,6 +11,11 @@ import SystemAdminLogin from "./pages/SystemAdminLogin";
 import DashboardLayout from "./pages/DashboardLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import SystemAdminDashboard from "./pages/SystemAdminDashboard";
+import SystemUserManagement from "./pages/SystemUserManagement";
+import SystemTransactions from "./pages/SystemTransactions";
+import SystemAdminRequests from "./pages/SystemAdminRequests";
+import SystemTeams from "./pages/SystemTeams";
+import SystemReports from "./pages/SystemReports";
 import NotFound from "./pages/NotFound";
 import DashboardHome from "./pages/DashboardHome";
 import Tournaments from "./pages/Tournaments";
@@ -43,6 +48,11 @@ const App = () => (
           </Route>
           <Route path="/org-dashboard" element={<AdminDashboard />} />
           <Route path="/system-admin-dashboard" element={<SystemAdminDashboard />} />
+          <Route path="/system-users" element={<SystemUserManagement />} />
+          <Route path="/system-transactions" element={<SystemTransactions />} />
+          <Route path="/system-admin-requests" element={<SystemAdminRequests />} />
+          <Route path="/system-teams" element={<SystemTeams />} />
+          <Route path="/system-reports" element={<SystemReports />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

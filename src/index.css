@@ -162,7 +162,7 @@
   }
   
   .hero-text {
-    @apply text-4xl md:text-6xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+    @apply text-4xl md:text-6xl font-black text-primary;
   }
   
   .nav-link {

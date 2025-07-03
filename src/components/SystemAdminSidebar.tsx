@@ -21,28 +21,28 @@ const sidebarItems = [
   },
   {
     title: "User Management",
-    url: "/system-admin-dashboard?tab=users",
+    url: "/system-users",
     icon: Users,
   },
   {
     title: "Transactions",
-    url: "/system-admin-dashboard?tab=transactions", 
+    url: "/system-transactions", 
     icon: DollarSign,
   },
   {
     title: "Admin Requests",
-    url: "/system-admin-dashboard?tab=admin-requests",
+    url: "/system-admin-requests",
     icon: UserCheck,
   },
   {
-    title: "Analytics",
-    url: "/system-admin-dashboard?tab=analytics",
-    icon: Activity,
+    title: "Teams",
+    url: "/system-teams",
+    icon: Shield,
   },
   {
-    title: "System Config",
-    url: "/system-admin-dashboard?tab=system",
-    icon: Settings,
+    title: "Reports",
+    url: "/system-reports",
+    icon: Activity,
   }
 ];
 
@@ -51,10 +51,7 @@ const SystemAdminSidebar = () => {
   const currentPath = location.pathname + location.search;
 
   const isActive = (path: string) => {
-    if (path === "/system-admin-dashboard" && location.pathname === "/system-admin-dashboard" && !location.search) {
-      return true;
-    }
-    return currentPath === path;
+    return location.pathname === path;
   };
 
   return (
