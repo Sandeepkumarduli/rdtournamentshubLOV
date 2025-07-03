@@ -8,16 +8,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Send, Users, MessageSquare, Trophy, Search, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ChatDialog from '@/components/ChatDialog';
-
-interface Group {
-  id: number;
-  orgName: string;
-  adminName: string;
-  memberCount: number;
-  activeTournaments: number;
-  totalPrizePool: string;
-  joinedDate: string;
-}
+import { useGroups } from '@/hooks/useGroups';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Message {
   id: number;
@@ -28,33 +20,16 @@ interface Message {
 }
 
 const Groups = () => {
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const { groups, loading } = useGroups();
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [chatAdmin, setChatAdmin] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Mock groups data
-  const mockGroups: Group[] = [
-    {
-      id: 1,
-      orgName: "FireStorm ORG",
-      adminName: "AdminStorm",
-      memberCount: 156,
-      activeTournaments: 3,
-      totalPrizePool: "₹2,45,000",
-      joinedDate: "2024-01-15"
-    },
-    {
-      id: 2,
-      orgName: "Thunder Eagles",
-      adminName: "EagleAdmin",
-      memberCount: 89,
-      activeTournaments: 2,
-      totalPrizePool: "₹1,50,000",
-      joinedDate: "2024-01-10"
-    }
-  ];
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
 
   // Mock messages for selected group
   const mockMessages: Message[] = [
@@ -81,8 +56,8 @@ const Groups = () => {
     }
   ];
 
-  const filteredGroups = mockGroups.filter(group =>
-    group.orgName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredGroups = groups.filter(group =>
+    group.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSendMessage = () => {
@@ -90,13 +65,13 @@ const Groups = () => {
 
     toast({
       title: "Message Sent",
-      description: `Message sent to ${selectedGroup.orgName}`,
+      description: `Message sent to ${selectedGroup.name}`,
     });
     
     setMessage('');
   };
 
-  const handleJoinGroup = (group: Group) => {
+  const handleJoinGroup = (group: any) => {
     setSelectedGroup(group);
   };
 
@@ -129,29 +104,35 @@ const Groups = () => {
             <CardContent className="p-0">
               <ScrollArea className="h-[500px]">
                 <div className="p-6 pt-0 space-y-3">
-                  {filteredGroups.map((group) => (
-                    <Card 
-                      key={group.id} 
-                      className={`cursor-pointer transition-colors ${
-                        selectedGroup?.id === group.id ? 'bg-primary/20 border-primary' : 'hover:bg-accent'
-                      }`}
-                      onClick={() => handleJoinGroup(group)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-semibold">{group.orgName}</h3>
-                            <Badge variant="outline">{group.memberCount} members</Badge>
+                  {filteredGroups.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No tournament groups found. Join tournaments to access their groups.</p>
+                    </div>
+                  ) : (
+                    filteredGroups.map((group) => (
+                      <Card 
+                        key={group.id} 
+                        className={`cursor-pointer transition-colors ${
+                          selectedGroup?.id === group.id ? 'bg-primary/20 border-primary' : 'hover:bg-accent'
+                        }`}
+                        onClick={() => handleJoinGroup(group)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-semibold">{group.name}</h3>
+                              <Badge variant="outline">{group.member_count} members</Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              <div>Tournament: {group.tournament?.name}</div>
+                              <div className="text-gaming-gold">Prize Pool: ₹{group.tournament?.prize_pool}</div>
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            <div>Admin: {group.adminName}</div>
-                            <div>Active Tournaments: {group.activeTournaments}</div>
-                            <div className="text-gaming-gold">Total Prize: {group.totalPrizePool}</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </ScrollArea>
             </CardContent>
@@ -166,11 +147,11 @@ const Groups = () => {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
-                    {selectedGroup.orgName} Chat
+                    {selectedGroup.name} Chat
                   </CardTitle>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span className="text-sm">{selectedGroup.memberCount} members</span>
+                    <span className="text-sm">{selectedGroup.member_count} members</span>
                   </div>
                 </div>
               </CardHeader>

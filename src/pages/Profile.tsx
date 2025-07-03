@@ -5,21 +5,43 @@ import { useNavigate } from 'react-router-dom';
 import ProfileCard from '@/components/ProfileCard';
 import AccountStats from '@/components/AccountStats';
 import DeleteAccount from '@/components/DeleteAccount';
+import ChangePasswordDialog from '@/components/ChangePasswordDialog';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
+import { useWallet } from '@/hooks/useWallet';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { Key } from 'lucide-react';
 
 const Profile = () => {
-  const userData = JSON.parse(localStorage.getItem('userAuth') || '{}');
-  
+  const { user } = useAuth();
+  const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const { balance } = useWallet();
   const [formData, setFormData] = useState({
-    username: userData.username || '',
-    email: userData.email || '',
-    phone: userData.phone || '',
-    bgmiId: userData.bgmiId || ''
+    username: profile?.display_name || '',
+    email: profile?.email || '',
+    phone: '',
+    bgmiId: profile?.bgmi_id || ''
   });
   
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (profile) {
+      setFormData({
+        username: profile.display_name || '',
+        email: profile.email || '',
+        phone: '',
+        bgmiId: profile.bgmi_id || ''
+      });
+    }
+  }, [profile]);
+
+  if (profileLoading) {
+    return <LoadingSpinner fullScreen />;
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -28,7 +50,7 @@ const Profile = () => {
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Basic validation
     if (!formData.email || !formData.email.includes('@')) {
       toast({
@@ -39,21 +61,20 @@ const Profile = () => {
       return;
     }
 
-    if (formData.phone && formData.phone.length < 10) {
+    const { error } = await updateProfile({
+      display_name: formData.username,
+      email: formData.email,
+      bgmi_id: formData.bgmiId
+    });
+
+    if (error) {
       toast({
-        title: "Invalid Phone",
-        description: "Please enter a valid phone number",
+        title: "Error",
+        description: typeof error === 'string' ? error : error.message,
         variant: "destructive"
       });
       return;
     }
-
-    // Update localStorage
-    const updatedUserData = {
-      ...userData,
-      ...formData
-    };
-    localStorage.setItem('userAuth', JSON.stringify(updatedUserData));
 
     setIsEditing(false);
     toast({
@@ -65,16 +86,16 @@ const Profile = () => {
   const handleCancel = () => {
     // Reset form data to original values
     setFormData({
-      username: userData.username || '',
-      email: userData.email || '',
-      phone: userData.phone || '',
-      bgmiId: userData.bgmiId || ''
+      username: profile?.display_name || '',
+      email: profile?.email || '',
+      phone: '',
+      bgmiId: profile?.bgmi_id || ''
     });
     setIsEditing(false);
   };
 
-  const handleDeleteAccount = () => {
-    const currentBalance = userData.wallet?.balance || 0;
+  const handleDeleteAccount = async () => {
+    const currentBalance = balance?.balance || 0;
     
     if (currentBalance > 0) {
       toast({
@@ -86,14 +107,12 @@ const Profile = () => {
       return;
     }
 
-    // Delete account (clear localStorage and redirect)
-    localStorage.removeItem('userAuth');
+    // Note: In a real app, you'd implement proper account deletion
     setIsDeleteDialogOpen(false);
     toast({
-      title: "Account Deleted",
-      description: "Your account has been permanently deleted.",
+      title: "Account Deletion",
+      description: "Contact support to delete your account.",
     });
-    navigate('/');
   };
 
   return (
@@ -118,6 +137,13 @@ const Profile = () => {
             </Button>
           </div>
         )}
+        
+        <ChangePasswordDialog>
+          <Button variant="outline" size="sm">
+            <Key className="h-4 w-4 mr-2" />
+            Change Password
+          </Button>
+        </ChangePasswordDialog>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -127,7 +153,7 @@ const Profile = () => {
           onInputChange={handleInputChange}
         />
 
-        <AccountStats balance={userData.wallet?.balance || 100}>
+        <AccountStats balance={balance?.balance || 0}>
           <DeleteAccount
             isOpen={isDeleteDialogOpen}
             onOpenChange={setIsDeleteDialogOpen}

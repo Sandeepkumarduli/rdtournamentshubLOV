@@ -136,11 +136,48 @@ export const useTeams = () => {
     return { data: team, error: null };
   };
 
+  const addTeamMember = async (teamId: string, userIdToAdd: string) => {
+    if (!user) return { error: 'No user found' };
+
+    // Check if current user is team leader
+    const { data: teamData } = await supabase
+      .from('teams')
+      .select('leader_id')
+      .eq('id', teamId)
+      .single();
+
+    if (!teamData || teamData.leader_id !== user.id) {
+      return { error: 'Only team leader can add members' };
+    }
+
+    // Check team member limit (5 members max)
+    const { data: currentMembers } = await supabase
+      .from('team_members')
+      .select('id')
+      .eq('team_id', teamId);
+
+    if (currentMembers && currentMembers.length >= 5) {
+      return { error: 'Team is full (maximum 5 members)' };
+    }
+
+    // Add member
+    const { error } = await supabase
+      .from('team_members')
+      .insert([{
+        team_id: teamId,
+        user_id: userIdToAdd,
+        role: 'member',
+      }]);
+
+    return { error };
+  };
+
   return {
     teams,
     userTeam,
     teamMembers,
     loading,
     createTeam,
+    addTeamMember,
   };
 };

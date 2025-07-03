@@ -6,90 +6,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { RefreshCw, Trophy, Users, Calendar, Target, Filter, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTournaments } from '@/hooks/useTournaments';
+import { useTeams } from '@/hooks/useTeams';
+import { useAuth } from '@/hooks/useAuth';
+import LoadingSpinner from '@/components/LoadingSpinner';
 const DashboardHome = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('');
   const [timeFilter, setTimeFilter] = useState('');
   const { toast } = useToast();
-  const mockTournaments = [{
-    id: 1,
-    name: "BGMI Pro League",
-    status: "Live",
-    prize: "₹50,000",
-    participants: 156,
-    maxSlots: 200,
-    type: "Squad",
-    minTeamSize: 4,
-    entryFee: 100,
-    date: "2024-01-20",
-    time: "18:00"
-  }, {
-    id: 2,
-    name: "Weekly Championship",
-    status: "Upcoming",
-    prize: "₹25,000",
-    participants: 89,
-    maxSlots: 150,
-    type: "Duo",
-    minTeamSize: 2,
-    entryFee: 50,
-    date: "2024-01-25",
-    time: "20:00"
-  }, {
-    id: 3,
-    name: "Solo Masters",
-    status: "Upcoming",
-    prize: "₹15,000",
-    participants: 200,
-    maxSlots: 300,
-    type: "Solo",
-    minTeamSize: 0,
-    entryFee: 25,
-    date: "2024-01-22",
-    time: "16:00"
-  }, {
-    id: 4,
-    name: "Squad Elimination",
-    status: "Live",
-    prize: "₹75,000",
-    participants: 120,
-    maxSlots: 160,
-    type: "Squad",
-    minTeamSize: 4,
-    entryFee: 150,
-    date: "2024-01-20",
-    time: "19:00"
-  }, {
-    id: 5,
-    name: "Duo Challenge",
-    status: "Upcoming",
-    prize: "₹30,000",
-    participants: 64,
-    maxSlots: 100,
-    type: "Duo",
-    minTeamSize: 2,
-    entryFee: 75,
-    date: "2024-01-23",
-    time: "17:30"
-  }, {
-    id: 6,
-    name: "Solo Championship",
-    status: "Upcoming",
-    prize: "₹20,000",
-    participants: 180,
-    maxSlots: 250,
-    type: "Solo",
-    minTeamSize: 0,
-    entryFee: 40,
-    date: "2024-01-24",
-    time: "15:00"
-  }];
+  const { tournaments, loading: tournamentsLoading } = useTournaments();
+  const { teams, userTeam, loading: teamsLoading } = useTeams();
+  const { user } = useAuth();
 
-  const filteredTournaments = mockTournaments.filter(tournament => {
+  if (tournamentsLoading || teamsLoading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  const filteredTournaments = tournaments.filter(tournament => {
     if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
-    if (dateFilter && tournament.date !== dateFilter) return false;
-    if (timeFilter && tournament.time !== timeFilter) return false;
+    if (dateFilter && tournament.start_date && new Date(tournament.start_date).toISOString().split('T')[0] !== dateFilter) return false;
     return true;
   });
 
@@ -107,15 +44,17 @@ const DashboardHome = () => {
       description: "Latest tournament information loaded"
     });
   };
-  const handleJoinTournament = (tournament: any) => {
-    if (tournament.type === "Squad" && tournament.minTeamSize > 0) {
+  const handleJoinTournament = async (tournament: any) => {
+    if (!user || !userTeam) {
       toast({
         title: "Team Required",
-        description: `You need a team with at least ${tournament.minTeamSize} members to join this ${tournament.type} tournament.`,
+        description: "You need to create or join a team first to participate in tournaments.",
         variant: "destructive"
       });
       return;
     }
+    
+    // Here you would implement the actual tournament registration
     toast({
       title: "Tournament Joined",
       description: `Successfully registered for ${tournament.name}`
@@ -141,7 +80,7 @@ const DashboardHome = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Active Tournaments</p>
-                <p className="text-2xl font-bold text-slate-50">3</p>
+                <p className="text-2xl font-bold text-slate-50">{tournaments.filter(t => t.status === 'active').length}</p>
               </div>
               <Trophy className="h-8 w-8 text-primary" />
             </div>
@@ -153,7 +92,7 @@ const DashboardHome = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">My Teams</p>
-                <p className="text-2xl font-bold text-slate-50">0</p>
+                <p className="text-2xl font-bold text-slate-50">{userTeam ? 1 : 0}</p>
               </div>
               <Users className="h-8 w-8 text-accent" />
             </div>
@@ -177,7 +116,7 @@ const DashboardHome = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Win Rate</p>
-                <p className="text-2xl font-bold text-warning">0%</p>
+                <p className="text-2xl font-bold text-warning">{userTeam?.wins || 0}%</p>
               </div>
               <Target className="h-8 w-8 text-warning" />
             </div>
@@ -227,66 +166,76 @@ const DashboardHome = () => {
         </div>
         
         {/* Tournament Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTournaments.map(tournament => (
-            <Card key={tournament.id} className="gaming-card h-full">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">{tournament.name}</CardTitle>
-                  <Badge variant={tournament.status === "Live" ? "destructive" : "secondary"}>
-                    {tournament.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Prize Pool:</span>
-                    <span className="font-semibold text-gaming-gold">{tournament.prize}</span>
+        {filteredTournaments.length === 0 ? (
+          <Card className="gaming-card">
+            <CardContent className="p-8 text-center">
+              <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Tournaments Available</h3>
+              <p className="text-muted-foreground">
+                No tournaments match your current filters or there are no active tournaments.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTournaments.map(tournament => (
+              <Card key={tournament.id} className="gaming-card h-full">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold">{tournament.name}</CardTitle>
+                    <Badge variant={tournament.status === "active" ? "destructive" : "secondary"}>
+                      {tournament.status}
+                    </Badge>
                   </div>
-                  
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Date & Time:</span>
-                    <span className="font-medium">{tournament.date} at {tournament.time}</span>
-                  </div>
-                  
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Slots:</span>
-                    <span className="font-medium">{tournament.participants}/{tournament.maxSlots}</span>
-                  </div>
-                  
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Entry Fee:</span>
-                    <span className="font-medium">{tournament.entryFee} rdCoins</span>
-                  </div>
-                  
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Type:</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{tournament.type}</Badge>
-                      {tournament.minTeamSize > 0 && (
-                        <span className="text-xs text-muted-foreground">Min: {tournament.minTeamSize}</span>
-                      )}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Prize Pool:</span>
+                      <span className="font-semibold text-gaming-gold">₹{tournament.prize_pool}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Date & Time:</span>
+                      <span className="font-medium">
+                        {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : 'TBA'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Max Teams:</span>
+                      <span className="font-medium">{tournament.max_teams || 'Unlimited'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Entry Fee:</span>
+                      <span className="font-medium">{tournament.entry_fee} rdCoins</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Game:</span>
+                      <Badge variant="outline">{tournament.game_type}</Badge>
                     </div>
                   </div>
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">ORG:</span>
-                    <span className="font-medium text-primary">FireStorm</span>
-                  </div>
-                </div>
-                
-                <Button 
-                  variant="default" 
-                  className="w-full"
-                  onClick={() => handleJoinTournament(tournament)}
-                >
-                  Join Now
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  
+                  {tournament.description && (
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-sm text-muted-foreground">{tournament.description}</p>
+                    </div>
+                  )}
+                  
+                  <Button 
+                    variant="default" 
+                    className="w-full"
+                    onClick={() => handleJoinTournament(tournament)}
+                  >
+                    Join Now
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>;
 };

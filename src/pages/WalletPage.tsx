@@ -6,36 +6,20 @@ import { useToast } from '@/hooks/use-toast';
 import WalletBalance from '@/components/WalletBalance';
 import WalletDialog from '@/components/WalletDialog';
 import WalletTransaction from '@/components/WalletTransaction';
+import { useWallet } from '@/hooks/useWallet';
+import LoadingSpinner from '@/components/LoadingSpinner';
 const WalletPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [addAmount, setAddAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
-  const {
-    toast
-  } = useToast();
-  const userData = JSON.parse(localStorage.getItem('userAuth') || '{}');
-  const currentBalance = userData.wallet?.balance || 100;
-  const transactions = [{
-    id: 1,
-    type: 'credit' as const,
-    amount: 100,
-    description: 'Welcome Bonus',
-    date: '2024-01-15'
-  }, {
-    id: 2,
-    type: 'debit' as const,
-    amount: 50,
-    description: 'Tournament Entry - BGMI Pro League',
-    date: '2024-01-16'
-  }, {
-    id: 3,
-    type: 'credit' as const,
-    amount: 200,
-    description: 'Prize Money - Squad Showdown',
-    date: '2024-01-17'
-  }];
+  const { toast } = useToast();
+  const { balance, transactions, loading, addTransaction } = useWallet();
+
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -45,7 +29,7 @@ const WalletPage = () => {
       description: "Latest wallet information loaded"
     });
   };
-  const handleAddFunds = () => {
+  const handleAddFunds = async () => {
     const amount = parseFloat(addAmount);
     if (!amount || amount <= 0) {
       toast({
@@ -64,25 +48,26 @@ const WalletPage = () => {
       return;
     }
 
-    // Update user wallet in localStorage
-    const updatedUserData = {
-      ...userData,
-      wallet: {
-        balance: currentBalance + amount
-      }
-    };
-    localStorage.setItem('userAuth', JSON.stringify(updatedUserData));
+    const { error } = await addTransaction('deposit', amount, 'Funds added');
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: typeof error === 'string' ? error : error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setAddAmount('');
     setIsAddDialogOpen(false);
     toast({
       title: "Funds Added",
       description: `₹${amount} added to your wallet successfully`
     });
-
-    // Refresh the page to update balance
-    window.location.reload();
   };
-  const handleWithdraw = () => {
+
+  const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount <= 0) {
       toast({
@@ -92,7 +77,7 @@ const WalletPage = () => {
       });
       return;
     }
-    if (amount > currentBalance) {
+    if (amount > (balance?.balance || 0)) {
       toast({
         title: "Insufficient Balance",
         description: "You don't have enough balance for this withdrawal",
@@ -109,23 +94,23 @@ const WalletPage = () => {
       return;
     }
 
-    // Update user wallet in localStorage
-    const updatedUserData = {
-      ...userData,
-      wallet: {
-        balance: currentBalance - amount
-      }
-    };
-    localStorage.setItem('userAuth', JSON.stringify(updatedUserData));
+    const { error } = await addTransaction('withdrawal', -amount, 'Funds withdrawn');
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: typeof error === 'string' ? error : error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setWithdrawAmount('');
     setIsWithdrawDialogOpen(false);
     toast({
       title: "Withdrawal Successful",
       description: `₹${amount} will be transferred to your bank account within 2-3 business days`
     });
-
-    // Refresh the page to update balance
-    window.location.reload();
   };
   return <div className="space-y-6">
       {/* Header */}
@@ -141,7 +126,7 @@ const WalletPage = () => {
       </div>
 
       {/* Wallet Balance Card */}
-      <WalletBalance balance={currentBalance}>
+      <WalletBalance balance={balance?.balance || 0}>
         <WalletDialog
           type="add"
           isOpen={isAddDialogOpen}
@@ -163,7 +148,7 @@ const WalletPage = () => {
           amount={withdrawAmount}
           onAmountChange={setWithdrawAmount}
           onConfirm={handleWithdraw}
-          currentBalance={currentBalance}
+          currentBalance={balance?.balance || 0}
         >
           <Button variant="outline" className="flex-1">
             <ArrowDownCircle className="h-4 w-4" />
@@ -179,9 +164,22 @@ const WalletPage = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {transactions.map(transaction => (
-              <WalletTransaction key={transaction.id} transaction={transaction} />
-            ))}
+            {transactions.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">No transactions yet</p>
+            ) : (
+              transactions.map(transaction => (
+                <WalletTransaction 
+                  key={transaction.id} 
+                  transaction={{
+                    id: parseInt(transaction.id),
+                    type: transaction.type === 'deposit' ? 'credit' : 'debit',
+                    amount: transaction.amount,
+                    description: transaction.description || 'Transaction',
+                    date: new Date(transaction.created_at).toLocaleDateString()
+                  }}
+                />
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
