@@ -5,8 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, Users, MessageSquare, Trophy, Search } from 'lucide-react';
+import { Send, Users, MessageSquare, Trophy, Search, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import ChatDialog from '@/components/ChatDialog';
 
 interface Group {
   id: number;
@@ -30,6 +31,7 @@ const Groups = () => {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [chatAdmin, setChatAdmin] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Mock groups data
@@ -227,6 +229,14 @@ const Groups = () => {
           )}
         </div>
       </div>
+
+      {/* Chat Dialog */}
+      <ChatDialog
+        isOpen={!!chatAdmin}
+        onClose={() => setChatAdmin(null)}
+        recipientName={chatAdmin || ''}
+        recipientType="admin"
+      />
     </div>
   );
 };
