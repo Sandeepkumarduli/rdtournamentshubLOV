@@ -4,47 +4,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, GamepadIcon, Shield } from "lucide-react";
+import { Eye, EyeOff, GamepadIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { DEFAULT_CREDENTIALS } from "@/config/auth";
+import { useAuth } from "@/hooks/useAuth";
 import LoadingSpinner from "@/components/LoadingSpinner";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: ""
   });
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const { signIn } = useAuth();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (formData.username === DEFAULT_CREDENTIALS.user.username && formData.password === DEFAULT_CREDENTIALS.user.password) {
-      localStorage.setItem("userAuth", JSON.stringify({
-        username: formData.username,
-        role: "user",
-        email: DEFAULT_CREDENTIALS.user.email,
-        wallet: {
-          balance: 100
-        },
-        teams: []
-      }));
+
+    const { data, error } = await signIn(formData.email, formData.password);
+
+    if (error) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else if (data.user) {
       toast({
         title: "Login Successful!",
         description: "Welcome to BGMI Tournament Hub"
       });
       navigate("/dashboard");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Use 1234/1234 for demo access",
-        variant: "destructive"
-      });
     }
+    
     setIsLoading(false);
   };
   return <div className="min-h-screen flex items-center justify-center p-4">
@@ -66,11 +60,11 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username or Email</Label>
-                <Input id="username" type="text" value={formData.username} onChange={e => setFormData({
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={formData.email} onChange={e => setFormData({
                 ...formData,
-                username: e.target.value
-              })} placeholder="Enter your username" required />
+                email: e.target.value
+              })} placeholder="Enter your email" required />
               </div>
               
               <div className="space-y-2">

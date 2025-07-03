@@ -1,48 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { LogOut, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UserSidebar from "@/components/UserSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import TopBar from "@/components/TopBar";
 import PageTransition from "@/components/PageTransition";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { useWallet } from "@/hooks/useWallet";
 
 const DashboardLayout = () => {
-  const [userData, setUserData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+  const { balance } = useWallet();
 
   useEffect(() => {
-    const auth = localStorage.getItem("userAuth");
-    if (!auth) {
+    if (!authLoading && !user) {
       navigate("/login");
-      return;
     }
-    
-    const user = JSON.parse(auth);
-    if (user.role !== "user") {
-      navigate("/login");
-      return;
-    }
-    
-    setUserData(user);
-    setLoading(false);
-  }, [navigate]);
+  }, [user, authLoading, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("userAuth");
-    localStorage.removeItem("userTeams");
-    toast({
-      title: "Logged out successfully",
-      description: "See you in the battlefield!",
-    });
-    navigate("/");
-  };
+  if (authLoading || profileLoading) {
+    return <LoadingSpinner fullScreen />;
+  }
 
-  if (loading) {
+  if (!user || !profile) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -59,7 +44,7 @@ const DashboardLayout = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div>
-                  <h1 className="text-xl font-bold">Welcome back, {userData?.username}!</h1>
+                  <h1 className="text-xl font-bold">Welcome back, {profile?.display_name || 'User'}!</h1>
                   <p className="text-muted-foreground">Ready for some action?</p>
                 </div>
               </div>
@@ -70,7 +55,7 @@ const DashboardLayout = () => {
               <div className="flex items-center gap-3">
                 <div className="rdcoin-badge">
                   <Wallet className="h-4 w-4" />
-                  {userData?.wallet?.balance || 100} rdCoins
+                  {balance?.balance || 0} rdCoins
                 </div>
               </div>
             </div>

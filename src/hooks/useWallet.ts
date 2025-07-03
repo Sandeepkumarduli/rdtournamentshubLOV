@@ -1,0 +1,149 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
+
+export interface WalletBalance {
+  id: string;
+  user_id: string;
+  balance: number;
+  updated_at: string;
+}
+
+export interface Transaction {
+  id: string;
+  user_id: string;
+  type: string;
+  amount: number;
+  description: string | null;
+  status: string;
+  tournament_id: string | null;
+  created_at: string;
+}
+
+export const useWallet = () => {
+  const { user } = useAuth();
+  const [balance, setBalance] = useState<WalletBalance | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setBalance(null);
+      setTransactions([]);
+      setLoading(false);
+      return;
+    }
+
+    const fetchWalletData = async () => {
+      // Fetch balance
+      const { data: balanceData, error: balanceError } = await supabase
+        .from('wallet_balances')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (balanceError) {
+        console.error('Error fetching wallet balance:', balanceError);
+      } else {
+        setBalance(balanceData);
+      }
+
+      // Fetch transactions
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (transactionsError) {
+        console.error('Error fetching transactions:', transactionsError);
+      } else {
+        setTransactions(transactionsData || []);
+      }
+
+      setLoading(false);
+    };
+
+    fetchWalletData();
+
+    // Subscribe to wallet changes
+    const balanceChannel = supabase
+      .channel('wallet-balance-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'wallet_balances',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            setBalance(payload.new as WalletBalance);
+          }
+        }
+      )
+      .subscribe();
+
+    const transactionsChannel = supabase
+      .channel('transactions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'transactions',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          setTransactions(prev => [payload.new as Transaction, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(balanceChannel);
+      supabase.removeChannel(transactionsChannel);
+    };
+  }, [user]);
+
+  const addTransaction = async (
+    type: string,
+    amount: number,
+    description?: string,
+    tournamentId?: string
+  ) => {
+    if (!user) return { error: 'No user found' };
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert([{
+        user_id: user.id,
+        type,
+        amount,
+        description,
+        tournament_id: tournamentId,
+      }])
+      .select()
+      .single();
+
+    if (!error) {
+      // Update wallet balance
+      const newBalance = (balance?.balance || 0) + (type === 'deposit' || type === 'prize_win' ? amount : -amount);
+      
+      await supabase
+        .from('wallet_balances')
+        .update({ balance: newBalance })
+        .eq('user_id', user.id);
+    }
+
+    return { data, error };
+  };
+
+  return {
+    balance,
+    transactions,
+    loading,
+    addTransaction,
+  };
+};

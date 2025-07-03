@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshCw, Trophy, Calendar, Users, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTournaments } from '@/hooks/useTournaments';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Tournaments = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -14,49 +16,17 @@ const Tournaments = () => {
   const [dateFilter, setDateFilter] = useState('');
   const [timeFilter, setTimeFilter] = useState('');
   const { toast } = useToast();
+  const { tournaments, loading } = useTournaments();
 
-  // Mock registered tournaments - would come from API
-  const registeredTournaments = [
-    {
-      id: 1,
-      name: "BGMI Pro League",
-      status: "Active",
-      registrationDate: "2024-01-15",
-      matchDate: "2024-01-20",
-      matchTime: "18:00",
-      prize: "₹50,000",
-      type: "Squad",
-      participants: 156,
-      maxSlots: 200,
-      entryFee: 100,
-      minTeamSize: 4,
-      roomId: "",
-      password: ""
-    },
-    {
-      id: 2,
-      name: "Weekly Championship",
-      status: "Upcoming",
-      registrationDate: "2024-01-16",
-      matchDate: "2024-01-25",
-      matchTime: "20:00",
-      prize: "₹25,000",
-      type: "Duo",
-      participants: 89,
-      maxSlots: 150,
-      entryFee: 50,
-      minTeamSize: 2,
-      roomId: "",
-      password: ""
-    }
-  ];
-
-  const filteredTournaments = registeredTournaments.filter(tournament => {
+  const filteredTournaments = tournaments.filter(tournament => {
     if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
-    if (dateFilter && tournament.matchDate !== dateFilter) return false;
-    if (timeFilter && tournament.matchTime !== timeFilter) return false;
+    if (dateFilter && tournament.start_date && new Date(tournament.start_date).toISOString().split('T')[0] !== dateFilter) return false;
     return true;
   });
+
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
 
   const clearFilters = () => {
     setStatusFilter('All');
@@ -150,7 +120,7 @@ const Tournaments = () => {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg font-semibold">{tournament.name}</CardTitle>
-                    <Badge variant={tournament.status === "Active" ? "default" : "secondary"}>
+                    <Badge variant={tournament.status === "active" ? "default" : "secondary"}>
                       {tournament.status}
                     </Badge>
                   </div>
@@ -159,66 +129,35 @@ const Tournaments = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Prize Pool:</span>
-                      <span className="font-semibold text-gaming-gold">{tournament.prize}</span>
+                      <span className="font-semibold text-gaming-gold">₹{tournament.prize_pool}</span>
                     </div>
                     
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Date & Time:</span>
-                      <span className="font-medium">{tournament.matchDate} at {tournament.matchTime}</span>
+                      <span className="text-muted-foreground">Start Date:</span>
+                      <span className="font-medium">{tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : 'TBA'}</span>
                     </div>
                     
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Slots:</span>
-                      <span className="font-medium">{tournament.participants}/{tournament.maxSlots}</span>
+                      <span className="text-muted-foreground">Max Teams:</span>
+                      <span className="font-medium">{tournament.max_teams || 'Unlimited'}</span>
                     </div>
                     
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Entry Fee:</span>
-                      <span className="font-medium">{tournament.entryFee} rdCoins</span>
+                      <span className="font-medium">₹{tournament.entry_fee}</span>
                     </div>
                     
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Type:</span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{tournament.type}</Badge>
-                        {tournament.minTeamSize > 0 && (
-                          <span className="text-xs text-muted-foreground">Min: {tournament.minTeamSize}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">ORG:</span>
-                      <span className="font-medium text-primary">FireStorm</span>
+                      <span className="text-muted-foreground">Game:</span>
+                      <Badge variant="outline">{tournament.game_type}</Badge>
                     </div>
                   </div>
                   
-                  {/* Room Details */}
-                  <div className="pt-2 border-t border-border">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={`roomId-${tournament.id}`} className="font-medium">Room ID</Label>
-                        <Input
-                          id={`roomId-${tournament.id}`}
-                          value={tournament.roomId}
-                          placeholder="Will be provided by admin"
-                          disabled
-                          className="text-center font-mono"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor={`password-${tournament.id}`} className="font-medium">Password</Label>
-                        <Input
-                          id={`password-${tournament.id}`}
-                          value={tournament.password}
-                          placeholder="Will be provided by admin"
-                          disabled
-                          className="text-center font-mono"
-                        />
-                      </div>
+                  {tournament.description && (
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-sm text-muted-foreground">{tournament.description}</p>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

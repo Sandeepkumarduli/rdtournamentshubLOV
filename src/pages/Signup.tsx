@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, GamepadIcon, Mail, User, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,8 +21,9 @@ const Signup = () => {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp } = useAuth();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
@@ -33,28 +35,20 @@ const Signup = () => {
       return;
     }
 
-    if (formData.username && formData.email && formData.password) {
-      // Create user account with initial wallet
-      localStorage.setItem("userAuth", JSON.stringify({
-        username: formData.username,
-        email: formData.email,
-        role: "user",
-        wallet: { balance: 100, transactions: [] }, // Welcome bonus
-        loginTime: new Date().toISOString()
-      }));
-      
-      toast({
-        title: "Account Created!",
-        description: "Welcome to BGMI Tournament Hub! You received 100 rdCoins as welcome bonus.",
-      });
-      
-      navigate("/dashboard");
-    } else {
+    const { data, error } = await signUp(formData.email, formData.password, formData.username);
+
+    if (error) {
       toast({
         title: "Signup Failed",
-        description: "Please fill in all required fields",
+        description: error.message,
         variant: "destructive",
       });
+    } else if (data.user) {
+      toast({
+        title: "Account Created!",
+        description: "Welcome to BGMI Tournament Hub! Please check your email to verify your account.",
+      });
+      navigate("/login");
     }
   };
 
