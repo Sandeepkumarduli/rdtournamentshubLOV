@@ -170,7 +170,7 @@ const WalletPage = () => {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="addAmount" className="px-0 py-0 my-[10px]">Amount (₹)</Label>
-                    <Input id="addAmount" type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)} placeholder="Enter amount (min ₹10)" min="10" className="my-[10px]" />
+                    <Input id="addAmount" type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)} placeholder="Enter amount (min ₹10)" min="10" className="my-px" />
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={handleAddFunds} className="flex-1">

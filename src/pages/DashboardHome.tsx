@@ -4,54 +4,48 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Trophy, Users, Calendar, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
 const DashboardHome = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { toast } = useToast();
-
-  const mockTournaments = [
-    { 
-      id: 1, 
-      name: "BGMI Pro League", 
-      status: "Live", 
-      prize: "₹50,000", 
-      participants: 156,
-      type: "Squad",
-      minTeamSize: 4,
-      entryFee: 100
-    },
-    { 
-      id: 2, 
-      name: "Weekly Championship", 
-      status: "Upcoming", 
-      prize: "₹25,000", 
-      participants: 89,
-      type: "Duo",
-      minTeamSize: 2,
-      entryFee: 50
-    },
-    { 
-      id: 3, 
-      name: "Solo Masters", 
-      status: "Upcoming", 
-      prize: "₹15,000", 
-      participants: 200,
-      type: "Solo",
-      minTeamSize: 0,
-      entryFee: 25
-    },
-  ];
-
+  const {
+    toast
+  } = useToast();
+  const mockTournaments = [{
+    id: 1,
+    name: "BGMI Pro League",
+    status: "Live",
+    prize: "₹50,000",
+    participants: 156,
+    type: "Squad",
+    minTeamSize: 4,
+    entryFee: 100
+  }, {
+    id: 2,
+    name: "Weekly Championship",
+    status: "Upcoming",
+    prize: "₹25,000",
+    participants: 89,
+    type: "Duo",
+    minTeamSize: 2,
+    entryFee: 50
+  }, {
+    id: 3,
+    name: "Solo Masters",
+    status: "Upcoming",
+    prize: "₹15,000",
+    participants: 200,
+    type: "Solo",
+    minTeamSize: 0,
+    entryFee: 25
+  }];
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     setIsRefreshing(false);
     toast({
       title: "Data Refreshed",
-      description: "Latest tournament information loaded",
+      description: "Latest tournament information loaded"
     });
   };
-
   const handleJoinTournament = (tournament: any) => {
     if (tournament.type === "Squad" && tournament.minTeamSize > 0) {
       toast({
@@ -61,15 +55,12 @@ const DashboardHome = () => {
       });
       return;
     }
-    
     toast({
       title: "Tournament Joined",
-      description: `Successfully registered for ${tournament.name}`,
+      description: `Successfully registered for ${tournament.name}`
     });
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -89,7 +80,7 @@ const DashboardHome = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Active Tournaments</p>
-                <p className="text-2xl font-bold text-primary">3</p>
+                <p className="text-2xl font-bold text-slate-50">3</p>
               </div>
               <Trophy className="h-8 w-8 text-primary" />
             </div>
@@ -101,7 +92,7 @@ const DashboardHome = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">My Teams</p>
-                <p className="text-2xl font-bold text-accent">0</p>
+                <p className="text-2xl font-bold text-slate-50">0</p>
               </div>
               <Users className="h-8 w-8 text-accent" />
             </div>
@@ -138,8 +129,7 @@ const DashboardHome = () => {
         <h2 className="text-2xl font-bold">Available Tournaments</h2>
         
         <div className="grid gap-4">
-          {mockTournaments.map((tournament) => (
-            <Card key={tournament.id} className="gaming-card">
+          {mockTournaments.map(tournament => <Card key={tournament.id} className="gaming-card">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -162,27 +152,19 @@ const DashboardHome = () => {
                       <div>
                         Entry Fee: {tournament.entryFee} rdCoins
                       </div>
-                      {tournament.minTeamSize > 0 && (
-                        <div>
+                      {tournament.minTeamSize > 0 && <div>
                           Min Team Size: {tournament.minTeamSize}
-                        </div>
-                      )}
+                        </div>}
                     </div>
                   </div>
-                  <Button 
-                    variant="gaming-outline"
-                    onClick={() => handleJoinTournament(tournament)}
-                  >
+                  <Button variant="gaming-outline" onClick={() => handleJoinTournament(tournament)}>
                     {tournament.status === "Live" ? "Join Now" : "Register"}
                   </Button>
                 </div>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DashboardHome;
