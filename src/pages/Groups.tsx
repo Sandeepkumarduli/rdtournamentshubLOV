@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, Users, MessageSquare, Trophy, Search, MessageCircle } from 'lucide-react';
+import { RefreshCw, Users, MessageSquare, Trophy, Search, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ChatDialog from '@/components/ChatDialog';
 import { useGroups } from '@/hooks/useGroups';
@@ -27,6 +27,7 @@ const Groups = () => {
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [chatAdmin, setChatAdmin] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
   const loading = groupsLoading || registrationsLoading;
@@ -93,6 +94,11 @@ const Groups = () => {
     setSelectedGroup(group);
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    window.location.reload();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -101,6 +107,10 @@ const Groups = () => {
           <h1 className="text-4xl font-bold">Groups</h1>
           <p className="text-lg text-muted-foreground">Connect with tournament organizations</p>
         </div>
+        <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[700px]">

@@ -17,6 +17,8 @@ export interface TournamentRegistration {
     end_date: string | null;
     status: string;
     description: string | null;
+    room_id: string | null;
+    room_password: string | null;
   };
 }
 
@@ -61,7 +63,9 @@ export const useTournamentRegistrations = () => {
             start_date,
             end_date,
             status,
-            description
+            description,
+            room_id,
+            room_password
           )
         `)
         .in('team_id', teamIds);

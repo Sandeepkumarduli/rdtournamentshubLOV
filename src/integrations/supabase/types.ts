@@ -348,6 +348,8 @@ export type Database = {
           max_teams: number | null
           name: string
           prize_pool: number | null
+          room_id: string | null
+          room_password: string | null
           rules: string | null
           start_date: string | null
           status: string | null
@@ -364,6 +366,8 @@ export type Database = {
           max_teams?: number | null
           name: string
           prize_pool?: number | null
+          room_id?: string | null
+          room_password?: string | null
           rules?: string | null
           start_date?: string | null
           status?: string | null
@@ -380,6 +384,8 @@ export type Database = {
           max_teams?: number | null
           name?: string
           prize_pool?: number | null
+          room_id?: string | null
+          room_password?: string | null
           rules?: string | null
           start_date?: string | null
           status?: string | null

@@ -156,15 +156,13 @@ const Tournaments = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Room ID:</span>
                         <span className="font-medium text-gaming-gold">
-                          {/* Room ID will be provided by admin closer to match time */}
-                          TBA
+                          {tournament.room_id || 'TBA'}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Room Password:</span>
                         <span className="font-medium text-gaming-gold">
-                          {/* Password will be provided by admin closer to match time */}
-                          TBA
+                          {tournament.room_password || 'TBA'}
                         </span>
                       </div>
                     </div>
