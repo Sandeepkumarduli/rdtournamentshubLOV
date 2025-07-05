@@ -17,7 +17,7 @@ const DashboardHome = () => {
   const [timeFilter, setTimeFilter] = useState('');
   const { toast } = useToast();
   const { tournaments, loading: tournamentsLoading } = useTournaments();
-  const { teams, userTeam, loading: teamsLoading } = useTeams();
+  const { teams, userTeams, loading: teamsLoading } = useTeams();
   const { user } = useAuth();
 
   if (tournamentsLoading || teamsLoading) {
@@ -45,7 +45,7 @@ const DashboardHome = () => {
     });
   };
   const handleJoinTournament = async (tournament: any) => {
-    if (!user || !userTeam) {
+    if (!user || userTeams.length === 0) {
       toast({
         title: "Team Required",
         description: "You need to create or join a team first to participate in tournaments.",
@@ -92,7 +92,7 @@ const DashboardHome = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">My Teams</p>
-                <p className="text-2xl font-bold text-slate-50">{userTeam ? 1 : 0}</p>
+                <p className="text-2xl font-bold text-slate-50">{userTeams.length}</p>
               </div>
               <Users className="h-8 w-8 text-accent" />
             </div>
@@ -116,7 +116,7 @@ const DashboardHome = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Win Rate</p>
-                <p className="text-2xl font-bold text-warning">{userTeam?.wins || 0}%</p>
+                <p className="text-2xl font-bold text-warning">{userTeams.length > 0 ? (userTeams[0].wins || 0) : 0}%</p>
               </div>
               <Target className="h-8 w-8 text-warning" />
             </div>

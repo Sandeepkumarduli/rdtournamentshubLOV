@@ -29,54 +29,47 @@ export interface TeamMember {
 export const useTeams = () => {
   const { user } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
-  const [userTeam, setUserTeam] = useState<Team | null>(null);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [userTeams, setUserTeams] = useState<Team[]>([]);
+  const [teamMembersMap, setTeamMembersMap] = useState<Record<string, TeamMember[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTeams = async () => {
-      const { data, error } = await supabase
-        .from('teams')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching teams:', error);
-      } else {
-        setTeams(data || []);
-      }
-    };
-
-    const fetchUserTeam = async () => {
+    const fetchUserTeams = async () => {
       if (!user) return;
 
-      const { data, error } = await supabase
+      // Fetch teams where user is a member
+      const { data: memberData, error } = await supabase
         .from('team_members')
         .select(`
           *,
           teams:team_id (*)
         `)
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', user.id);
 
-      if (!error && data) {
-        setUserTeam(data.teams as Team);
+      if (!error && memberData) {
+        const teams = memberData.map(member => member.teams as Team);
+        setUserTeams(teams);
         
-        // Fetch team members
-        const { data: members } = await supabase
-          .from('team_members')
-          .select(`
-            *,
-            profiles:user_id (display_name, bgmi_id)
-          `)
-          .eq('team_id', data.team_id);
+        // Fetch members for each team
+        const membersMap: Record<string, TeamMember[]> = {};
+        
+        for (const team of teams) {
+          const { data: members } = await supabase
+            .from('team_members')
+            .select(`
+              *,
+              profiles:user_id (display_name, bgmi_id)
+            `)
+            .eq('team_id', team.id);
 
-        setTeamMembers(members || []);
+          membersMap[team.id] = members || [];
+        }
+        
+        setTeamMembersMap(membersMap);
       }
     };
 
-    fetchTeams();
-    fetchUserTeam();
+    fetchUserTeams();
     setLoading(false);
 
     // Subscribe to team changes
@@ -89,16 +82,8 @@ export const useTeams = () => {
           schema: 'public',
           table: 'teams',
         },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setTeams(prev => [payload.new as Team, ...prev]);
-          } else if (payload.eventType === 'UPDATE') {
-            setTeams(prev => 
-              prev.map(t => t.id === payload.new.id ? payload.new as Team : t)
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setTeams(prev => prev.filter(t => t.id !== payload.old.id));
-          }
+        () => {
+          fetchUserTeams();
         }
       )
       .subscribe();
@@ -108,8 +93,13 @@ export const useTeams = () => {
     };
   }, [user]);
 
-  const createTeam = async (teamName: string) => {
+  const createTeam = async (teamName: string, memberEmails?: string[]) => {
     if (!user) return { error: 'No user found' };
+
+    // Check team limit (2 teams max)
+    if (userTeams.length >= 2) {
+      return { error: 'Maximum 2 teams allowed per user' };
+    }
 
     const { data: team, error: teamError } = await supabase
       .from('teams')
@@ -132,6 +122,9 @@ export const useTeams = () => {
       }]);
 
     if (memberError) return { error: memberError };
+
+    // Add initial members if provided (placeholder for now)
+    // In real implementation, you'd look up users by email first
 
     return { data: team, error: null };
   };
@@ -174,8 +167,8 @@ export const useTeams = () => {
 
   return {
     teams,
-    userTeam,
-    teamMembers,
+    userTeams,
+    teamMembersMap,
     loading,
     createTeam,
     addTeamMember,
