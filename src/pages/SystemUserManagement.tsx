@@ -11,22 +11,24 @@ import {
   UserPlus, 
   Trash2,
   RefreshCw,
-  MessageCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Snowflake,
+  AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import ChatDialog from "@/components/ChatDialog";
-import { useSystemUsers } from "@/hooks/useSystemUsers";
+import UserDetailsDialog from "@/components/UserDetailsDialog";
+import { useSystemUsers, SystemUser } from "@/hooks/useSystemUsers";
 
 const SystemUserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [chatUser, setChatUser] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
   const { toast } = useToast();
-  const { users, loading: usersLoading, refetch, deleteUser } = useSystemUsers();
+  const { users, loading: usersLoading, refetch, deleteUser, freezeUser, unfreezeUser } = useSystemUsers();
   
   const usersPerPage = 20;
 
@@ -47,6 +49,27 @@ const SystemUserManagement = () => {
     }
   };
 
+  const handleFreezeUser = async (userId: string, currentStatus: string) => {
+    const result = currentStatus === 'Frozen' 
+      ? await unfreezeUser(userId)
+      : await freezeUser(userId);
+    
+    if (result.success) {
+      toast({
+        title: currentStatus === 'Frozen' ? "User Unfrozen" : "User Frozen",
+        description: currentStatus === 'Frozen' 
+          ? "User account has been reactivated" 
+          : "User account has been frozen. They can only file reports now.",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to update user status",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleAddUser = () => {
     toast({
       title: "Add User",
@@ -58,7 +81,7 @@ const SystemUserManagement = () => {
     refetch();
     toast({
       title: "Data Refreshed",
-      description: "Users data fetched successfully",
+      description: "User data fetched successfully",
     });
   };
 
@@ -78,8 +101,8 @@ const SystemUserManagement = () => {
   const startIndex = (currentPage - 1) * usersPerPage;
   const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
 
-  const handleChatWithUser = (username: string) => {
-    setChatUser(username);
+  const handleViewUser = (user: SystemUser) => {
+    setSelectedUser(user);
   };
 
   return (
@@ -168,23 +191,49 @@ const SystemUserManagement = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleChatWithUser(user.username)}
+                        onClick={() => handleViewUser(user)}
                       >
-                        <MessageCircle className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                       <Button 
-                        variant="destructive" 
+                        variant={user.status === 'Frozen' ? "default" : "outline"} 
                         size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => handleFreezeUser(user.id, user.status)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Snowflake className="h-4 w-4" />
+                        {user.status === 'Frozen' ? 'Unfreeze' : 'Freeze'}
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                              Delete User Account
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              You are about to delete this player. Please ensure all funds are withdrawn first.
+                              This action cannot be undone and will remove all related data.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete User
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 </CardContent>
@@ -235,12 +284,11 @@ const SystemUserManagement = () => {
           )}
         </main>
 
-        {/* Chat Dialog */}
-        <ChatDialog
-          isOpen={!!chatUser}
-          onClose={() => setChatUser(null)}
-          recipientName={chatUser || ''}
-          recipientType="user"
+        {/* User Details Dialog */}
+        <UserDetailsDialog
+          isOpen={!!selectedUser}
+          onClose={() => setSelectedUser(null)}
+          user={selectedUser}
         />
       </div>
     </div>

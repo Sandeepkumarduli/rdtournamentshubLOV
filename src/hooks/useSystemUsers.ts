@@ -34,7 +34,7 @@ export const useSystemUsers = () => {
         bgmiId: profile.bgmi_id || 'Not Set',
         phone: '(Not Available)', // Phone not in profiles table
         createdAt: new Date(profile.created_at).toLocaleDateString(),
-        status: profile.role === 'banned' ? 'Inactive' : 'Active',
+        status: profile.role === 'banned' ? 'Inactive' : profile.role === 'frozen' ? 'Frozen' : 'Active',
         organization: profile.organization || 'None',
         role: profile.role || 'user',
       })) || [];
@@ -49,13 +49,13 @@ export const useSystemUsers = () => {
 
   const deleteUser = async (userId: string) => {
     try {
-      // In a real implementation, you might soft delete or update status
-      const { error } = await supabase
+      // First delete from profiles table
+      const { error: profileError } = await supabase
         .from('profiles')
-        .update({ role: 'banned' })
+        .delete()
         .eq('id', userId);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
       
       // Refresh users list
       fetchUsers();
@@ -63,6 +63,40 @@ export const useSystemUsers = () => {
     } catch (error) {
       console.error('Error deleting user:', error);
       return { error: 'Failed to delete user' };
+    }
+  };
+
+  const freezeUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'frozen' })
+        .eq('id', userId);
+
+      if (error) throw error;
+      
+      fetchUsers();
+      return { success: true };
+    } catch (error) {
+      console.error('Error freezing user:', error);
+      return { error: 'Failed to freeze user' };
+    }
+  };
+
+  const unfreezeUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'user' })
+        .eq('id', userId);
+
+      if (error) throw error;
+      
+      fetchUsers();
+      return { success: true };
+    } catch (error) {
+      console.error('Error unfreezing user:', error);
+      return { error: 'Failed to unfreeze user' };
     }
   };
 
@@ -85,5 +119,7 @@ export const useSystemUsers = () => {
     loading,
     refetch: fetchUsers,
     deleteUser,
+    freezeUser,
+    unfreezeUser,
   };
 };

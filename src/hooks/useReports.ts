@@ -56,12 +56,9 @@ export const useReports = () => {
 
   const resolveReport = async (reportId: string, resolution: string) => {
     try {
-      // Get current system admin user ID from localStorage
-      const auth = localStorage.getItem("userAuth");
-      const user = auth ? JSON.parse(auth) : null;
-      const systemAdminId = user?.user_id;
-
-      if (!systemAdminId) {
+      // Get current user session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
         return { error: 'Not authenticated' };
       }
 
@@ -70,7 +67,7 @@ export const useReports = () => {
         .update({
           status: 'Resolved',
           resolution: resolution,
-          resolved_by: systemAdminId,
+          resolved_by: session.user.id,
           resolved_at: new Date().toISOString(),
         })
         .eq('id', reportId);
@@ -100,10 +97,28 @@ export const useReports = () => {
     };
   }, []);
 
+  const deleteReport = async (reportId: string) => {
+    try {
+      const { error } = await supabase
+        .from('reports')
+        .delete()
+        .eq('id', reportId);
+
+      if (error) throw error;
+
+      fetchReports();
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      return { error: 'Failed to delete report' };
+    }
+  };
+
   return {
     reports,
     loading,
     refetch: fetchReports,
     resolveReport,
+    deleteReport,
   };
 };

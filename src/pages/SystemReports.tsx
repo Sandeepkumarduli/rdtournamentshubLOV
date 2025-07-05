@@ -25,14 +25,15 @@ import { useReports } from "@/hooks/useReports";
 const SystemReports = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
-  const [resolution, setResolution] = useState("");
+  const [resolutions, setResolutions] = useState<Record<string, string>>({});
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("");
   const { toast } = useToast();
-  const { reports, loading: reportsLoading, refetch, resolveReport } = useReports();
+  const { reports, loading: reportsLoading, refetch, resolveReport, deleteReport } = useReports();
 
   const handleResolve = async (reportId: string) => {
-    if (!resolution.trim()) {
+    const resolution = resolutions[reportId];
+    if (!resolution?.trim()) {
       toast({
         title: "Resolution Required",
         description: "Please provide a resolution before marking as resolved",
@@ -49,7 +50,7 @@ const SystemReports = () => {
         variant: "default"
       });
       setSelectedReport(null);
-      setResolution("");
+      setResolutions(prev => ({ ...prev, [reportId]: "" }));
     } else {
       toast({
         title: "Error",
@@ -59,12 +60,21 @@ const SystemReports = () => {
     }
   };
 
-  const handleDeleteReport = (reportId: string) => {
-    toast({
-      title: "Report Deleted",
-      description: "Report has been permanently removed from the system",
-      variant: "destructive"
-    });
+  const handleDeleteReport = async (reportId: string) => {
+    const result = await deleteReport(reportId);
+    if (result.success) {
+      toast({
+        title: "Report Deleted",
+        description: "Report has been permanently removed from the system",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Error",  
+        description: result.error || "Failed to delete report",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleRefresh = () => {
@@ -252,12 +262,12 @@ const SystemReports = () => {
                         <p className="mt-1 text-sm">{report.description}</p>
                       </div>
                       
-                      {selectedReport === report.id && report.status !== "Resolved" && (
+                       {selectedReport === report.id && report.status !== "Resolved" && (
                         <div className="space-y-4">
                           <Textarea
                             placeholder="Provide your resolution details..."
-                            value={resolution}
-                            onChange={(e) => setResolution(e.target.value)}
+                            value={resolutions[report.id] || ""}
+                            onChange={(e) => setResolutions(prev => ({ ...prev, [report.id]: e.target.value }))}
                             rows={3}
                           />
                           <div className="flex gap-2">
