@@ -18,8 +18,10 @@ const Teams = () => {
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedTeamForAddMember, setSelectedTeamForAddMember] = useState<string | null>(null);
+  const [joinTeamId, setJoinTeamId] = useState('');
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const { toast } = useToast();
-  const { userTeams, teamMembersMap, loading, createTeam, addTeamMember } = useTeams();
+  const { userTeams, teamMembersMap, loading, createTeam, addTeamMember, joinTeam } = useTeams();
   const { user } = useAuth();
 
   if (loading) {
@@ -143,6 +145,44 @@ const Teams = () => {
     });
   };
 
+  const handleJoinTeam = async () => {
+    if (!joinTeamId.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid team ID",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (userTeams.length >= 2) {
+      toast({
+        title: "Team Limit Reached",
+        description: "Maximum 2 teams allowed per user",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { error } = await joinTeam(joinTeamId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: typeof error === 'string' ? error : error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setJoinTeamId('');
+    setIsJoinDialogOpen(false);
+    toast({
+      title: "Team Joined",
+      description: "Successfully joined the team!"
+    });
+  };
+
   const canCreateTeam = userTeams.length < 2;
 
   return (
@@ -163,6 +203,44 @@ const Teams = () => {
 
       {/* Create Team Section */}
       <div className="flex gap-4">
+        {canCreateTeam && (
+          <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <UserPlus className="h-4 w-4" />
+                Join Team
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Join Existing Team</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="joinTeamId">Team ID</Label>
+                  <Input 
+                    id="joinTeamId" 
+                    value={joinTeamId} 
+                    onChange={e => setJoinTeamId(e.target.value)} 
+                    placeholder="Enter team ID to join" 
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Ask the team leader for the team ID
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleJoinTeam} className="flex-1">
+                    Join Team
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsJoinDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+        
         {canCreateTeam ? (
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>

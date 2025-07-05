@@ -50,6 +50,33 @@ const ChangePasswordDialog = ({ children }: ChangePasswordDialogProps) => {
     setLoading(true);
 
     try {
+      // First verify the current password by trying to sign in with it
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        toast({
+          title: "Error",
+          description: "Unable to verify current user",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verify current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+
+      if (signInError) {
+        toast({
+          title: "Incorrect Password",
+          description: "The current password you entered is incorrect",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // If verification passes, update the password
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });

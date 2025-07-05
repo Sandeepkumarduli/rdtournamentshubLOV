@@ -129,6 +129,59 @@ export const useTeams = () => {
     return { data: team, error: null };
   };
 
+  const joinTeam = async (teamId: string) => {
+    if (!user) return { error: 'No user found' };
+
+    // Check if user already has 2 teams
+    if (userTeams.length >= 2) {
+      return { error: 'Maximum 2 teams allowed per user' };
+    }
+
+    // Check if team exists
+    const { data: teamData, error: teamError } = await supabase
+      .from('teams')
+      .select('id, name')
+      .eq('id', teamId)
+      .single();
+
+    if (teamError || !teamData) {
+      return { error: 'Team not found' };
+    }
+
+    // Check if user is already a member
+    const { data: existingMember } = await supabase
+      .from('team_members')
+      .select('id')
+      .eq('team_id', teamId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (existingMember) {
+      return { error: 'You are already a member of this team' };
+    }
+
+    // Check team member limit
+    const { data: currentMembers } = await supabase
+      .from('team_members')
+      .select('id')
+      .eq('team_id', teamId);
+
+    if (currentMembers && currentMembers.length >= 5) {
+      return { error: 'Team is full (maximum 5 members)' };
+    }
+
+    // Add user to team
+    const { error } = await supabase
+      .from('team_members')
+      .insert([{
+        team_id: teamId,
+        user_id: user.id,
+        role: 'member',
+      }]);
+
+    return { error };
+  };
+
   const addTeamMember = async (teamId: string, userIdToAdd: string) => {
     if (!user) return { error: 'No user found' };
 
@@ -172,5 +225,6 @@ export const useTeams = () => {
     loading,
     createTeam,
     addTeamMember,
+    joinTeam,
   };
 };

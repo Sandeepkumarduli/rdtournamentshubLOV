@@ -26,32 +26,53 @@ const AdminSignup = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { data, error } = await signUp(formData.email, formData.password, formData.displayName);
+    try {
+      const { data, error } = await signUp(formData.email, formData.password, formData.displayName);
 
-    if (error) {
+      if (error) {
+        toast({
+          title: "Signup Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data.user) {
+        // Create an admin request instead of directly creating admin
+        const { error: requestError } = await supabase
+          .from('admin_requests')
+          .insert([{
+            user_id: data.user.id,
+            reason: `Admin access request for ${formData.organization}`,
+            experience: formData.organization,
+            status: 'pending'
+          }]);
+
+        if (requestError) {
+          toast({
+            title: "Request Failed",
+            description: "Failed to submit admin request",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        toast({
+          title: "Admin Request Submitted!",
+          description: "Your admin request has been submitted. Please wait for System Admin approval.",
+        });
+        navigate("/admin-login");
+      }
+    } catch (error) {
       toast({
-        title: "Signup Failed",
-        description: error.message,
+        title: "Error",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
-    } else if (data.user) {
-      // Update profile with admin role after signup
-      await supabase
-        .from('profiles')
-        .update({ 
-          role: 'admin',
-          organization: formData.organization 
-        })
-        .eq('user_id', data.user.id);
-
-      toast({
-        title: "Admin Account Created!",
-        description: "Please check your email to verify your account, then login.",
-      });
-      navigate("/admin-login");
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (

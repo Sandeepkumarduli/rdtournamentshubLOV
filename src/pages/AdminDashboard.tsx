@@ -31,21 +31,31 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/admin-login");
-        return;
-      }
-      
-      // Check if user has admin role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate("/admin-login");
+          return;
+        }
         
-      if (profile?.role !== "admin") {
+        // Check if user has admin role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+          
+        if (profile?.role !== "admin") {
+          navigate("/admin-login");
+          return;
+        }
+        
+        setAdminData(profile);
+      } catch (error) {
+        console.error('Auth check error:', error);
         navigate("/admin-login");
+      } finally {
+        setLoading(false);
       }
     };
     checkAuth();
