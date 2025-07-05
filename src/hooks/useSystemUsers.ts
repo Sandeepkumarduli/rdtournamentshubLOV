@@ -28,7 +28,7 @@ export const useSystemUsers = () => {
       if (error) throw error;
 
       const formattedUsers = data?.map(profile => ({
-        id: profile.id,
+        id: profile.user_id, // Use user_id instead of id
         username: profile.display_name || profile.email || 'Unknown',
         email: profile.email || '',
         bgmiId: profile.bgmi_id || 'Not Set',
@@ -53,7 +53,7 @@ export const useSystemUsers = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (profileError) throw profileError;
       
@@ -71,7 +71,7 @@ export const useSystemUsers = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ role: 'frozen' })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) throw error;
       
@@ -88,7 +88,7 @@ export const useSystemUsers = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ role: 'user' })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) throw error;
       

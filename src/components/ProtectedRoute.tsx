@@ -53,6 +53,12 @@ const ProtectedRoute = ({
 
         const userRole = profile?.role;
 
+        // Block frozen users from accessing any protected routes
+        if (userRole === 'frozen') {
+          navigate('/login');
+          return;
+        }
+
         // Strict role-based access control
         if (requiredRole === 'user' && userRole !== 'user') {
           navigate('/login');
