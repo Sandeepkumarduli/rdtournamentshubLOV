@@ -6,40 +6,40 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, Shield, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
+    email: "admin@example.com",
+    password: "password123",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Demo admin credentials
-    if (formData.username === "1234" && formData.password === "1234") {
-      localStorage.setItem("userAuth", JSON.stringify({
-        username: "admin",
-        role: "admin",
-        loginTime: new Date().toISOString()
-      }));
-      
+    const { data, error } = await signIn(formData.email, formData.password);
+
+    if (error) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else if (data.user) {
       toast({
         title: "Admin Login Successful!",
         description: "Welcome to the admin dashboard",
       });
-      
       navigate("/org-dashboard");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid admin credentials",
-        variant: "destructive",
-      });
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -65,13 +65,13 @@ const AdminLogin = () => {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Admin Username</Label>
+                <Label htmlFor="email">Admin Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="Enter admin username"
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Enter admin email"
                   required
                 />
               </div>
@@ -105,13 +105,13 @@ const AdminLogin = () => {
 
               <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
                 <p className="font-medium mb-1">Demo Credentials:</p>
-                <p>Username: 1234</p>
-                <p>Password: 1234</p>
+                <p>Email: admin@example.com</p>
+                <p>Password: password123</p>
               </div>
 
-              <Button type="submit" variant="gaming" className="w-full">
+              <Button type="submit" variant="gaming" className="w-full" disabled={isLoading}>
                 <Shield className="h-4 w-4" />
-                Access Admin Dashboard
+                {isLoading ? "Signing In..." : "Access Admin Dashboard"}
               </Button>
             </form>
 

@@ -15,17 +15,16 @@ export const useReportSubmission = () => {
   const submitReport = async (data: ReportSubmissionData) => {
     setLoading(true);
     try {
-      const auth = localStorage.getItem("userAuth");
-      const user = auth ? JSON.parse(auth) : null;
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!user?.user_id) {
+      if (!session?.user) {
         return { error: 'Not authenticated' };
       }
 
       const { error } = await supabase
         .from('reports')
         .insert([{
-          reporter_id: user.user_id,
+          reporter_id: session.user.id,
           type: data.type,
           title: data.title,
           description: data.description,

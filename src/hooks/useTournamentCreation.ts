@@ -19,10 +19,9 @@ export const useTournamentCreation = () => {
   const createTournament = async (data: TournamentData) => {
     setLoading(true);
     try {
-      const auth = localStorage.getItem("userAuth");
-      const user = auth ? JSON.parse(auth) : null;
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!user?.user_id) {
+      if (!session?.user) {
         return { error: 'Not authenticated' };
       }
 
@@ -30,7 +29,7 @@ export const useTournamentCreation = () => {
         .from('tournaments')
         .insert([{
           ...data,
-          created_by: user.user_id,
+          created_by: session.user.id,
           status: 'upcoming',
         }])
         .select()

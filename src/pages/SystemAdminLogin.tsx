@@ -6,40 +6,40 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, ShieldCheck, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const SystemAdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
+    email: "systemadmin@example.com",
+    password: "password123",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Demo system admin credentials
-    if (formData.username === "1234" && formData.password === "1234") {
-      localStorage.setItem("userAuth", JSON.stringify({
-        username: "systemadmin",
-        role: "systemadmin",
-        loginTime: new Date().toISOString()
-      }));
-      
+    const { data, error } = await signIn(formData.email, formData.password);
+
+    if (error) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else if (data.user) {
       toast({
         title: "System Admin Login Successful!",
         description: "Welcome to the system administration dashboard",
       });
-      
       navigate("/system-admin-dashboard");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid system admin credentials",
-        variant: "destructive",
-      });
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -65,13 +65,13 @@ const SystemAdminLogin = () => {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">System Admin ID</Label>
+                <Label htmlFor="email">System Admin Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="Enter system admin ID"
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Enter system admin email"
                   required
                 />
               </div>
@@ -105,13 +105,13 @@ const SystemAdminLogin = () => {
 
               <div className="bg-primary/10 border border-primary/30 p-3 rounded-lg text-sm">
                 <p className="font-medium mb-1 text-primary">Demo Credentials:</p>
-                <p className="text-primary/80">Username: 1234</p>
-                <p className="text-primary/80">Password: 1234</p>
+                <p className="text-primary/80">Email: systemadmin@example.com</p>
+                <p className="text-primary/80">Password: password123</p>
               </div>
 
-              <Button type="submit" variant="hero" className="w-full">
+              <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
                 <Crown className="h-4 w-4" />
-                Access System Control
+                {isLoading ? "Signing In..." : "Access System Control"}
               </Button>
             </form>
 

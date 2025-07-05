@@ -17,11 +17,9 @@ export const useOrgChat = () => {
   const fetchMessages = async () => {
     setLoading(true);
     try {
-      // Get current user's organization
-      const auth = localStorage.getItem("userAuth");
-      const user = auth ? JSON.parse(auth) : null;
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!user?.user_id) {
+      if (!session?.user) {
         setLoading(false);
         return;
       }
@@ -30,7 +28,7 @@ export const useOrgChat = () => {
       const { data: profile } = await supabase
         .from('profiles')
         .select('organization')
-        .eq('user_id', user.user_id)
+        .eq('user_id', session.user.id)
         .single();
 
       if (!profile?.organization) {
@@ -75,17 +73,16 @@ export const useOrgChat = () => {
 
   const sendMessage = async (message: string) => {
     try {
-      const auth = localStorage.getItem("userAuth");
-      const user = auth ? JSON.parse(auth) : null;
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!user?.user_id) {
+      if (!session?.user) {
         return { error: 'Not authenticated' };
       }
 
       const { error } = await supabase
         .from('chat_messages')
         .insert([{
-          sender_id: user.user_id,
+          sender_id: session.user.id,
           message: message,
           message_type: 'organization',
         }]);

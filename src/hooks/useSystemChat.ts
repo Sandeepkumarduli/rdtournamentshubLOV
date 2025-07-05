@@ -89,19 +89,16 @@ export const useSystemChat = () => {
 
   const sendMessage = async (recipientId: string, message: string) => {
     try {
-      // Get current system admin user ID from localStorage
-      const auth = localStorage.getItem("userAuth");
-      const user = auth ? JSON.parse(auth) : null;
-      const systemAdminId = user?.user_id;
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (!systemAdminId) {
+      if (!session?.user) {
         return { error: 'Not authenticated' };
       }
 
       const { error } = await supabase
         .from('chat_messages')
         .insert([{
-          sender_id: systemAdminId,
+          sender_id: session.user.id,
           recipient_id: recipientId,
           message: message,
           message_type: 'direct',
