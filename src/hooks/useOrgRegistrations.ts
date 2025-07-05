@@ -120,23 +120,15 @@ export const useOrgRegistrations = () => {
     try {
       console.log('Starting to populate existing registrations...');
       
-      // Get all tournament registrations with tournament and team data
-      const { data: registrations } = await supabase
+      // Get all tournament registrations
+      const { data: registrations, error: regError } = await supabase
         .from('tournament_registrations')
-        .select(`
-          id,
-          team_id,
-          tournament_id,
-          tournaments (
-            id,
-            name,
-            organization
-          ),
-          teams (
-            id,
-            name
-          )
-        `);
+        .select('id, team_id, tournament_id');
+
+      if (regError) {
+        console.error('Error fetching registrations:', regError);
+        return { error: 'Failed to fetch registrations' };
+      }
 
       if (!registrations || registrations.length === 0) {
         console.log('No existing registrations found');
@@ -146,11 +138,6 @@ export const useOrgRegistrations = () => {
       console.log('Found registrations to populate:', registrations.length);
 
       for (const registration of registrations) {
-        if (!registration.tournaments?.organization) {
-          console.log('Skipping registration without org:', registration.id);
-          continue;
-        }
-
         // Check if org registration already exists
         const { data: existingOrgReg } = await supabase
           .from('org_user_registrations')
