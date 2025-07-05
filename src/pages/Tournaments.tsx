@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RefreshCw, Trophy, Calendar, Users, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTournaments } from '@/hooks/useTournaments';
+import { useTournamentRegistrations } from '@/hooks/useTournamentRegistrations';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Tournaments = () => {
@@ -16,9 +17,15 @@ const Tournaments = () => {
   const [dateFilter, setDateFilter] = useState('');
   const [timeFilter, setTimeFilter] = useState('');
   const { toast } = useToast();
-  const { tournaments, loading } = useTournaments();
+  const { tournaments, loading: tournamentsLoading } = useTournaments();
+  const { registrations, loading: registrationsLoading } = useTournamentRegistrations();
 
-  const filteredTournaments = tournaments.filter(tournament => {
+  const loading = tournamentsLoading || registrationsLoading;
+
+  // Filter to show only registered tournaments
+  const registeredTournaments = registrations.map(reg => reg.tournaments).filter(Boolean);
+
+  const filteredTournaments = registeredTournaments.filter(tournament => {
     if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
     if (dateFilter && tournament.start_date && new Date(tournament.start_date).toISOString().split('T')[0] !== dateFilter) return false;
     return true;
@@ -36,12 +43,7 @@ const Tournaments = () => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsRefreshing(false);
-    toast({
-      title: "Data Refreshed",
-      description: "Latest tournament information loaded",
-    });
+    window.location.reload();
   };
 
   return (
@@ -138,11 +140,6 @@ const Tournaments = () => {
                     </div>
                     
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Max Teams:</span>
-                      <span className="font-medium">{tournament.max_teams || 'Unlimited'}</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Entry Fee:</span>
                       <span className="font-medium">₹{tournament.entry_fee}</span>
                     </div>
@@ -150,6 +147,26 @@ const Tournaments = () => {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Game:</span>
                       <Badge variant="outline">{tournament.game_type}</Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Room Details */}
+                  <div className="pt-2 border-t border-border">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Room ID:</span>
+                        <span className="font-medium text-gaming-gold">
+                          {/* Room ID will be provided by admin closer to match time */}
+                          TBA
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Room Password:</span>
+                        <span className="font-medium text-gaming-gold">
+                          {/* Password will be provided by admin closer to match time */}
+                          TBA
+                        </span>
+                      </div>
                     </div>
                   </div>
                   

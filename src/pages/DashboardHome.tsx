@@ -9,18 +9,24 @@ import { useToast } from '@/hooks/use-toast';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useTeams } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
+import { useWallet } from '@/hooks/useWallet';
+import { useTournamentRegistrations } from '@/hooks/useTournamentRegistrations';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import TournamentJoinDialog from '@/components/TournamentJoinDialog';
 const DashboardHome = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('');
   const [timeFilter, setTimeFilter] = useState('');
+  const [selectedTournament, setSelectedTournament] = useState<any>(null);
   const { toast } = useToast();
   const { tournaments, loading: tournamentsLoading } = useTournaments();
   const { teams, userTeams, loading: teamsLoading } = useTeams();
   const { user } = useAuth();
+  const { balance, loading: walletLoading } = useWallet();
+  const { registrations, registerForTournament } = useTournamentRegistrations();
 
-  if (tournamentsLoading || teamsLoading) {
+  if (tournamentsLoading || teamsLoading || walletLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -37,14 +43,11 @@ const DashboardHome = () => {
   };
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsRefreshing(false);
-    toast({
-      title: "Data Refreshed",
-      description: "Latest tournament information loaded"
-    });
+    // Force refresh by reloading the page data
+    window.location.reload();
   };
-  const handleJoinTournament = async (tournament: any) => {
+
+  const handleJoinTournament = (tournament: any) => {
     if (!user || userTeams.length === 0) {
       toast({
         title: "Team Required",
@@ -53,13 +56,32 @@ const DashboardHome = () => {
       });
       return;
     }
-    
-    // Here you would implement the actual tournament registration
-    toast({
-      title: "Tournament Joined",
-      description: `Successfully registered for ${tournament.name}`
-    });
+    setSelectedTournament(tournament);
   };
+
+  const handleConfirmJoin = async (tournamentId: string, teamId: string) => {
+    const result = await registerForTournament(tournamentId, teamId);
+    
+    if (result.error) {
+      toast({
+        title: "Error",
+        description: typeof result.error === 'string' ? result.error : 'Failed to join tournament',
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Tournament Joined",
+        description: "Successfully registered for the tournament!"
+      });
+    }
+  };
+
+  // Check if user is registered for a tournament
+  const isRegisteredForTournament = (tournamentId: string) => {
+    return registrations.some(reg => reg.tournament_id === tournamentId);
+  };
+
+  const registeredCount = registrations.length;
   return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -104,7 +126,7 @@ const DashboardHome = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Registered</p>
-                <p className="text-2xl font-bold text-success">0</p>
+                <p className="text-2xl font-bold text-success">{registeredCount}</p>
               </div>
               <Calendar className="h-8 w-8 text-success" />
             </div>
@@ -224,19 +246,35 @@ const DashboardHome = () => {
                     </div>
                   )}
                   
-                  <Button 
-                    variant="default" 
-                    className="w-full"
-                    onClick={() => handleJoinTournament(tournament)}
-                  >
-                    Join Now
-                  </Button>
+                  {isRegisteredForTournament(tournament.id) ? (
+                    <Badge variant="default" className="w-full justify-center py-2 text-center">
+                      Joined
+                    </Badge>
+                  ) : (
+                    <Button 
+                      variant="default" 
+                      className="w-full"
+                      onClick={() => handleJoinTournament(tournament)}
+                    >
+                      Join Now
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </div>
+
+      {/* Tournament Join Dialog */}
+      <TournamentJoinDialog
+        isOpen={!!selectedTournament}
+        onClose={() => setSelectedTournament(null)}
+        tournament={selectedTournament}
+        userTeams={userTeams}
+        walletBalance={balance?.balance || 0}
+        onJoin={handleConfirmJoin}
+      />
     </div>;
 };
 export default DashboardHome;

@@ -9,6 +9,7 @@ import { Send, Users, MessageSquare, Trophy, Search, MessageCircle } from 'lucid
 import { useToast } from '@/hooks/use-toast';
 import ChatDialog from '@/components/ChatDialog';
 import { useGroups } from '@/hooks/useGroups';
+import { useTournamentRegistrations } from '@/hooks/useTournamentRegistrations';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Message {
@@ -20,12 +21,15 @@ interface Message {
 }
 
 const Groups = () => {
-  const { groups, loading } = useGroups();
+  const { groups, loading: groupsLoading } = useGroups();
+  const { registrations, loading: registrationsLoading } = useTournamentRegistrations();
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [chatAdmin, setChatAdmin] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const loading = groupsLoading || registrationsLoading;
 
   if (loading) {
     return <LoadingSpinner fullScreen />;
@@ -56,7 +60,21 @@ const Groups = () => {
     }
   ];
 
-  const filteredGroups = groups.filter(group =>
+  // Create groups based on tournaments user has joined
+  const joinedTournamentGroups = registrations.map(reg => ({
+    id: `group-${reg.tournament_id}`,
+    name: `${reg.tournaments.name} Group`,
+    created_by: '',
+    tournament_id: reg.tournament_id,
+    member_count: Math.floor(Math.random() * 50) + 10, // Mock member count
+    created_at: reg.registered_at,
+    tournament: {
+      name: reg.tournaments.name,
+      prize_pool: reg.tournaments.prize_pool
+    }
+  }));
+
+  const filteredGroups = joinedTournamentGroups.filter(group =>
     group.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

@@ -21,11 +21,22 @@ export const useReportSubmission = () => {
         return { error: 'Not authenticated' };
       }
 
+      // Map report types to valid database values
+      const validTypeMap: Record<string, string> = {
+        'tournament': 'tournament_issue',
+        'player': 'player_misconduct', 
+        'payment': 'payment_issue',
+        'technical': 'technical_bug',
+        'other': 'other_issue'
+      };
+
+      const dbType = validTypeMap[data.type] || 'other_issue';
+
       const { error } = await supabase
         .from('reports')
         .insert([{
           reporter_id: session.user.id,
-          type: data.type,
+          type: dbType,
           title: data.title,
           description: data.description,
           priority: data.priority,
