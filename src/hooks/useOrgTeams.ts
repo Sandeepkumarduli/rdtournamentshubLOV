@@ -38,28 +38,43 @@ export const useOrgTeams = () => {
       const adminOrg = adminProfile?.organization || 'Default Org';
       console.log('Admin organization for teams:', adminOrg);
 
-      // Get tournament registrations for this org's tournaments
-      const { data: registrations } = await supabase
+      // Fetch tournament registrations with tournament organization data
+      const { data: tournamentRegistrations, error: regError } = await supabase
         .from('tournament_registrations')
         .select(`
           team_id,
-          tournaments!inner(
+          tournament_id,
+          tournaments (
             id,
             organization
           )
         `)
-        .eq('tournaments.organization', adminOrg);
+        .not('tournaments.organization', 'is', null);
 
-      console.log('Tournament registrations for teams:', registrations);
+      if (regError) {
+        console.error('Error fetching tournament registrations:', regError);
+        setTeams([]);
+        setLoading(false);
+        return;
+      }
 
-      if (!registrations || registrations.length === 0) {
+      console.log('All tournament registrations for teams:', tournamentRegistrations);
+
+      // Filter registrations for this organization
+      const orgRegistrations = tournamentRegistrations?.filter(reg => 
+        reg.tournaments?.organization === adminOrg
+      ) || [];
+
+      console.log('Filtered registrations for org teams:', orgRegistrations);
+
+      if (orgRegistrations.length === 0) {
         console.log('No registrations found for org teams:', adminOrg);
         setTeams([]);
         setLoading(false);
         return;
       }
 
-      const teamIds = [...new Set(registrations.map(reg => reg.team_id))];
+      const teamIds = [...new Set(orgRegistrations.map(reg => reg.team_id))];
       console.log('Unique team IDs:', teamIds);
 
       // Fetch teams with leader information
