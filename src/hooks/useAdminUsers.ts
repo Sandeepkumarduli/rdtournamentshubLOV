@@ -20,6 +20,7 @@ export const useAdminUsers = () => {
       // Get current admin's organization from session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
+        console.log('No session found for admin users');
         setLoading(false);
         return;
       }
@@ -31,6 +32,7 @@ export const useAdminUsers = () => {
         .single();
 
       const adminOrg = adminProfile?.organization || 'Default Org';
+      console.log('Admin organization:', adminOrg);
 
       // Fetch users who joined this org's tournaments
       const { data: tournamentRegistrations } = await supabase
@@ -44,22 +46,41 @@ export const useAdminUsers = () => {
         `)
         .eq('tournaments.organization', adminOrg);
 
+      console.log('Tournament registrations:', tournamentRegistrations);
+
       if (!tournamentRegistrations || tournamentRegistrations.length === 0) {
+        console.log('No tournament registrations found for org:', adminOrg);
         setUsers([]);
         setLoading(false);
         return;
       }
 
       const teamIds = tournamentRegistrations.map(reg => reg.team_id);
+      console.log('Team IDs from registrations:', teamIds);
 
       // Get team members from these teams
-      const { data: teamMembers } = await supabase
+      const { data: teamMembers, error: teamMembersError } = await supabase
         .from('team_members')
         .select(`
           user_id,
-          profiles!inner(*)
+          profiles!inner(
+            user_id,
+            display_name,
+            email,
+            created_at,
+            organization
+          )
         `)
         .in('team_id', teamIds);
+
+      if (teamMembersError) {
+        console.error('Error fetching team members:', teamMembersError);
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Team members found:', teamMembers);
 
       // Get organization bans for this org
       const { data: orgBans } = await supabase
@@ -83,6 +104,7 @@ export const useAdminUsers = () => {
         index === self.findIndex(u => u.id === user.id)
       );
 
+      console.log('Final formatted users:', uniqueUsers);
       setUsers(uniqueUsers);
     } catch (error) {
       console.error('Error fetching admin users:', error);

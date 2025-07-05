@@ -189,12 +189,12 @@ const Teams = () => {
   };
 
   const handleDeleteTeam = async (teamId: string) => {
-    const { error } = await deleteTeam(teamId);
+    const result = await deleteTeam(teamId);
     
-    if (error) {
+    if (result.error) {
       toast({
         title: "Error",
-        description: typeof error === 'string' ? error : error.message,
+        description: result.error,
         variant: "destructive"
       });
       return;

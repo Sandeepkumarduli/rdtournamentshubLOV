@@ -238,7 +238,10 @@ export const useTeams = () => {
       .delete()
       .eq('team_id', teamId);
 
-    if (membersError) return { error: membersError };
+    if (membersError) {
+      console.error('Error deleting team members:', membersError);
+      return { error: typeof membersError === 'string' ? membersError : membersError.message };
+    }
 
     // Delete the team
     const { error: teamError } = await supabase
@@ -246,7 +249,12 @@ export const useTeams = () => {
       .delete()
       .eq('id', teamId);
 
-    return { error: teamError };
+    if (teamError) {
+      console.error('Error deleting team:', teamError);
+      return { error: typeof teamError === 'string' ? teamError : teamError.message };
+    }
+
+    return { success: true };
   };
 
   const removeMemberFromTeam = async (teamId: string, memberUserId: string) => {

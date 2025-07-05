@@ -24,6 +24,7 @@ export const useOrgTeams = () => {
       // Get current admin's organization from session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
+        console.log('No session found for org teams');
         setLoading(false);
         return;
       }
@@ -35,6 +36,7 @@ export const useOrgTeams = () => {
         .single();
 
       const adminOrg = adminProfile?.organization || 'Default Org';
+      console.log('Admin organization for teams:', adminOrg);
 
       // Get tournament registrations for this org's tournaments
       const { data: registrations } = await supabase
@@ -48,25 +50,43 @@ export const useOrgTeams = () => {
         `)
         .eq('tournaments.organization', adminOrg);
 
+      console.log('Tournament registrations for teams:', registrations);
+
       if (!registrations || registrations.length === 0) {
+        console.log('No registrations found for org teams:', adminOrg);
         setTeams([]);
         setLoading(false);
         return;
       }
 
       const teamIds = [...new Set(registrations.map(reg => reg.team_id))];
+      console.log('Unique team IDs:', teamIds);
 
       // Fetch teams with leader information
       const { data, error } = await supabase
         .from('teams')
         .select(`
-          *,
-          leader:profiles!teams_leader_id_fkey (display_name)
+          id,
+          name,
+          leader_id,
+          status,
+          total_earnings,
+          tournaments_played,
+          wins,
+          created_at,
+          leader:profiles!teams_leader_id_fkey (
+            display_name
+          )
         `)
         .in('id', teamIds)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching teams:', error);
+        throw error;
+      }
+
+      console.log('Teams data fetched:', data);
 
       // Get organization bans for teams
       const { data: orgBans } = await supabase
@@ -89,6 +109,7 @@ export const useOrgTeams = () => {
         has_tournament_registration: true,
       })) || [];
 
+      console.log('Final formatted teams:', formattedTeams);
       setTeams(formattedTeams);
     } catch (error) {
       console.error('Error fetching org teams:', error);
