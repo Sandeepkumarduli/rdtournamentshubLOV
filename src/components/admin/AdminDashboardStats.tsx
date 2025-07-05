@@ -1,10 +1,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { RefreshCw, TrendingUp, Users, Trophy, Wallet, Settings } from 'lucide-react';
+import { RefreshCw, TrendingUp, Wallet, Clock, CheckCircle, Play, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useToast } from '@/hooks/use-toast';
 
 interface AdminDashboardStatsProps {
   onRefresh: () => void;
@@ -13,14 +14,19 @@ interface AdminDashboardStatsProps {
 const AdminDashboardStats = ({ onRefresh }: AdminDashboardStatsProps) => {
   const navigate = useNavigate();
   const { stats, loading, refetch } = useAdminStats();
+  const { toast } = useToast();
 
   const handleSendMoney = () => {
     navigate('/org-dashboard?tab=wallets');
   };
 
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    await refetch();
     onRefresh();
+    toast({
+      title: "Data Fetched Successfully",
+      description: "Dashboard data has been refreshed",
+    });
   };
 
   if (loading) {
@@ -48,37 +54,13 @@ const AdminDashboardStats = ({ onRefresh }: AdminDashboardStatsProps) => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="gaming-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">ORG Members</p>
-                <p className="text-2xl font-bold text-slate-50">{stats.orgMembers}</p>
-              </div>
-              <Users className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="gaming-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">ORG Tournaments</p>
-                <p className="text-2xl font-bold text-slate-50">{stats.orgTournaments}</p>
-              </div>
-              <Trophy className="h-8 w-8 text-accent" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="gaming-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Prize Pool</p>
-                <p className="text-2xl font-bold text-gaming-gold">₹{stats.totalPrizePool.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Wallet Balance</p>
+                <p className="text-2xl font-bold text-gaming-gold">₹{stats.walletBalance.toLocaleString()}</p>
               </div>
               <Wallet className="h-8 w-8 text-gaming-gold" />
             </div>
@@ -89,10 +71,61 @@ const AdminDashboardStats = ({ onRefresh }: AdminDashboardStatsProps) => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Pending Reviews</p>
-                <p className="text-2xl font-bold text-warning">{stats.pendingReviews}</p>
+                <p className="text-sm text-muted-foreground">Need Room Updates</p>
+                <p className="text-2xl font-bold text-warning">{stats.tournamentsNeedingRoomUpdates}</p>
               </div>
-              <Settings className="h-8 w-8 text-warning" />
+              <Clock className="h-8 w-8 text-warning" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Prize Spent</p>
+                <p className="text-2xl font-bold text-slate-50">₹{stats.totalPrizeMoneySpent.toLocaleString()}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tournament Status Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Completed</p>
+                <p className="text-2xl font-bold text-success">{stats.completedTournaments}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-success" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Live Now</p>
+                <p className="text-2xl font-bold text-destructive">{stats.liveTournaments}</p>
+              </div>
+              <Play className="h-8 w-8 text-destructive" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Upcoming</p>
+                <p className="text-2xl font-bold text-accent">{stats.upcomingTournaments}</p>
+              </div>
+              <Calendar className="h-8 w-8 text-accent" />
             </div>
           </CardContent>
         </Card>

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { RefreshCw, Ban, UserCheck, UserX } from 'lucide-react';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useToast } from '@/hooks/use-toast';
 
 interface AdminUsersTabProps {
   onRefresh: () => void;
@@ -13,13 +14,37 @@ interface AdminUsersTabProps {
 
 const AdminUsersTab = ({ onRefresh }: AdminUsersTabProps) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
-  const { users, loading, refetch } = useAdminUsers();
+  const { users, loading, refetch, banUser, unbanUser } = useAdminUsers();
   const filteredUsers = users.filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    await refetch();
     onRefresh();
+    toast({
+      title: "Data Fetched Successfully",
+      description: "Users data has been refreshed",
+    });
+  };
+
+  const handleBanUser = async (userId: string, currentStatus: string) => {
+    const result = currentStatus === 'Active' 
+      ? await banUser(userId)
+      : await unbanUser(userId);
+    
+    if (result.success) {
+      toast({
+        title: currentStatus === 'Active' ? 'User Banned' : 'User Unbanned',
+        description: `User has been ${currentStatus === 'Active' ? 'banned from' : 'unbanned from'} organization tournaments`,
+      });
+    } else {
+      toast({
+        title: 'Error',
+        description: result.error || 'Failed to update user status',
+        variant: 'destructive'
+      });
+    }
   };
 
   if (loading) {
@@ -27,7 +52,7 @@ const AdminUsersTab = ({ onRefresh }: AdminUsersTabProps) => {
   }
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">ORG Members</h2>
+        <h2 className="text-2xl font-bold">Tournament Participants</h2>
         <div className="flex gap-2">
           <Input placeholder="Search users..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-64" />
           <Button variant="outline" onClick={handleRefresh}>
@@ -48,7 +73,11 @@ const AdminUsersTab = ({ onRefresh }: AdminUsersTabProps) => {
                   </Badge>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant={user.status === "Active" ? "destructive" : "default"} size="sm">
+                  <Button 
+                    variant={user.status === "Active" ? "destructive" : "default"} 
+                    size="sm"
+                    onClick={() => handleBanUser(user.id, user.status)}
+                  >
                     {user.status === "Active" ? <>
                         <Ban className="h-4 w-4 mr-2" />
                         Ban User

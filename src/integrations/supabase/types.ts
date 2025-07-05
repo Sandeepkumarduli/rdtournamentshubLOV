@@ -109,6 +109,58 @@ export type Database = {
           },
         ]
       }
+      organization_bans: {
+        Row: {
+          banned_by: string
+          banned_team_id: string | null
+          banned_user_id: string | null
+          created_at: string
+          id: string
+          organization: string
+          reason: string | null
+        }
+        Insert: {
+          banned_by: string
+          banned_team_id?: string | null
+          banned_user_id?: string | null
+          created_at?: string
+          id?: string
+          organization: string
+          reason?: string | null
+        }
+        Update: {
+          banned_by?: string
+          banned_team_id?: string | null
+          banned_user_id?: string | null
+          created_at?: string
+          id?: string
+          organization?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_bans_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "organization_bans_banned_team_id_fkey"
+            columns: ["banned_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_bans_banned_user_id_fkey"
+            columns: ["banned_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -489,6 +541,14 @@ export type Database = {
       get_admin_organization: {
         Args: { admin_user_id: string }
         Returns: string
+      }
+      is_team_banned_by_org: {
+        Args: { team_id_param: string; org_name: string }
+        Returns: boolean
+      }
+      is_user_banned_by_org: {
+        Args: { user_id_param: string; org_name: string }
+        Returns: boolean
       }
     }
     Enums: {

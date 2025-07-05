@@ -8,6 +8,14 @@ export interface AdminTournament {
   prize: number;
   participants: number;
   startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  gameType: string;
+  entryFee: number;
+  maxTeams: number;
+  roomId: string | null;
+  roomPassword: string | null;
   org: string;
 }
 
@@ -48,12 +56,20 @@ export const useAdminTournaments = () => {
         id: tournament.id,
         name: tournament.name,
         status: tournament.status === 'upcoming' ? 'Upcoming' : 
-                tournament.status === 'active' ? 'Active' : 'Completed',
+                tournament.status === 'active' ? 'Live' : 'Completed',
         prize: tournament.prize_pool || 0,
         participants: Array.isArray(tournament.tournament_registrations) 
           ? tournament.tournament_registrations.length 
           : 0,
         startDate: tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : '',
+        startTime: tournament.start_date ? new Date(tournament.start_date).toLocaleTimeString() : '',
+        endDate: tournament.end_date ? new Date(tournament.end_date).toLocaleDateString() : '',
+        endTime: tournament.end_date ? new Date(tournament.end_date).toLocaleTimeString() : '',
+        gameType: tournament.game_type,
+        entryFee: tournament.entry_fee || 0,
+        maxTeams: tournament.max_teams || 0,
+        roomId: tournament.room_id,
+        roomPassword: tournament.room_password,
         org: adminOrg,
       })) || [];
 

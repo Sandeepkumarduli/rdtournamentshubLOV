@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshCw, Edit, Trash2, X } from 'lucide-react';
 import CreateTournamentDialog from '@/components/CreateTournamentDialog';
+import UpdateRoomDialog from '@/components/admin/UpdateRoomDialog';
 import { useAdminTournaments } from '@/hooks/useAdminTournaments';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useToast } from '@/hooks/use-toast';
 
 interface AdminTournamentsTabProps {
   onRefresh: () => void;
@@ -17,6 +19,7 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('');
   const { tournaments, loading, refetch } = useAdminTournaments();
+  const { toast } = useToast();
 
   const filteredTournaments = tournaments.filter(tournament => {
     if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
@@ -24,9 +27,13 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
     return true;
   });
 
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    await refetch();
     onRefresh();
+    toast({
+      title: "Data Fetched Successfully",
+      description: "Tournaments data has been refreshed",
+    });
   };
 
   if (loading) {
@@ -59,7 +66,7 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="All">All</SelectItem>
-            <SelectItem value="Active">Active</SelectItem>
+            <SelectItem value="Live">Live</SelectItem>
             <SelectItem value="Upcoming">Upcoming</SelectItem>
           </SelectContent>
         </Select>
@@ -84,7 +91,7 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold">{tournament.name}</CardTitle>
-                <Badge variant={tournament.status === "Active" ? "destructive" : "secondary"}>
+                <Badge variant={tournament.status === "Live" ? "destructive" : tournament.status === "Completed" ? "secondary" : "default"}>
                   {tournament.status}
                 </Badge>
               </div>
@@ -97,13 +104,40 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
                 </div>
                 
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Date:</span>
+                  <span className="text-muted-foreground">Entry Fee:</span>
+                  <span className="font-medium">₹{tournament.entryFee.toLocaleString()}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Start Date:</span>
                   <span className="font-medium">{tournament.startDate}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Participants:</span>
+                  <span className="text-muted-foreground">Start Time:</span>
+                  <span className="font-medium">{tournament.startTime}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Game Mode:</span>
+                  <span className="font-medium">{tournament.gameType}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Max Teams:</span>
+                  <span className="font-medium">{tournament.maxTeams || 'Unlimited'}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Registered:</span>
                   <span className="font-medium">{tournament.participants}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Room Status:</span>
+                  <span className={`font-medium ${tournament.roomId ? 'text-success' : 'text-warning'}`}>
+                    {tournament.roomId ? 'Ready' : 'Needs Update'}
+                  </span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
@@ -112,7 +146,13 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
                 </div>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                <UpdateRoomDialog 
+                  tournamentId={tournament.id}
+                  currentRoomId={tournament.roomId}
+                  currentRoomPassword={tournament.roomPassword}
+                  onUpdate={refetch}
+                />
                 <Button variant="outline" size="sm">
                   <Edit className="h-4 w-4" />
                 </Button>

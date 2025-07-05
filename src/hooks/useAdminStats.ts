@@ -2,18 +2,22 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AdminStats {
-  orgMembers: number;
-  orgTournaments: number;
-  totalPrizePool: number;
-  pendingReviews: number;
+  walletBalance: number;
+  tournamentsNeedingRoomUpdates: number;
+  completedTournaments: number;
+  liveTournaments: number;
+  upcomingTournaments: number;
+  totalPrizeMoneySpent: number;
 }
 
 export const useAdminStats = () => {
   const [stats, setStats] = useState<AdminStats>({
-    orgMembers: 0,
-    orgTournaments: 0,
-    totalPrizePool: 0,
-    pendingReviews: 0,
+    walletBalance: 0,
+    tournamentsNeedingRoomUpdates: 0,
+    completedTournaments: 0,
+    liveTournaments: 0,
+    upcomingTournaments: 0,
+    totalPrizeMoneySpent: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -35,32 +39,46 @@ export const useAdminStats = () => {
 
       const adminOrg = adminProfile?.organization || 'Default Org';
 
-      // Fetch org members count
-      const { count: membersCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('organization', adminOrg);
+      // Fetch admin's wallet balance
+      const { data: adminWallet } = await supabase
+        .from('wallet_balances')
+        .select('balance')
+        .eq('user_id', session.user.id)
+        .single();
 
       // Fetch org tournaments created by this organization
       const { data: tournaments } = await supabase
         .from('tournaments')
-        .select('prize_pool')
+        .select('*')
         .eq('organization', adminOrg);
 
-      // Calculate total prize pool for org tournaments
-      const totalPrizePool = tournaments?.reduce((sum, t) => sum + (t.prize_pool || 0), 0) || 0;
+      // Calculate tournament stats
+      const tournamentsNeedingRoomUpdates = tournaments?.filter(t => 
+        !t.room_id || !t.room_password
+      ).length || 0;
+      
+      const completedTournaments = tournaments?.filter(t => 
+        t.status === 'completed'
+      ).length || 0;
+      
+      const liveTournaments = tournaments?.filter(t => 
+        t.status === 'active'
+      ).length || 0;
+      
+      const upcomingTournaments = tournaments?.filter(t => 
+        t.status === 'upcoming'
+      ).length || 0;
 
-      // Fetch pending reviews (reports) - only for system admin or all for regular admin
-      const { count: pendingCount } = await supabase
-        .from('reports')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+      // Calculate total prize money spent (sum of all prize pools)
+      const totalPrizeMoneySpent = tournaments?.reduce((sum, t) => sum + (t.prize_pool || 0), 0) || 0;
 
       setStats({
-        orgMembers: membersCount || 0,
-        orgTournaments: tournaments?.length || 0,
-        totalPrizePool,
-        pendingReviews: pendingCount || 0,
+        walletBalance: adminWallet?.balance || 0,
+        tournamentsNeedingRoomUpdates,
+        completedTournaments,
+        liveTournaments,
+        upcomingTournaments,
+        totalPrizeMoneySpent,
       });
     } catch (error) {
       console.error('Error fetching admin stats:', error);
@@ -75,9 +93,8 @@ export const useAdminStats = () => {
     // Subscribe to changes
     const channel = supabase
       .channel('admin-stats-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchAdminStats)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, fetchAdminStats)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, fetchAdminStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wallet_balances' }, fetchAdminStats)
       .subscribe();
 
     return () => {

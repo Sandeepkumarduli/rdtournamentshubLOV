@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Mail, Phone, MessageSquare, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminReportPage = () => {
   const [reportData, setReportData] = useState({
@@ -17,22 +18,58 @@ const AdminReportPage = () => {
   });
   const { toast } = useToast();
 
-  const handleSubmitReport = (e: React.FormEvent) => {
+  const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Generate unique ID for report
-    const reportId = Math.random().toString(36).substring(2, 8).toUpperCase();
     
-    toast({
-      title: "Report Submitted",
-      description: `Your report #${reportId} has been submitted to System Admin for review.`,
-    });
-    
-    setReportData({
-      type: '',
-      subject: '',
-      description: '',
-      priority: 'medium'
-    });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit a report",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, role')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const { error } = await supabase
+        .from('reports')
+        .insert([{
+          reporter_id: session.user.id,
+          type: reportData.type,
+          title: reportData.subject,
+          description: `${reportData.description}\n\n--- Admin Info ---\nUsername: ${profile?.display_name || 'Not Set'}\nRole: ORG Admin`,
+          priority: reportData.priority,
+          category: 'admin_report',
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Report Submitted",
+        description: "Your report has been submitted to System Admin for review.",
+      });
+      
+      setReportData({
+        type: '',
+        subject: '',
+        description: '',
+        priority: 'medium'
+      });
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit report. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleRefresh = () => {
