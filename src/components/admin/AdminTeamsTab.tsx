@@ -6,6 +6,7 @@ import { RefreshCw, Ban, UserX } from 'lucide-react';
 import { useOrgTeams } from '@/hooks/useOrgTeams';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
+import PopulateRegistrationsButton from '@/components/PopulateRegistrationsButton';
 
 interface AdminTeamsTabProps {
   onRefresh: () => void;
@@ -19,8 +20,8 @@ const AdminTeamsTab = ({ onRefresh }: AdminTeamsTabProps) => {
     onRefresh();
     await refetch();
     toast({
-      title: "Data Fetched Successfully",
-      description: "Teams data has been refreshed",
+      title: "Teams Updated",
+      description: "Teams loaded successfully for this organization",
     });
   };
 
@@ -49,10 +50,13 @@ const AdminTeamsTab = ({ onRefresh }: AdminTeamsTabProps) => {
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Tournament Teams</h2>
-        <Button variant="outline" onClick={handleRefresh}>
-          <RefreshCw className="h-4 w-4" />
-          Refresh Teams
-        </Button>
+        <div className="flex gap-2">
+          <PopulateRegistrationsButton />
+          <Button variant="outline" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4" />
+            Refresh Teams
+          </Button>
+        </div>
       </div>
       
       <div className="grid gap-4">

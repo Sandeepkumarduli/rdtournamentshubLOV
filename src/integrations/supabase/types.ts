@@ -109,6 +109,61 @@ export type Database = {
           },
         ]
       }
+      org_user_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          org_name: string
+          registration_type: string
+          team_id: string | null
+          tournament_id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_name: string
+          registration_type: string
+          team_id?: string | null
+          tournament_id: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_name?: string
+          registration_type?: string
+          team_id?: string | null
+          tournament_id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_org_user_registrations_team_id"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_org_user_registrations_tournament_id"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_org_user_registrations_user_id"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       organization_bans: {
         Row: {
           banned_by: string

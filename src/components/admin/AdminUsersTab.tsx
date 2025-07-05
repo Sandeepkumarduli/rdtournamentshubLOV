@@ -23,8 +23,8 @@ const AdminUsersTab = ({ onRefresh }: AdminUsersTabProps) => {
     await refetch();
     onRefresh();
     toast({
-      title: "Data Fetched Successfully",
-      description: "Users data has been refreshed",
+      title: "Users Updated",
+      description: "Users fetched for this organization",
     });
   };
 

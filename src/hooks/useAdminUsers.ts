@@ -34,68 +34,35 @@ export const useAdminUsers = () => {
       const adminOrg = adminProfile?.organization || 'Default Org';
       console.log('Admin organization:', adminOrg);
 
-      // Fetch tournament registrations with tournament organization data
-      const { data: tournamentRegistrations, error: regError } = await supabase
-        .from('tournament_registrations')
-        .select(`
-          team_id,
-          tournament_id,
-          tournaments (
-            id,
-            organization
-          )
-        `)
-        .not('tournaments.organization', 'is', null);
-
-      if (regError) {
-        console.error('Error fetching tournament registrations:', regError);
-        setUsers([]);
-        setLoading(false);
-        return;
-      }
-
-      console.log('All tournament registrations:', tournamentRegistrations);
-
-      // Filter registrations for this organization
-      const orgRegistrations = tournamentRegistrations?.filter(reg => 
-        reg.tournaments?.organization === adminOrg
-      ) || [];
-
-      console.log('Filtered registrations for org:', orgRegistrations);
-
-      if (orgRegistrations.length === 0) {
-        console.log('No tournament registrations found for org:', adminOrg);
-        setUsers([]);
-        setLoading(false);
-        return;
-      }
-
-      const teamIds = orgRegistrations.map(reg => reg.team_id);
-      console.log('Team IDs from registrations:', teamIds);
-
-      // Get team members from these teams
-      const { data: teamMembers, error: teamMembersError } = await supabase
-        .from('team_members')
+      // Fetch users who registered for this org's tournaments
+      const { data: orgRegistrations, error: regError } = await supabase
+        .from('org_user_registrations')
         .select(`
           user_id,
-          profiles!inner(
-            user_id,
-            display_name,
-            email,
-            created_at,
-            organization
-          )
+          username,
+          team_id,
+          org_name,
+          tournament_id,
+          registration_type,
+          created_at
         `)
-        .in('team_id', teamIds);
+        .eq('org_name', adminOrg);
 
-      if (teamMembersError) {
-        console.error('Error fetching team members:', teamMembersError);
+      if (regError) {
+        console.error('Error fetching org registrations:', regError);
         setUsers([]);
         setLoading(false);
         return;
       }
 
-      console.log('Team members found:', teamMembers);
+      console.log('Org user registrations:', orgRegistrations);
+
+      if (!orgRegistrations || orgRegistrations.length === 0) {
+        console.log('No user registrations found for org:', adminOrg);
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
 
       // Get organization bans for this org
       const { data: orgBans } = await supabase
@@ -105,22 +72,26 @@ export const useAdminUsers = () => {
 
       const bannedUserIds = orgBans?.map(ban => ban.banned_user_id) || [];
 
-      const formattedUsers = teamMembers?.map(member => ({
-        id: member.profiles.user_id, // Use user_id for ban functionality
-        username: member.profiles.display_name || member.profiles.email || 'Unknown',
-        email: member.profiles.email || '',
-        status: bannedUserIds.includes(member.profiles.user_id) ? 'Banned' : 'Active',
-        joinDate: new Date(member.profiles.created_at).toLocaleDateString(),
-        organization: member.profiles.organization || adminOrg,
-      })) || [];
+      // Format users from org registrations (remove duplicates)
+      const uniqueUserMap = new Map();
+      
+      orgRegistrations.forEach(reg => {
+        if (!uniqueUserMap.has(reg.user_id)) {
+          uniqueUserMap.set(reg.user_id, {
+            id: reg.user_id,
+            username: reg.username,
+            email: '', // We'll need to get this from profiles if needed
+            status: bannedUserIds.includes(reg.user_id) ? 'Banned' : 'Active',
+            joinDate: new Date(reg.created_at).toLocaleDateString(),
+            organization: reg.org_name,
+          });
+        }
+      });
 
-      // Remove duplicates based on user_id
-      const uniqueUsers = formattedUsers.filter((user, index, self) => 
-        index === self.findIndex(u => u.id === user.id)
-      );
+      const formattedUsers = Array.from(uniqueUserMap.values());
 
-      console.log('Final formatted users:', uniqueUsers);
-      setUsers(uniqueUsers);
+      console.log('Final formatted users:', formattedUsers);
+      setUsers(formattedUsers);
     } catch (error) {
       console.error('Error fetching admin users:', error);
     } finally {
@@ -192,11 +163,10 @@ export const useAdminUsers = () => {
   useEffect(() => {
     fetchUsers();
 
-    // Subscribe to profile changes and registrations
+    // Subscribe to real-time changes
     const channel = supabase
       .channel('admin-users-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchUsers)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_registrations' }, fetchUsers)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'org_user_registrations' }, fetchUsers)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'organization_bans' }, fetchUsers)
       .subscribe();
 
