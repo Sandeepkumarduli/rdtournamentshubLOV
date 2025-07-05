@@ -67,37 +67,37 @@ const App = () => (
             </ProtectedRoute>
           } />
           <Route path="/system-admin-dashboard" element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="systemadmin">
               <SystemAdminDashboard />
             </ProtectedRoute>
           } />
           <Route path="/system-users" element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="systemadmin">
               <SystemUserManagement />
             </ProtectedRoute>
           } />
           <Route path="/system-transactions" element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="systemadmin">
               <SystemTransactions />
             </ProtectedRoute>
           } />
           <Route path="/system-admin-requests" element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="systemadmin">
               <SystemAdminRequests />
             </ProtectedRoute>
           } />
           <Route path="/system-teams" element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="systemadmin">
               <SystemTeams />
             </ProtectedRoute>
           } />
           <Route path="/system-reports" element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="systemadmin">
               <SystemReports />
             </ProtectedRoute>
           } />
           <Route path="/system-chat" element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="systemadmin">
               <SystemChatPage />
             </ProtectedRoute>
           } />

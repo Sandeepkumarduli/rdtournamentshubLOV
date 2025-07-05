@@ -43,31 +43,34 @@ const ProtectedRoute = ({
         return;
       }
 
-      // If role is required, check user role
-      if (requiredRole !== 'user') {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('user_id', user.id)
-            .single();
+      // Always check user role for protected routes
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
 
-          const userRole = profile?.role;
+        const userRole = profile?.role;
 
-          // Check role permissions
-          if (requiredRole === 'systemadmin' && userRole !== 'systemadmin') {
-            navigate('/system-admin-login');
-            return;
-          }
-
-          if (requiredRole === 'admin' && !['admin', 'systemadmin'].includes(userRole)) {
-            navigate('/admin-login');
-            return;
-          }
-        } catch (error) {
-          console.error('Error checking user role:', error);
+        // Strict role-based access control
+        if (requiredRole === 'user' && userRole !== 'user') {
           navigate('/login');
+          return;
         }
+
+        if (requiredRole === 'admin' && userRole !== 'admin') {
+          navigate('/admin-login');
+          return;
+        }
+
+        if (requiredRole === 'systemadmin' && userRole !== 'systemadmin') {
+          navigate('/system-admin-login');
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        navigate('/login');
       }
     };
 
