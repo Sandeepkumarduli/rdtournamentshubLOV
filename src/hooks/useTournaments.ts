@@ -16,6 +16,7 @@ export interface Tournament {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  organization: string | null;
 }
 
 export const useTournaments = () => {

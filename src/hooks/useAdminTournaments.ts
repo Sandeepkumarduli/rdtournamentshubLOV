@@ -18,10 +18,20 @@ export const useAdminTournaments = () => {
   const fetchTournaments = async () => {
     setLoading(true);
     try {
-      // Get current admin's organization
-      const auth = localStorage.getItem("userAuth");
-      const adminData = auth ? JSON.parse(auth) : null;
-      const adminOrg = adminData?.organization || 'FireStorm';
+      // Get current admin's organization from session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('organization')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const adminOrg = adminProfile?.organization || 'Default Org';
 
       const { data, error } = await supabase
         .from('tournaments')
@@ -29,23 +39,12 @@ export const useAdminTournaments = () => {
           *,
           tournament_registrations!tournament_registrations_tournament_id_fkey(count)
         `)
+        .eq('organization', adminOrg)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Filter tournaments by admin's organization if they have created_by matching admin's profile
-      const { data: adminProfile } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('organization', adminOrg)
-        .eq('role', 'admin')
-        .single();
-
-      const orgTournaments = data?.filter(tournament => 
-        tournament.created_by === adminProfile?.user_id
-      ) || [];
-
-      const formattedTournaments = orgTournaments.map(tournament => ({
+      const formattedTournaments = data?.map(tournament => ({
         id: tournament.id,
         name: tournament.name,
         status: tournament.status === 'upcoming' ? 'Upcoming' : 
@@ -56,7 +55,7 @@ export const useAdminTournaments = () => {
           : 0,
         startDate: tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : '',
         org: adminOrg,
-      }));
+      })) || [];
 
       setTournaments(formattedTournaments);
     } catch (error) {

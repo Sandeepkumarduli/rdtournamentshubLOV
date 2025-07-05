@@ -20,10 +20,20 @@ export const useAdminStats = () => {
   const fetchAdminStats = async () => {
     setLoading(true);
     try {
-      // Get current admin's organization from localStorage
-      const auth = localStorage.getItem("userAuth");
-      const adminData = auth ? JSON.parse(auth) : null;
-      const adminOrg = adminData?.organization || 'FireStorm';
+      // Get current admin's organization from session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('organization')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const adminOrg = adminProfile?.organization || 'Default Org';
 
       // Fetch org members count
       const { count: membersCount } = await supabase
@@ -31,16 +41,16 @@ export const useAdminStats = () => {
         .select('*', { count: 'exact', head: true })
         .eq('organization', adminOrg);
 
-      // Fetch org tournaments
+      // Fetch org tournaments created by this organization
       const { data: tournaments } = await supabase
         .from('tournaments')
         .select('prize_pool')
-        .eq('status', 'active');
+        .eq('organization', adminOrg);
 
       // Calculate total prize pool for org tournaments
       const totalPrizePool = tournaments?.reduce((sum, t) => sum + (t.prize_pool || 0), 0) || 0;
 
-      // Fetch pending reviews (reports)
+      // Fetch pending reviews (reports) - only for system admin or all for regular admin
       const { count: pendingCount } = await supabase
         .from('reports')
         .select('*', { count: 'exact', head: true })

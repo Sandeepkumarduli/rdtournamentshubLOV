@@ -347,6 +347,7 @@ export type Database = {
           id: string
           max_teams: number | null
           name: string
+          organization: string | null
           prize_pool: number | null
           room_id: string | null
           room_password: string | null
@@ -365,6 +366,7 @@ export type Database = {
           id?: string
           max_teams?: number | null
           name: string
+          organization?: string | null
           prize_pool?: number | null
           room_id?: string | null
           room_password?: string | null
@@ -383,6 +385,7 @@ export type Database = {
           id?: string
           max_teams?: number | null
           name?: string
+          organization?: string | null
           prize_pool?: number | null
           room_id?: string | null
           room_password?: string | null
@@ -483,7 +486,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_admin_organization: {
+        Args: { admin_user_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

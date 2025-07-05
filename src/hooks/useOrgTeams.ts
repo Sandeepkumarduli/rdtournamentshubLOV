@@ -21,10 +21,20 @@ export const useOrgTeams = () => {
   const fetchOrgTeams = async () => {
     setLoading(true);
     try {
-      // Get current admin's organization
-      const auth = localStorage.getItem("userAuth");
-      const adminData = auth ? JSON.parse(auth) : null;
-      const adminOrg = adminData?.organization || 'FireStorm';
+      // Get current admin's organization from session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('organization')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const adminOrg = adminProfile?.organization || 'Default Org';
 
       // Fetch teams with leader information and tournament registrations
       const { data, error } = await supabase
@@ -32,17 +42,19 @@ export const useOrgTeams = () => {
         .select(`
           *,
           leader:profiles!teams_leader_id_fkey (display_name, organization),
-          tournament_registrations (id, tournament_id)
+          tournament_registrations!tournament_registrations_team_id_fkey (id, tournament_id, tournaments!inner(organization))
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Filter teams that belong to the organization and have tournament registrations
+      // Filter teams that have registered for tournaments from this organization
       const orgTeams = data?.filter(team => 
-        team.leader?.organization === adminOrg && 
         team.tournament_registrations && 
-        team.tournament_registrations.length > 0
+        team.tournament_registrations.length > 0 &&
+        team.tournament_registrations.some((reg: any) => 
+          reg.tournaments?.organization === adminOrg
+        )
       ) || [];
 
       const formattedTeams: OrgTeam[] = orgTeams.map(team => ({

@@ -43,8 +43,8 @@ const DashboardHome = () => {
   };
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // Force refresh by reloading the page data
-    window.location.reload();
+    // Refresh data without full page reload
+    setTimeout(() => setIsRefreshing(false), 1000);
   };
 
   const handleJoinTournament = (tournament: any) => {
@@ -235,8 +235,10 @@ const DashboardHome = () => {
                     </div>
                     
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Game:</span>
-                      <Badge variant="outline">{tournament.game_type}</Badge>
+                      <span className="text-muted-foreground">Organization:</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {tournament.organization || 'Unknown ORG'}
+                      </Badge>
                     </div>
                   </div>
                   

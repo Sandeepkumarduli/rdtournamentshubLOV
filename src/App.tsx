@@ -28,8 +28,7 @@ import TournamentGuide from "./pages/TournamentGuide";
 import Rules from "./pages/Rules";
 import Contact from "./pages/Contact";
 import WalletSystem from "./pages/WalletSystem";
-import UserChat from "./components/UserChat";
-import SystemChatPage from "./pages/SystemChatPage";
+import ChatComingSoon from "./components/ChatComingSoon";
 import Report from "./pages/Report";
 
 const queryClient = new QueryClient();
@@ -54,7 +53,7 @@ const App = () => (
             <Route path="wallet" element={<WalletPage />} />
             <Route path="groups" element={<Groups />} />
             <Route path="profile" element={<Profile />} />
-            <Route path="chat" element={<UserChat />} />
+            <Route path="chat" element={<ChatComingSoon />} />
             <Route path="report" element={<Report />} />
           </Route>
           <Route path="/org-dashboard" element={<AdminDashboard />} />
@@ -64,7 +63,7 @@ const App = () => (
           <Route path="/system-admin-requests" element={<SystemAdminRequests />} />
           <Route path="/system-teams" element={<SystemTeams />} />
           <Route path="/system-reports" element={<SystemReports />} />
-          <Route path="/system-chat" element={<SystemChatPage />} />
+          <Route path="/system-chat" element={<ChatComingSoon />} />
           <Route path="/tournament-guide" element={<TournamentGuide />} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/contact" element={<Contact />} />

@@ -26,11 +26,15 @@ export const useReportSubmission = () => {
         'tournament': 'tournament_issue',
         'player': 'player_misconduct', 
         'payment': 'payment_issue',
-        'technical': 'technical_bug',
-        'other': 'other_issue'
+        'technical': 'technical_issue',
+        'bug': 'bug_report',
+        'account': 'account_issue',
+        'general': 'general_inquiry',
+        'feature': 'feature_request',
+        'other': 'other'
       };
 
-      const dbType = validTypeMap[data.type] || 'other_issue';
+      const dbType = validTypeMap[data.type] || 'other';
 
       const { error } = await supabase
         .from('reports')

@@ -17,10 +17,20 @@ export const useAdminWallets = () => {
   const fetchWallets = async () => {
     setLoading(true);
     try {
-      // Get current admin's organization
-      const auth = localStorage.getItem("userAuth");
-      const adminData = auth ? JSON.parse(auth) : null;
-      const adminOrg = adminData?.organization || 'FireStorm';
+      // Get current admin's organization from session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('organization')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const adminOrg = adminProfile?.organization || 'Default Org';
 
       // Fetch users in the organization with their wallet data
       const { data: profiles } = await supabase
@@ -42,16 +52,8 @@ export const useAdminWallets = () => {
 
       setWallets(formattedWallets);
 
-      // Calculate organization balance (sum of all transactions for the org)
-      const { data: transactions } = await supabase
-        .from('transactions')
-        .select('amount, type')
-        .in('user_id', profiles?.map(p => p.user_id) || []);
-
-      const totalBalance = transactions?.reduce((sum, t) => {
-        return t.type === 'credit' ? sum + t.amount : sum - t.amount;
-      }, 50000) || 50000; // Start with base amount
-
+      // Calculate organization balance (sum of all wallet balances in the org)
+      const totalBalance = formattedWallets.reduce((sum, wallet) => sum + wallet.wallet, 0);
       setOrgBalance(totalBalance);
     } catch (error) {
       console.error('Error fetching admin wallets:', error);

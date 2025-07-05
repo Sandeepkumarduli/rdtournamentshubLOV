@@ -4,14 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import AdminSidebar from "@/components/AdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import OrgChat from "@/components/OrgChat";
+import ChatComingSoon from "@/components/ChatComingSoon";
 import AdminDashboardStats from "@/components/admin/AdminDashboardStats";
 import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminTournamentsTab from "@/components/admin/AdminTournamentsTab";
 import AdminTeamsTab from "@/components/admin/AdminTeamsTab";
 import AdminWalletsTab from "@/components/admin/AdminWalletsTab";
 import AdminGroupTab from "@/components/admin/AdminGroupTab";
-import AdminChat from "@/components/AdminChat";
 import AdminReportPage from "@/components/AdminReportPage";
 import TopBar from "@/components/TopBar";
 import PageTransition from "@/components/PageTransition";
@@ -38,10 +37,10 @@ const AdminDashboard = () => {
           return;
         }
         
-        // Check if user has admin role
+        // Check if user has admin role and get organization
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, organization, display_name')
           .eq('user_id', session.user.id)
           .single();
           
@@ -107,9 +106,8 @@ const AdminDashboard = () => {
       case 'admin-group':
         return <AdminGroupTab />;
       case 'chat':
-        return <AdminChat />;
       case 'org-chat':
-        return <OrgChat />;
+        return <ChatComingSoon />;
       case 'report':
         return <AdminReportPage />;
       default:
@@ -129,7 +127,7 @@ const AdminDashboard = () => {
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-bold">Welcome back, Admin!</h1>
+                <h1 className="text-xl font-bold">Welcome back, {adminData?.organization || 'ORG'} Admin!</h1>
                 <p className="text-muted-foreground">Manage your ORG tournaments</p>
               </div>
               

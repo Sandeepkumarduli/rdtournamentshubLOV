@@ -25,11 +25,19 @@ export const useTournamentCreation = () => {
         return { error: 'Not authenticated' };
       }
 
+      // Get admin's organization
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('organization')
+        .eq('user_id', session.user.id)
+        .single();
+
       const { data: tournament, error } = await supabase
         .from('tournaments')
         .insert([{
           ...data,
           created_by: session.user.id,
+          organization: adminProfile?.organization || 'Default Org',
           status: 'upcoming',
         }])
         .select()

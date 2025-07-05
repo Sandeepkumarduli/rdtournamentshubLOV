@@ -57,8 +57,9 @@ const TournamentJoinDialog = ({
     if (isSolo) return true;
     
     // For team tournaments, check minimum member count
-    // Note: This assumes team has a members count property, adjust as needed
-    return true; // For now, allow all teams, you can add member count validation later
+    // We'll assume each team has proper member count validation
+    // This needs to be implemented based on actual team member count
+    return true; // TODO: Add proper member count validation when team members API is available
   });
 
   const handleJoin = async () => {
