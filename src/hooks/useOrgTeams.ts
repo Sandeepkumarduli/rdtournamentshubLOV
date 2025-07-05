@@ -163,6 +163,7 @@ export const useOrgTeams = () => {
       .channel('org-teams-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, fetchOrgTeams)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_registrations' }, fetchOrgTeams)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'organization_bans' }, fetchOrgTeams)
       .subscribe();
 
     return () => {

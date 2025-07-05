@@ -67,7 +67,7 @@ export const useAdminUsers = () => {
       const bannedUserIds = orgBans?.map(ban => ban.banned_user_id) || [];
 
       const formattedUsers = teamMembers?.map(member => ({
-        id: member.profiles.id,
+        id: member.profiles.user_id, // Use user_id for ban functionality
         username: member.profiles.display_name || member.profiles.email || 'Unknown',
         email: member.profiles.email || '',
         status: bannedUserIds.includes(member.profiles.user_id) ? 'Banned' : 'Active',
@@ -152,10 +152,12 @@ export const useAdminUsers = () => {
   useEffect(() => {
     fetchUsers();
 
-    // Subscribe to profile changes
+    // Subscribe to profile changes and registrations
     const channel = supabase
       .channel('admin-users-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchUsers)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_registrations' }, fetchUsers)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'organization_bans' }, fetchUsers)
       .subscribe();
 
     return () => {

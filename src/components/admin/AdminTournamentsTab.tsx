@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshCw, Edit, Trash2, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import CreateTournamentDialog from '@/components/CreateTournamentDialog';
 import UpdateRoomDialog from '@/components/admin/UpdateRoomDialog';
 import { useAdminTournaments } from '@/hooks/useAdminTournaments';
@@ -20,6 +21,39 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
   const [dateFilter, setDateFilter] = useState('');
   const { tournaments, loading, refetch } = useAdminTournaments();
   const { toast } = useToast();
+
+  const handleDeleteTournament = async (tournamentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tournaments')
+        .delete()
+        .eq('id', tournamentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Tournament Deleted",
+        description: "Tournament has been successfully deleted",
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error('Error deleting tournament:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete tournament",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditTournament = (tournamentId: string) => {
+    // For now, just show a message that edit functionality is coming soon
+    toast({
+      title: "Edit Tournament",
+      description: "Edit functionality coming soon. Use Update Room dialog for now.",
+    });
+  };
 
   const filteredTournaments = tournaments.filter(tournament => {
     if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
@@ -153,10 +187,10 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
                   currentRoomPassword={tournament.roomPassword}
                   onUpdate={refetch}
                 />
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleEditTournament(tournament.id)}>
                   <Edit className="h-4 w-4" />
                 </Button>
-                <Button variant="destructive" size="sm">
+                <Button variant="destructive" size="sm" onClick={() => handleDeleteTournament(tournament.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
