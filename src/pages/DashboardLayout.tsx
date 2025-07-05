@@ -6,6 +6,7 @@ import UserSidebar from "@/components/UserSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import TopBar from "@/components/TopBar";
 import PageTransition from "@/components/PageTransition";
+import AccountBlockedPage from "@/components/AccountBlockedPage";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useWallet } from "@/hooks/useWallet";
@@ -22,6 +23,11 @@ const DashboardLayout = () => {
 
   if (!user || !profile) {
     return <LoadingSpinner fullScreen />;
+  }
+
+  // Check if user is frozen and not accessing the report page
+  if (profile.role === 'frozen' && !location.pathname.includes('/report')) {
+    return <AccountBlockedPage />;
   }
 
   return (
