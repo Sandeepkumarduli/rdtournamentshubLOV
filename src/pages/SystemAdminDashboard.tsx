@@ -240,11 +240,11 @@ const SystemAdminDashboard = () => {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span>Current Online Users</span>
-                  <span className="font-semibold text-success">423</span>
+                  <span className="font-semibold text-success">{systemMetrics.dailyActiveUsers}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Active Matches</span>
-                  <span className="font-semibold text-accent">28</span>
+                  <span className="font-semibold text-accent">{systemMetrics.activeTournaments}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Pending Admin Requests</span>

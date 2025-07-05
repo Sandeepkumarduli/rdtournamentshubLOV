@@ -1,114 +1,69 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface SystemChatUser {
+export interface SystemMessage {
   id: string;
-  name: string;
-  type: 'user' | 'admin';
-  status: 'online' | 'offline';
-  lastMessage?: string;
-  unreadCount: number;
-  organization?: string;
-}
-
-export interface SystemChatMessage {
-  id: string;
-  text: string;
+  message: string;
   sender: string;
-  senderType: 'user' | 'admin' | 'system';
-  timestamp: string;
-  isMe: boolean;
+  messageType: string;
+  createdAt: string;
 }
 
 export const useSystemChat = () => {
-  const [users, setUsers] = useState<SystemChatUser[]>([]);
-  const [messages, setMessages] = useState<Record<string, SystemChatMessage[]>>({});
+  const [messages, setMessages] = useState<SystemMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchChatUsers = async () => {
+  const fetchMessages = async () => {
     setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('role', ['user', 'admin'])
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-
-      const formattedUsers = data?.map(profile => ({
-        id: profile.user_id,
-        name: profile.display_name || profile.email || 'Unknown',
-        type: profile.role === 'admin' ? 'admin' as const : 'user' as const,
-        status: 'online' as const, // In a real app, you'd track this
-        lastMessage: 'Available for chat',
-        unreadCount: 0,
-        organization: profile.organization,
-      })) || [];
-
-      setUsers(formattedUsers);
-    } catch (error) {
-      console.error('Error fetching chat users:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMessages = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('chat_messages')
         .select(`
           *,
-          sender:profiles!chat_messages_sender_id_fkey (display_name, email, role),
-          recipient:profiles!chat_messages_recipient_id_fkey (display_name, email, role)
+          profiles!chat_messages_sender_id_fkey (display_name, email)
         `)
-        .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
-        .order('created_at', { ascending: true });
+        .eq('message_type', 'broadcast')
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) throw error;
 
       const formattedMessages = data?.map(msg => ({
         id: msg.id,
-        text: msg.message,
-        sender: msg.sender?.display_name || msg.sender?.email || 'Unknown',
-        senderType: msg.sender?.role === 'admin' ? 'admin' as const : 
-                   msg.sender?.role === 'systemadmin' ? 'system' as const : 'user' as const,
-        timestamp: new Date(msg.created_at).toLocaleTimeString(),
-        isMe: false, // Set based on current user
+        message: msg.message,
+        sender: msg.profiles?.display_name || msg.profiles?.email || 'System Admin',
+        messageType: msg.message_type || 'broadcast',
+        createdAt: new Date(msg.created_at).toLocaleString(),
       })) || [];
 
-      setMessages(prev => ({
-        ...prev,
-        [userId]: formattedMessages,
-      }));
+      setMessages(formattedMessages);
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error('Error fetching system messages:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const sendMessage = async (recipientId: string, message: string) => {
+  const sendMessage = async (message: string, type: string = 'broadcast') => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.user) {
+      if (!session) {
         return { error: 'Not authenticated' };
       }
 
       const { error } = await supabase
         .from('chat_messages')
-        .insert([{
+        .insert({
+          message,
           sender_id: session.user.id,
-          recipient_id: recipientId,
-          message: message,
-          message_type: 'direct',
-        }]);
+          message_type: type,
+          recipient_id: null, // null for broadcast messages
+        });
 
       if (error) throw error;
 
-      // Refresh messages for this user
-      fetchMessages(recipientId);
-      
+      // Refresh messages after sending
+      fetchMessages();
       return { success: true };
     } catch (error) {
       console.error('Error sending message:', error);
@@ -117,16 +72,12 @@ export const useSystemChat = () => {
   };
 
   useEffect(() => {
-    fetchChatUsers();
+    fetchMessages();
 
     // Subscribe to real-time changes
     const channel = supabase
       .channel('system-chat-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchChatUsers)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages' }, () => {
-        // Refresh messages for all users
-        users.forEach(user => fetchMessages(user.id));
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages' }, fetchMessages)
       .subscribe();
 
     return () => {
@@ -135,11 +86,9 @@ export const useSystemChat = () => {
   }, []);
 
   return {
-    users,
     messages,
     loading,
-    refetch: fetchChatUsers,
-    fetchMessages,
     sendMessage,
+    refetch: fetchMessages,
   };
 };

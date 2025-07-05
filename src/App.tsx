@@ -30,6 +30,7 @@ import Rules from "./pages/Rules";
 import Contact from "./pages/Contact";
 import WalletSystem from "./pages/WalletSystem";
 import Report from "./pages/Report";
+import SystemChatPage from "./pages/SystemChatPage";
 
 const queryClient = new QueryClient();
 
@@ -97,7 +98,7 @@ const App = () => (
           } />
           <Route path="/system-chat" element={
             <ProtectedRoute requiredRole="admin">
-              <ChatComingSoon />
+              <SystemChatPage />
             </ProtectedRoute>
           } />
           <Route path="/tournament-guide" element={<TournamentGuide />} />
