@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -45,7 +46,11 @@ const App = () => (
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin-signup" element={<AdminSignup />} />
           <Route path="/system-admin-login" element={<SystemAdminLogin />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route path="/dashboard" element={
+            <ProtectedRoute requiredRole="user">
+              <DashboardLayout />
+            </ProtectedRoute>
+          }>
             <Route index element={<DashboardHome />} />
             <Route path="tournaments" element={<Tournaments />} />
             <Route path="teams" element={<Teams />} />
@@ -55,14 +60,46 @@ const App = () => (
             <Route path="chat" element={<ChatComingSoon />} />
             <Route path="report" element={<Report />} />
           </Route>
-          <Route path="/org-dashboard" element={<AdminDashboard />} />
-          <Route path="/system-admin-dashboard" element={<SystemAdminDashboard />} />
-          <Route path="/system-users" element={<SystemUserManagement />} />
-          <Route path="/system-transactions" element={<SystemTransactions />} />
-          <Route path="/system-admin-requests" element={<SystemAdminRequests />} />
-          <Route path="/system-teams" element={<SystemTeams />} />
-          <Route path="/system-reports" element={<SystemReports />} />
-          <Route path="/system-chat" element={<ChatComingSoon />} />
+          <Route path="/org-dashboard" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/system-admin-dashboard" element={
+            <ProtectedRoute requiredRole="admin">
+              <SystemAdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/system-users" element={
+            <ProtectedRoute requiredRole="admin">
+              <SystemUserManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/system-transactions" element={
+            <ProtectedRoute requiredRole="admin">
+              <SystemTransactions />
+            </ProtectedRoute>
+          } />
+          <Route path="/system-admin-requests" element={
+            <ProtectedRoute requiredRole="admin">
+              <SystemAdminRequests />
+            </ProtectedRoute>
+          } />
+          <Route path="/system-teams" element={
+            <ProtectedRoute requiredRole="admin">
+              <SystemTeams />
+            </ProtectedRoute>
+          } />
+          <Route path="/system-reports" element={
+            <ProtectedRoute requiredRole="admin">
+              <SystemReports />
+            </ProtectedRoute>
+          } />
+          <Route path="/system-chat" element={
+            <ProtectedRoute requiredRole="admin">
+              <ChatComingSoon />
+            </ProtectedRoute>
+          } />
           <Route path="/tournament-guide" element={<TournamentGuide />} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/contact" element={<Contact />} />

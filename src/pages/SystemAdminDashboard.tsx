@@ -41,16 +41,20 @@ const SystemAdminDashboard = () => {
         return;
       }
       
-      // Check if user has systemadmin role
+      // Check if user has admin role (accepting both admin and systemadmin)
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('user_id', session.user.id)
         .single();
         
-      if (profile?.role !== "systemadmin") {
+      if (!profile?.role || !['admin', 'systemadmin'].includes(profile.role)) {
         navigate("/system-admin-login");
+        return;
       }
+      
+      // Set loading to false once auth check is complete
+      setLoading(false);
     };
     checkAuth();
   }, [navigate]);

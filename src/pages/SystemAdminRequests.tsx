@@ -19,28 +19,10 @@ import ChatDialog from "@/components/ChatDialog";
 import { useAdminRequests } from "@/hooks/useAdminRequests";
 
 const SystemAdminRequests = () => {
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("All");
   const [chatAdmin, setChatAdmin] = useState<string | null>(null);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { requests, loading: requestsLoading, refetch, approveRequest, rejectRequest } = useAdminRequests();
-
-  useEffect(() => {
-    const auth = localStorage.getItem("userAuth");
-    if (!auth) {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    const user = JSON.parse(auth);
-    if (user.role !== "systemadmin") {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    setLoading(false);
-  }, [navigate]);
 
   const handleApprove = async (requestId: string) => {
     const result = await approveRequest(requestId);
@@ -78,9 +60,13 @@ const SystemAdminRequests = () => {
 
   const handleRefresh = () => {
     refetch();
+    toast({
+      title: "Data Refreshed", 
+      description: "Admin requests fetched successfully",
+    });
   };
 
-  if (loading || requestsLoading) {
+  if (requestsLoading) {
     return <LoadingSpinner fullScreen />;
   }
 

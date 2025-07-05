@@ -22,31 +22,13 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { useSystemTeams } from "@/hooks/useSystemTeams";
 
 const SystemTeams = () => {
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { teams, loading: teamsLoading, refetch, deleteTeam } = useSystemTeams();
   
   const teamsPerPage = 20;
-
-  useEffect(() => {
-    const auth = localStorage.getItem("userAuth");
-    if (!auth) {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    const user = JSON.parse(auth);
-    if (user.role !== "systemadmin") {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    setLoading(false);
-  }, [navigate]);
 
   const handleDeleteTeam = async (teamId: string) => {
     const result = await deleteTeam(teamId);
@@ -71,9 +53,13 @@ const SystemTeams = () => {
 
   const handleRefresh = () => {
     refetch();
+    toast({
+      title: "Data Refreshed",
+      description: "Teams data fetched successfully",
+    });
   };
 
-  if (loading || teamsLoading) {
+  if (teamsLoading) {
     return <LoadingSpinner fullScreen />;
   }
 

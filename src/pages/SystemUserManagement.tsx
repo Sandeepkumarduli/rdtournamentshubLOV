@@ -22,31 +22,13 @@ import ChatDialog from "@/components/ChatDialog";
 import { useSystemUsers } from "@/hooks/useSystemUsers";
 
 const SystemUserManagement = () => {
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [chatUser, setChatUser] = useState<string | null>(null);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { users, loading: usersLoading, refetch, deleteUser } = useSystemUsers();
   
   const usersPerPage = 20;
-
-  useEffect(() => {
-    const auth = localStorage.getItem("userAuth");
-    if (!auth) {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    const user = JSON.parse(auth);
-    if (user.role !== "systemadmin") {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    setLoading(false);
-  }, [navigate]);
 
   const handleDeleteUser = async (userId: string) => {
     const result = await deleteUser(userId);
@@ -74,9 +56,13 @@ const SystemUserManagement = () => {
 
   const handleRefresh = () => {
     refetch();
+    toast({
+      title: "Data Refreshed",
+      description: "Users data fetched successfully",
+    });
   };
 
-  if (loading || usersLoading) {
+  if (usersLoading) {
     return <LoadingSpinner fullScreen />;
   }
 

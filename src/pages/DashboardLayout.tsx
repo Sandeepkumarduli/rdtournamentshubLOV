@@ -11,17 +11,10 @@ import { useProfile } from "@/hooks/useProfile";
 import { useWallet } from "@/hooks/useWallet";
 
 const DashboardLayout = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { balance } = useWallet();
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/login");
-    }
-  }, [user, authLoading, navigate]);
 
   if (authLoading || profileLoading) {
     return <LoadingSpinner fullScreen />;

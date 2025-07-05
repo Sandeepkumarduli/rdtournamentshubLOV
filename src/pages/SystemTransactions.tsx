@@ -19,36 +19,22 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { useSystemTransactions } from "@/hooks/useSystemTransactions";
 
 const SystemTransactions = () => {
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { transactions, loading: transactionsLoading, refetch, getTotalStats } = useSystemTransactions();
   
   const transactionsPerPage = 20;
 
-  useEffect(() => {
-    const auth = localStorage.getItem("userAuth");
-    if (!auth) {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    const user = JSON.parse(auth);
-    if (user.role !== "systemadmin") {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    setLoading(false);
-  }, [navigate]);
-
   const handleRefresh = () => {
     refetch();
+    toast({
+      title: "Data Refreshed",
+      description: "Transactions data fetched successfully",
+    });
   };
 
-  if (loading || transactionsLoading) {
+  if (transactionsLoading) {
     return <LoadingSpinner fullScreen />;
   }
 

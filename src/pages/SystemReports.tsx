@@ -23,31 +23,13 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { useReports } from "@/hooks/useReports";
 
 const SystemReports = () => {
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [resolution, setResolution] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("");
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { reports, loading: reportsLoading, refetch, resolveReport } = useReports();
-
-  useEffect(() => {
-    const auth = localStorage.getItem("userAuth");
-    if (!auth) {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    const user = JSON.parse(auth);
-    if (user.role !== "systemadmin") {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    setLoading(false);
-  }, [navigate]);
 
   const handleResolve = async (reportId: string) => {
     if (!resolution.trim()) {
@@ -87,9 +69,13 @@ const SystemReports = () => {
 
   const handleRefresh = () => {
     refetch();
+    toast({
+      title: "Data Refreshed",
+      description: "Reports data fetched successfully", 
+    });
   };
 
-  if (loading || reportsLoading) {
+  if (reportsLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
