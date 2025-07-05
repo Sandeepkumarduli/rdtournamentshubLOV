@@ -66,7 +66,6 @@ const SystemReports = () => {
       toast({
         title: "Report Deleted",
         description: "Report has been permanently removed from the system",
-        variant: "destructive"
       });
     } else {
       toast({
@@ -96,7 +95,10 @@ const SystemReports = () => {
       report.reporter.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.reportedEntity.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    .filter(report => statusFilter === "All" || report.status === statusFilter)
+    .filter(report => {
+      if (statusFilter === "All") return true;
+      return report.status.toLowerCase() === statusFilter.toLowerCase();
+    })
     .filter(report => !dateFilter || report.date === dateFilter)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
