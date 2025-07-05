@@ -78,8 +78,7 @@ const CreateTournamentDialog = ({ onTournamentCreated }: CreateTournamentDialogP
       setOpen(false);
       form.reset();
       
-      // Auto-refresh page after creation
-      setTimeout(() => window.location.reload(), 1000);
+      // No need to reload the page - let React handle the update
     } else {
       toast({
         title: "Error",
