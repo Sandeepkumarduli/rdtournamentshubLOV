@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X } from 'lucide-react';
+import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X, Trash2, Settings, UserMinus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTeams } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,8 +21,10 @@ const Teams = () => {
   const [selectedTeamForAddMember, setSelectedTeamForAddMember] = useState<string | null>(null);
   const [joinTeamId, setJoinTeamId] = useState('');
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+  const [selectedTeamForEdit, setSelectedTeamForEdit] = useState<string | null>(null);
+  const [teamToDelete, setTeamToDelete] = useState<string | null>(null);
   const { toast } = useToast();
-  const { userTeams, teamMembersMap, loading, createTeam, addTeamMember, joinTeam } = useTeams();
+  const { userTeams, teamMembersMap, loading, createTeam, addTeamMember, joinTeam, deleteTeam, removeMemberFromTeam } = useTeams();
   const { user } = useAuth();
   const { loading: searchLoading, results: searchResults, searchUsers, clearResults } = useUserSearch();
 
@@ -183,6 +185,43 @@ const Teams = () => {
     toast({
       title: "Team Joined",
       description: "Successfully joined the team!"
+    });
+  };
+
+  const handleDeleteTeam = async (teamId: string) => {
+    const { error } = await deleteTeam(teamId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: typeof error === 'string' ? error : error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Team Deleted",
+      description: "Team has been successfully deleted"
+    });
+    setTeamToDelete(null);
+  };
+
+  const handleRemoveMember = async (teamId: string, memberUserId: string) => {
+    const { error } = await removeMemberFromTeam(teamId, memberUserId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: typeof error === 'string' ? error : error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Member Removed",
+      description: "Team member has been removed successfully"
     });
   };
 
@@ -358,6 +397,137 @@ const Teams = () => {
                       {isLeader && <Badge variant="default">Leader</Badge>}
                     </CardTitle>
                     <div className="flex gap-2">
+                      {isLeader && (
+                        <>
+                          <Dialog 
+                            open={selectedTeamForEdit === team.id} 
+                            onOpenChange={(open) => setSelectedTeamForEdit(open ? team.id : null)}
+                          >
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <Settings className="h-4 w-4" />
+                                Manage Team
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Manage Team: {team.name}</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <h4 className="font-medium mb-2">Team Members ({teamMembers.length}/5)</h4>
+                                  <div className="space-y-2">
+                                    {teamMembers.map((member) => (
+                                      <div key={member.id} className="flex items-center justify-between p-2 border rounded">
+                                        <div>
+                                          <p className="font-medium">
+                                            {member.profiles?.display_name || 'Unknown'}
+                                          </p>
+                                          <p className="text-sm text-muted-foreground">
+                                            {member.role === 'leader' ? 'Team Leader' : 'Member'}
+                                            {member.profiles?.bgmi_id && ` • BGMI: ${member.profiles.bgmi_id}`}
+                                          </p>
+                                        </div>
+                                        {member.role !== 'leader' && (
+                                          <Button 
+                                            variant="destructive" 
+                                            size="sm"
+                                            onClick={() => handleRemoveMember(team.id, member.user_id)}
+                                          >
+                                            <UserMinus className="h-4 w-4" />
+                                            Remove
+                                          </Button>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {teamMembers.length < 5 && (
+                                  <div>
+                                    <h4 className="font-medium mb-2">Add New Member</h4>
+                                    <div>
+                                      <Label htmlFor="memberSearch">Search by Username or Email</Label>
+                                      <Input 
+                                        id="memberSearch" 
+                                        value={newMemberEmail} 
+                                        onChange={(e) => {
+                                          setNewMemberEmail(e.target.value);
+                                          searchUsers(e.target.value);
+                                        }}
+                                        placeholder="Enter username or email to search" 
+                                      />
+                                    </div>
+                                    
+                                    {/* Search Results */}
+                                    {searchResults.length > 0 && (
+                                      <div className="border rounded-lg p-2 max-h-40 overflow-y-auto mt-2">
+                                        <p className="text-sm font-medium mb-2">Search Results:</p>
+                                        <div className="space-y-1">
+                                          {searchResults.map((user) => (
+                                            <div 
+                                              key={user.user_id} 
+                                              className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
+                                              onClick={() => handleAddMemberToTeam(user.user_id, team.id)}
+                                            >
+                                              <div>
+                                                <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
+                                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                                                {user.bgmi_id && (
+                                                  <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
+                                                )}
+                                              </div>
+                                              <Button size="sm" variant="outline">
+                                                Add
+                                              </Button>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className="flex gap-2 pt-4">
+                                  <Button variant="outline" onClick={() => {
+                                    setSelectedTeamForEdit(null);
+                                    setNewMemberEmail('');
+                                    clearResults();
+                                  }}>
+                                    Close
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+
+                          <Dialog open={teamToDelete === team.id} onOpenChange={(open) => setTeamToDelete(open ? team.id : null)}>
+                            <DialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4" />
+                                Delete Team
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Delete Team</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <p>Are you sure you want to delete "{team.name}"? This action cannot be undone and will remove all team members.</p>
+                                <div className="flex gap-2">
+                                  <Button variant="destructive" onClick={() => handleDeleteTeam(team.id)} className="flex-1">
+                                    Delete Team
+                                  </Button>
+                                  <Button variant="outline" onClick={() => setTeamToDelete(null)}>
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </>
+                      )}
+
                       {isLeader && teamMembers.length < 5 && (
                         <Dialog 
                           open={selectedTeamForAddMember === team.id} 
@@ -366,7 +536,7 @@ const Teams = () => {
                           <DialogTrigger asChild>
                             <Button variant="outline" size="sm">
                               <UserPlus className="h-4 w-4" />
-                              Add Member
+                              Quick Add
                             </Button>
                           </DialogTrigger>
                             <DialogContent>

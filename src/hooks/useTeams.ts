@@ -218,6 +218,66 @@ export const useTeams = () => {
     return { error };
   };
 
+  const deleteTeam = async (teamId: string) => {
+    if (!user) return { error: 'No user found' };
+
+    // Check if current user is team leader
+    const { data: teamData } = await supabase
+      .from('teams')
+      .select('leader_id')
+      .eq('id', teamId)
+      .single();
+
+    if (!teamData || teamData.leader_id !== user.id) {
+      return { error: 'Only team leader can delete the team' };
+    }
+
+    // Delete team members first
+    const { error: membersError } = await supabase
+      .from('team_members')
+      .delete()
+      .eq('team_id', teamId);
+
+    if (membersError) return { error: membersError };
+
+    // Delete the team
+    const { error: teamError } = await supabase
+      .from('teams')
+      .delete()
+      .eq('id', teamId);
+
+    return { error: teamError };
+  };
+
+  const removeMemberFromTeam = async (teamId: string, memberUserId: string) => {
+    if (!user) return { error: 'No user found' };
+
+    // Check if current user is team leader
+    const { data: teamData } = await supabase
+      .from('teams')
+      .select('leader_id')
+      .eq('id', teamId)
+      .single();
+
+    if (!teamData || teamData.leader_id !== user.id) {
+      return { error: 'Only team leader can remove members' };
+    }
+
+    // Cannot remove the leader
+    if (memberUserId === user.id) {
+      return { error: 'Team leader cannot be removed. Delete the team instead.' };
+    }
+
+    // Remove member
+    const { error } = await supabase
+      .from('team_members')
+      .delete()
+      .eq('team_id', teamId)
+      .eq('user_id', memberUserId);
+
+    return { error };
+  };
+
   return {
     teams,
     userTeams,
@@ -226,5 +286,7 @@ export const useTeams = () => {
     createTeam,
     addTeamMember,
     joinTeam,
+    deleteTeam,
+    removeMemberFromTeam,
   };
 };

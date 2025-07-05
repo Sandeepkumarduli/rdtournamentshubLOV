@@ -37,7 +37,10 @@ export const useAdminUsers = () => {
         .from('tournament_registrations')
         .select(`
           team_id,
-          tournaments!inner(organization)
+          tournaments!inner(
+            id,
+            organization
+          )
         `)
         .eq('tournaments.organization', adminOrg);
 
