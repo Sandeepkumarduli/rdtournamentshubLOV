@@ -19,6 +19,7 @@ export interface TournamentRegistration {
     description: string | null;
     room_id: string | null;
     room_password: string | null;
+    organization: string | null;
   };
 }
 
@@ -65,7 +66,8 @@ export const useTournamentRegistrations = () => {
             status,
             description,
             room_id,
-            room_password
+            room_password,
+            organization
           )
         `)
         .in('team_id', teamIds);

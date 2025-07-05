@@ -9,6 +9,7 @@ import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import { useTeams } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserSearch } from '@/hooks/useUserSearch';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Teams = () => {
@@ -23,6 +24,7 @@ const Teams = () => {
   const { toast } = useToast();
   const { userTeams, teamMembersMap, loading, createTeam, addTeamMember, joinTeam } = useTeams();
   const { user } = useAuth();
+  const { loading: searchLoading, results: searchResults, searchUsers, clearResults } = useUserSearch();
 
   if (loading) {
     return <LoadingSpinner fullScreen />;
@@ -107,16 +109,7 @@ const Teams = () => {
     });
   };
 
-  const handleAddMemberToTeam = async (teamId: string) => {
-    if (!newMemberEmail.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid email",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const handleAddMemberToTeam = async (selectedUserId: string, teamId: string) => {
     const teamMembers = teamMembersMap[teamId] || [];
     if (teamMembers.length >= 5) {
       toast({
@@ -127,14 +120,24 @@ const Teams = () => {
       return;
     }
 
-    // In a real app, you'd look up user by email first
+    const { error } = await addTeamMember(teamId, selectedUserId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: typeof error === 'string' ? error : error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
     toast({
-      title: "Feature Coming Soon",
-      description: "Adding members by email will be available soon. Share your team ID for now.",
-      variant: "destructive"
+      title: "Member Added",
+      description: "Team member added successfully!"
     });
     setNewMemberEmail('');
     setSelectedTeamForAddMember(null);
+    clearResults();
   };
 
   const copyTeamId = (teamId: string) => {
@@ -366,33 +369,69 @@ const Teams = () => {
                               Add Member
                             </Button>
                           </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Add Team Member to {team.name}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="memberEmail">Member Email</Label>
-                                <Input 
-                                  id="memberEmail" 
-                                  value={newMemberEmail} 
-                                  onChange={e => setNewMemberEmail(e.target.value)} 
-                                  placeholder="Enter member's email" 
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Member must have an account to join
-                                </p>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Add Team Member to {team.name}</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="memberSearch">Search by Username or Email</Label>
+                                  <Input 
+                                    id="memberSearch" 
+                                    value={newMemberEmail} 
+                                    onChange={(e) => {
+                                      setNewMemberEmail(e.target.value);
+                                      searchUsers(e.target.value);
+                                    }}
+                                    placeholder="Enter username or email to search" 
+                                  />
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Search for existing users to add to your team
+                                  </p>
+                                </div>
+                                
+                                {/* Search Results */}
+                                {searchResults.length > 0 && (
+                                  <div className="border rounded-lg p-2 max-h-40 overflow-y-auto">
+                                    <p className="text-sm font-medium mb-2">Search Results:</p>
+                                    <div className="space-y-1">
+                                      {searchResults.map((user) => (
+                                        <div 
+                                          key={user.user_id} 
+                                          className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
+                                          onClick={() => handleAddMemberToTeam(user.user_id, team.id)}
+                                        >
+                                          <div>
+                                            <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
+                                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                                            {user.bgmi_id && (
+                                              <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
+                                            )}
+                                          </div>
+                                          <Button size="sm" variant="outline">
+                                            Add
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {searchLoading && (
+                                  <p className="text-sm text-muted-foreground">Searching...</p>
+                                )}
+                                
+                                <div className="flex gap-2">
+                                  <Button variant="outline" onClick={() => {
+                                    setSelectedTeamForAddMember(null);
+                                    setNewMemberEmail('');
+                                    clearResults();
+                                  }}>
+                                    Cancel
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="flex gap-2">
-                                <Button onClick={() => handleAddMemberToTeam(team.id)} className="flex-1">
-                                  Add Member
-                                </Button>
-                                <Button variant="outline" onClick={() => setSelectedTeamForAddMember(null)}>
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
+                            </DialogContent>
                         </Dialog>
                       )}
                       

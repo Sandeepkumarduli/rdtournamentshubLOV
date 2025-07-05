@@ -22,13 +22,12 @@ import DashboardHome from "./pages/DashboardHome";
 import Tournaments from "./pages/Tournaments";
 import Teams from "./pages/Teams";
 import WalletPage from "./pages/WalletPage";
-import Groups from "./pages/Groups";
+import ChatComingSoon from "./components/ChatComingSoon";
 import Profile from "./pages/Profile";
 import TournamentGuide from "./pages/TournamentGuide";
 import Rules from "./pages/Rules";
 import Contact from "./pages/Contact";
 import WalletSystem from "./pages/WalletSystem";
-import ChatComingSoon from "./components/ChatComingSoon";
 import Report from "./pages/Report";
 
 const queryClient = new QueryClient();
@@ -51,7 +50,7 @@ const App = () => (
             <Route path="tournaments" element={<Tournaments />} />
             <Route path="teams" element={<Teams />} />
             <Route path="wallet" element={<WalletPage />} />
-            <Route path="groups" element={<Groups />} />
+            <Route path="groups" element={<ChatComingSoon />} />
             <Route path="profile" element={<Profile />} />
             <Route path="chat" element={<ChatComingSoon />} />
             <Route path="report" element={<Report />} />

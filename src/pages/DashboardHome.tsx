@@ -21,7 +21,7 @@ const DashboardHome = () => {
   const [selectedTournament, setSelectedTournament] = useState<any>(null);
   const { toast } = useToast();
   const { tournaments, loading: tournamentsLoading } = useTournaments();
-  const { teams, userTeams, loading: teamsLoading } = useTeams();
+  const { teams, userTeams, teamMembersMap, loading: teamsLoading } = useTeams();
   const { user } = useAuth();
   const { balance, loading: walletLoading } = useWallet();
   const { registrations, registerForTournament } = useTournamentRegistrations();
@@ -274,6 +274,7 @@ const DashboardHome = () => {
         onClose={() => setSelectedTournament(null)}
         tournament={selectedTournament}
         userTeams={userTeams}
+        teamMembersMap={teamMembersMap}
         walletBalance={balance?.balance || 0}
         onJoin={handleConfirmJoin}
       />

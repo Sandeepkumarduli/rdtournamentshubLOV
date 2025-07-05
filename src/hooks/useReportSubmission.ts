@@ -21,6 +21,13 @@ export const useReportSubmission = () => {
         return { error: 'Not authenticated' };
       }
 
+      // Get user profile for username and role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, role')
+        .eq('user_id', session.user.id)
+        .single();
+
       // Map report types to valid database values
       const validTypeMap: Record<string, string> = {
         'tournament': 'tournament_issue',
@@ -42,7 +49,7 @@ export const useReportSubmission = () => {
           reporter_id: session.user.id,
           type: dbType,
           title: data.title,
-          description: data.description,
+          description: `${data.description}\n\n--- Additional Info ---\nUsername: ${profile?.display_name || 'Not Set'}\nUser Role: ${profile?.role || 'user'}`,
           priority: data.priority,
           category: data.category,
           reported_entity: 'General',

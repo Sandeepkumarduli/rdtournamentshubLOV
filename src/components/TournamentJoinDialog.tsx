@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Users, AlertTriangle, Wallet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Team } from '@/hooks/useTeams';
+import { Team, TeamMember } from '@/hooks/useTeams';
 
 interface Tournament {
   id: string;
@@ -21,6 +21,7 @@ interface TournamentJoinDialogProps {
   onClose: () => void;
   tournament: Tournament | null;
   userTeams: Team[];
+  teamMembersMap: Record<string, TeamMember[]>;
   walletBalance: number;
   onJoin: (tournamentId: string, teamId: string) => Promise<void>;
 }
@@ -30,6 +31,7 @@ const TournamentJoinDialog = ({
   onClose, 
   tournament, 
   userTeams, 
+  teamMembersMap,
   walletBalance,
   onJoin 
 }: TournamentJoinDialogProps) => {
@@ -57,10 +59,14 @@ const TournamentJoinDialog = ({
     if (isSolo) return true;
     
     // For team tournaments, check minimum member count
-    // We'll assume each team has proper member count validation
-    // This needs to be implemented based on actual team member count
-    return true; // TODO: Add proper member count validation when team members API is available
+    const teamMembers = teamMembersMap[team.id] || [];
+    return teamMembers.length >= minMembers;
   });
+
+  // Check if selected team meets requirements
+  const selectedTeam = selectedTeamId ? userTeams.find(t => t.id === selectedTeamId) : null;
+  const selectedTeamMembers = selectedTeamId ? teamMembersMap[selectedTeamId] || [] : [];
+  const hasInsufficientMembers = !isSolo && selectedTeam && selectedTeamMembers.length < minMembers;
 
   const handleJoin = async () => {
     if (!isSolo && !selectedTeamId) {
@@ -76,6 +82,15 @@ const TournamentJoinDialog = ({
       toast({
         title: "Insufficient Balance",
         description: "Please add money to your wallet first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (hasInsufficientMembers) {
+      toast({
+        title: "Insufficient Team Members",
+        description: `Your team needs at least ${minMembers} members for ${tournament.game_type} tournaments.`,
         variant: "destructive"
       });
       return;
@@ -150,14 +165,27 @@ const TournamentJoinDialog = ({
                   <SelectValue placeholder="Choose your team" />
                 </SelectTrigger>
                 <SelectContent>
-                  {eligibleTeams.map((team) => (
-                    <SelectItem key={team.id} value={team.id}>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        {team.name}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {userTeams.map((team) => {
+                    const teamMembers = teamMembersMap[team.id] || [];
+                    const isEligible = isSolo || teamMembers.length >= minMembers;
+                    
+                    return (
+                      <SelectItem key={team.id} value={team.id} disabled={!isEligible}>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            {team.name}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={isEligible ? "default" : "destructive"} className="text-xs">
+                              {teamMembers.length}/{minMembers}
+                            </Badge>
+                            {!isEligible && <span className="text-xs text-destructive">Insufficient</span>}
+                          </div>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
               
@@ -165,6 +193,21 @@ const TournamentJoinDialog = ({
                 <p className="text-xs text-muted-foreground">
                   * Minimum {minMembers} members required for {tournament.game_type} tournaments
                 </p>
+              )}
+              
+              {/* Team Members Validation Warning */}
+              {hasInsufficientMembers && (
+                <Card className="border-destructive">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Insufficient Team Members</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Selected team has {selectedTeamMembers.length} members, but {minMembers} are required for {tournament.game_type}.
+                    </p>
+                  </CardContent>
+                </Card>
               )}
             </div>
           )}
@@ -188,7 +231,7 @@ const TournamentJoinDialog = ({
             </Button>
             <Button 
               onClick={handleJoin} 
-              disabled={loading || hasInsufficientBalance || (!isSolo && !selectedTeamId)}
+              disabled={loading || hasInsufficientBalance || hasInsufficientMembers || (!isSolo && !selectedTeamId)}
               className="flex-1"
             >
               {loading ? 'Joining...' : 'Join Tournament'}
