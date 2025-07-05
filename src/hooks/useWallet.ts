@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useProfile } from './useProfile';
 
 export interface WalletBalance {
   id: string;
@@ -22,6 +23,7 @@ export interface Transaction {
 
 export const useWallet = () => {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,6 +116,11 @@ export const useWallet = () => {
     tournamentId?: string
   ) => {
     if (!user) return { error: 'No user found' };
+    
+    // Prevent frozen users from making transactions
+    if (profile?.role === 'frozen') {
+      return { error: 'Account is frozen. Contact support to resolve.' };
+    }
 
     const { data, error } = await supabase
       .from('transactions')

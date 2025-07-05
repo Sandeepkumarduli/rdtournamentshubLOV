@@ -7,7 +7,9 @@ import WalletBalance from '@/components/WalletBalance';
 import WalletDialog from '@/components/WalletDialog';
 import WalletTransaction from '@/components/WalletTransaction';
 import { useWallet } from '@/hooks/useWallet';
+import { useProfile } from '@/hooks/useProfile';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import FrozenAccountBanner from '@/components/FrozenAccountBanner';
 const WalletPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [addAmount, setAddAmount] = useState('');
@@ -15,6 +17,7 @@ const WalletPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { profile } = useProfile();
   const { balance, transactions, loading, addTransaction } = useWallet();
 
   if (loading) {
@@ -29,6 +32,9 @@ const WalletPage = () => {
       description: "Latest wallet information loaded"
     });
   };
+  
+  const isFrozen = profile?.role === 'frozen';
+  
   const handleAddFunds = async () => {
     const amount = parseFloat(addAmount);
     if (!amount || amount <= 0) {
@@ -112,7 +118,11 @@ const WalletPage = () => {
       description: `₹${amount} will be transferred to your bank account within 2-3 business days`
     });
   };
+  
   return <div className="space-y-6">
+      {/* Frozen Account Banner */}
+      <FrozenAccountBanner />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -135,9 +145,9 @@ const WalletPage = () => {
           onAmountChange={setAddAmount}
           onConfirm={handleAddFunds}
         >
-          <Button variant="rdcoin" className="flex-1">
+          <Button variant="rdcoin" className="flex-1" disabled={isFrozen}>
             <ArrowUpCircle className="h-4 w-4" />
-            Add Funds
+            {isFrozen ? 'Account Frozen' : 'Add Funds'}
           </Button>
         </WalletDialog>
 
@@ -150,9 +160,9 @@ const WalletPage = () => {
           onConfirm={handleWithdraw}
           currentBalance={balance?.balance || 0}
         >
-          <Button variant="outline" className="flex-1">
+          <Button variant="outline" className="flex-1" disabled={isFrozen}>
             <ArrowDownCircle className="h-4 w-4" />
-            Withdraw
+            {isFrozen ? 'Account Frozen' : 'Withdraw'}
           </Button>
         </WalletDialog>
       </WalletBalance>

@@ -11,8 +11,10 @@ import { useTeams } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
 import { useWallet } from '@/hooks/useWallet';
 import { useTournamentRegistrations } from '@/hooks/useTournamentRegistrations';
+import { useProfile } from '@/hooks/useProfile';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import TournamentJoinDialog from '@/components/TournamentJoinDialog';
+import FrozenAccountBanner from '@/components/FrozenAccountBanner';
 const DashboardHome = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
@@ -23,6 +25,7 @@ const DashboardHome = () => {
   const { tournaments, loading: tournamentsLoading } = useTournaments();
   const { teams, userTeams, teamMembersMap, loading: teamsLoading } = useTeams();
   const { user } = useAuth();
+  const { profile } = useProfile();
   const { balance, loading: walletLoading } = useWallet();
   const { registrations, registerForTournament } = useTournamentRegistrations();
 
@@ -48,6 +51,15 @@ const DashboardHome = () => {
   };
 
   const handleJoinTournament = (tournament: any) => {
+    if (profile?.role === 'frozen') {
+      toast({
+        title: "Account Frozen",
+        description: "Your account is frozen. You cannot join tournaments. Contact support to resolve.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (!user || userTeams.length === 0) {
       toast({
         title: "Team Required",
@@ -82,7 +94,12 @@ const DashboardHome = () => {
   };
 
   const registeredCount = registrations.length;
+  const isFrozen = profile?.role === 'frozen';
+  
   return <div className="space-y-6">
+      {/* Frozen Account Banner */}
+      <FrozenAccountBanner />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -257,8 +274,9 @@ const DashboardHome = () => {
                       variant="default" 
                       className="w-full"
                       onClick={() => handleJoinTournament(tournament)}
+                      disabled={isFrozen}
                     >
-                      Join Now
+                      {isFrozen ? 'Account Frozen' : 'Join Now'}
                     </Button>
                   )}
                 </CardContent>

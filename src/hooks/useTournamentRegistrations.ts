@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useProfile } from './useProfile';
 
 export interface TournamentRegistration {
   id: string;
@@ -25,6 +26,7 @@ export interface TournamentRegistration {
 
 export const useTournamentRegistrations = () => {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [registrations, setRegistrations] = useState<TournamentRegistration[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -105,6 +107,11 @@ export const useTournamentRegistrations = () => {
 
   const registerForTournament = async (tournamentId: string, teamId: string) => {
     if (!user) return { error: 'No user found' };
+    
+    // Prevent frozen users from registering
+    if (profile?.role === 'frozen') {
+      return { error: 'Account is frozen. You cannot register for tournaments. Contact support to resolve.' };
+    }
 
     // Check if already registered
     const { data: existingReg } = await supabase

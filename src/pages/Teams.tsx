@@ -9,8 +9,10 @@ import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X, Trash2, Setting
 import { useToast } from '@/hooks/use-toast';
 import { useTeams } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import FrozenAccountBanner from '@/components/FrozenAccountBanner';
 
 const Teams = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -26,6 +28,7 @@ const Teams = () => {
   const { toast } = useToast();
   const { userTeams, teamMembersMap, loading, createTeam, addTeamMember, joinTeam, deleteTeam, removeMemberFromTeam } = useTeams();
   const { user } = useAuth();
+  const { profile } = useProfile();
   const { loading: searchLoading, results: searchResults, searchUsers, clearResults } = useUserSearch();
 
   if (loading) {
@@ -61,6 +64,15 @@ const Teams = () => {
   };
 
   const handleCreateTeam = async () => {
+    if (profile?.role === 'frozen') {
+      toast({
+        title: "Account Frozen",
+        description: "Your account is frozen. You cannot create teams. Contact support to resolve.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (!teamName.trim()) {
       toast({
         title: "Error",
@@ -112,6 +124,15 @@ const Teams = () => {
   };
 
   const handleAddMemberToTeam = async (selectedUserId: string, teamId: string) => {
+    if (profile?.role === 'frozen') {
+      toast({
+        title: "Account Frozen",
+        description: "Your account is frozen. You cannot manage teams. Contact support to resolve.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const teamMembers = teamMembersMap[teamId] || [];
     if (teamMembers.length >= 5) {
       toast({
@@ -151,6 +172,15 @@ const Teams = () => {
   };
 
   const handleJoinTeam = async () => {
+    if (profile?.role === 'frozen') {
+      toast({
+        title: "Account Frozen",
+        description: "Your account is frozen. You cannot join teams. Contact support to resolve.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (!joinTeamId.trim()) {
       toast({
         title: "Error",
@@ -226,9 +256,13 @@ const Teams = () => {
   };
 
   const canCreateTeam = userTeams.length < 2;
+  const isFrozen = profile?.role === 'frozen';
 
   return (
     <div className="space-y-6">
+      {/* Frozen Account Banner */}
+      <FrozenAccountBanner />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -245,7 +279,7 @@ const Teams = () => {
 
       {/* Create Team Section */}
       <div className="flex gap-4">
-        {canCreateTeam && (
+        {canCreateTeam && !isFrozen && (
           <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -283,7 +317,7 @@ const Teams = () => {
           </Dialog>
         )}
         
-        {canCreateTeam ? (
+        {canCreateTeam && !isFrozen ? (
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="default">
@@ -358,12 +392,17 @@ const Teams = () => {
               </div>
             </DialogContent>
           </Dialog>
-        ) : (
+        ) : !canCreateTeam ? (
           <div className="flex items-center gap-2 p-3 border border-destructive/50 bg-destructive/10 rounded-lg">
             <AlertCircle className="h-4 w-4 text-destructive" />
             <span className="text-sm text-destructive">Maximum 2 teams allowed per user</span>
           </div>
-        )}
+        ) : isFrozen ? (
+          <div className="flex items-center gap-2 p-3 border border-destructive/50 bg-destructive/10 rounded-lg">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <span className="text-sm text-destructive">Account frozen - Team management disabled</span>
+          </div>
+        ) : null}
       </div>
 
       {/* Teams List */}
@@ -376,7 +415,7 @@ const Teams = () => {
               <p className="text-muted-foreground mb-4">
                 Create a team to start competing in tournaments with other players.
               </p>
-              {canCreateTeam && (
+              {canCreateTeam && !isFrozen && (
                 <Button variant="default" onClick={() => setIsCreateDialogOpen(true)}>
                   Create Your First Team
                 </Button>
@@ -397,7 +436,7 @@ const Teams = () => {
                       {isLeader && <Badge variant="default">Leader</Badge>}
                     </CardTitle>
                     <div className="flex gap-2">
-                      {isLeader && (
+                      {isLeader && !isFrozen && (
                         <>
                           <Dialog 
                             open={selectedTeamForEdit === team.id} 
@@ -528,7 +567,7 @@ const Teams = () => {
                         </>
                       )}
 
-                      {isLeader && teamMembers.length < 5 && (
+                      {isLeader && teamMembers.length < 5 && !isFrozen && (
                         <Dialog 
                           open={selectedTeamForAddMember === team.id} 
                           onOpenChange={(open) => setSelectedTeamForAddMember(open ? team.id : null)}
