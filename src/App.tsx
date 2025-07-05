@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AdminLogin from "./pages/AdminLogin";
+import AdminSignup from "./pages/AdminSignup";
 import SystemAdminLogin from "./pages/SystemAdminLogin";
 import DashboardLayout from "./pages/DashboardLayout";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -43,8 +44,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/adminlogin" element={<AdminLogin />} />
-          <Route path="/systemadminlogin" element={<SystemAdminLogin />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin-signup" element={<AdminSignup />} />
+          <Route path="/system-admin-login" element={<SystemAdminLogin />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="tournaments" element={<Tournaments />} />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,11 @@ import { Send, Users, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useOrgChat } from '@/hooks/useOrgChat';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AutoRefresh from '@/components/AutoRefresh';
 
 const OrgChat = () => {
   const [message, setMessage] = useState('');
-  const { messages, loading, sendMessage } = useOrgChat();
+  const { messages, loading, sendMessage, refetch } = useOrgChat();
   const { toast } = useToast();
 
   if (loading) {
@@ -22,13 +23,15 @@ const OrgChat = () => {
     if (!message.trim()) return;
 
     const result = await sendMessage(message);
-    if (result?.success) {
-      setMessage('');
-      toast({
-        title: "Message Sent",
-        description: "Your message has been sent to the group",
-      });
-    } else {
+      if (result?.success) {
+        setMessage('');
+        toast({
+          title: "Message Sent",
+          description: "Your message has been sent to the group",
+        });
+        // Auto-refresh after sending
+        setTimeout(() => refetch(), 500);
+      } else {
       toast({
         title: "Error",
         description: result?.error || "Failed to send message",
@@ -39,11 +42,12 @@ const OrgChat = () => {
 
   return (
     <div className="space-y-6">
+      <AutoRefresh onRefresh={refetch} />
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">ORG Chat</h2>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Users className="h-4 w-4" />
-          <span className="text-sm">24 members online</span>
+          <span className="text-sm">{messages.length} messages</span>
         </div>
       </div>
 

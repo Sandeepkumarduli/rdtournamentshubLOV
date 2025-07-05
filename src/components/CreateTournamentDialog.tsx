@@ -77,6 +77,9 @@ const CreateTournamentDialog = ({ onTournamentCreated }: CreateTournamentDialogP
       onTournamentCreated?.(result.data);
       setOpen(false);
       form.reset();
+      
+      // Auto-refresh page after creation
+      setTimeout(() => window.location.reload(), 1000);
     } else {
       toast({
         title: "Error",

@@ -17,6 +17,7 @@ import TopBar from "@/components/TopBar";
 import PageTransition from "@/components/PageTransition";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminDashboard = () => {
   const [adminData, setAdminData] = useState<any>(null);
@@ -29,20 +30,25 @@ const AdminDashboard = () => {
   const activeTab = searchParams.get('tab') || 'dashboard';
 
   useEffect(() => {
-    const auth = localStorage.getItem("userAuth");
-    if (!auth) {
-      navigate("/adminlogin");
-      return;
-    }
-    
-    const user = JSON.parse(auth);
-    if (user.role !== "admin") {
-      navigate("/adminlogin");
-      return;
-    }
-    
-    setAdminData(user);
-    setLoading(false);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/admin-login");
+        return;
+      }
+      
+      // Check if user has admin role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+        
+      if (profile?.role !== "admin") {
+        navigate("/admin-login");
+      }
+    };
+    checkAuth();
   }, [navigate]);
 
   // Add page loading effect when tab changes
@@ -52,8 +58,8 @@ const AdminDashboard = () => {
     return () => clearTimeout(timer);
   }, [activeTab]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("userAuth");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     toast({
       title: "Admin logged out",
       description: "Admin session ended",

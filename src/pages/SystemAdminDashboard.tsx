@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useSystemStats } from '@/hooks/useSystemStats';
+import { supabase } from "@/integrations/supabase/client";
 
 const SystemAdminDashboard = () => {
   const [systemAdminData, setSystemAdminData] = useState<any>(null);
@@ -33,20 +34,25 @@ const SystemAdminDashboard = () => {
   const { stats: systemMetrics, loading: statsLoading, refetch } = useSystemStats();
 
   useEffect(() => {
-    const auth = localStorage.getItem("userAuth");
-    if (!auth) {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    const user = JSON.parse(auth);
-    if (user.role !== "systemadmin") {
-      navigate("/systemadminlogin");
-      return;
-    }
-    
-    setSystemAdminData(user);
-    setLoading(false);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/system-admin-login");
+        return;
+      }
+      
+      // Check if user has systemadmin role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+        
+      if (profile?.role !== "systemadmin") {
+        navigate("/system-admin-login");
+      }
+    };
+    checkAuth();
   }, [navigate]);
 
   const refreshData = () => {
