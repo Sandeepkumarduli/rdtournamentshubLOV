@@ -12,8 +12,8 @@ const SystemAdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "systemadmin@example.com",
-    password: "password123",
+    email: "sandeepkumarduli.ai@gmail.com",
+    password: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -104,9 +104,9 @@ const SystemAdminLogin = () => {
               </div>
 
               <div className="bg-primary/10 border border-primary/30 p-3 rounded-lg text-sm">
-                <p className="font-medium mb-1 text-primary">Demo Credentials:</p>
-                <p className="text-primary/80">Email: systemadmin@example.com</p>
-                <p className="text-primary/80">Password: password123</p>
+                <p className="font-medium mb-1 text-primary">System Admin Access:</p>
+                <p className="text-primary/80">Email: sandeepkumarduli.ai@gmail.com</p>
+                <p className="text-primary/80">Use your registered password</p>
               </div>
 
               <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
