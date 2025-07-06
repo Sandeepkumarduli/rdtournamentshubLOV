@@ -127,11 +127,11 @@ const TournamentJoinDialog = ({
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Entry Fee:</span>
-                  <span className="font-medium">₹{tournament.entry_fee}</span>
+                  <span className="font-medium">{tournament.entry_fee} rdCoins</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Prize Pool:</span>
-                  <span className="font-semibold text-gaming-gold">₹{tournament.prize_pool}</span>
+                  <span className="font-semibold text-gaming-gold">{tournament.prize_pool} rdCoins</span>
                 </div>
               </div>
             </CardContent>
