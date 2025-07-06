@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, GamepadIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +37,26 @@ const Login = () => {
         title: "Login Successful!",
         description: "Welcome to BGMI Tournament Hub"
       });
-      navigate("/dashboard");
+      
+      // Check if user is frozen and redirect accordingly
+      try {
+        const { data: freezeRecord } = await supabase
+          .from('user_freeze_status')
+          .select('is_frozen')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+        
+        if (freezeRecord?.is_frozen) {
+          console.log('🚫 User is frozen, redirecting to reports page');
+          navigate("/dashboard/report");
+        } else {
+          console.log('✅ User is active, redirecting to dashboard');
+          navigate("/dashboard");
+        }
+      } catch (err) {
+        console.error('Error checking freeze status during login:', err);
+        navigate("/dashboard"); // Default fallback
+      }
     }
     
     setIsLoading(false);
