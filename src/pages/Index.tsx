@@ -211,7 +211,7 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-3">Admin</h4>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <Link to="/adminlogin" className="block hover:text-primary">Admin Portal</Link>
+                <Link to="/admin-login" className="block hover:text-primary">Admin Portal</Link>
               </div>
             </div>
           </div>
