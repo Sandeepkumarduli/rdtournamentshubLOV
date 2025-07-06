@@ -44,7 +44,7 @@ const UserSidebar = () => {
   };
   
   const isPageAllowed = (path: string) => {
-    return path.includes('/report') || path.includes('/wallet');
+    return path === '/dashboard' || path.includes('/report') || path.includes('/wallet');
   };
 
   return (
@@ -70,6 +70,11 @@ const UserSidebar = () => {
             
             const isLocked = isFrozen && !isPageAllowed(item.path);
             
+            // Hide locked items completely for frozen users
+            if (isLocked) {
+              return null;
+            }
+            
             return (
               <li key={item.path}>
                 {item.comingSoon ? (
@@ -80,18 +85,6 @@ const UserSidebar = () => {
                     <Icon className="h-5 w-5" />
                     <span>{item.label}</span>
                     <span className="text-xs bg-muted px-2 py-1 rounded ml-auto">Soon</span>
-                  </div>
-                ) : isLocked ? (
-                  <div 
-                    onClick={(e) => handleLockedClick(e, item.label)}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer",
-                      "text-muted-foreground hover:bg-accent opacity-60"
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                    <Lock className="h-4 w-4 ml-auto text-destructive" />
                   </div>
                 ) : (
                   <NavLink

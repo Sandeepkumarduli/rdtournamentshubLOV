@@ -25,7 +25,7 @@ const DashboardHome = () => {
   const { toast } = useToast();
   const { tournaments, loading: tournamentsLoading, refetch: refetchTournaments } = useTournaments();
   const { teams, userTeams, teamMembersMap, loading: teamsLoading } = useTeams();
-  const { user } = useAuth();
+  const { user, isFrozen } = useAuth();
   const { profile } = useProfile();
   const { balance, loading: walletLoading } = useWallet();
   const { registrations, registerForTournament, refreshRegistrations } = useTournamentRegistrations();
@@ -87,7 +87,7 @@ const DashboardHome = () => {
   };
 
   const handleJoinTournament = (tournament: any) => {
-    if (profile?.role === 'frozen') {
+    if (isFrozen) {
       toast({
         title: "Account Frozen",
         description: "Your account is frozen. You cannot join tournaments. Contact support to resolve.",
@@ -130,7 +130,6 @@ const DashboardHome = () => {
   };
 
   const registeredCount = registrations.length;
-  const isFrozen = profile?.role === 'frozen';
   
   return <div className="space-y-6">
       {/* Frozen Account Banner */}
