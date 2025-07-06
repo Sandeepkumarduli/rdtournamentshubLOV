@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Ban, AlertTriangle, Mail } from 'lucide-react';
+import { Ban, AlertTriangle, Mail, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,9 +17,9 @@ const AccountBlockedPage = () => {
             </div>
             
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-destructive">Account Blocked</h2>
+              <h2 className="text-2xl font-bold text-destructive">Account Frozen</h2>
               <p className="text-muted-foreground max-w-md">
-                Your account has been temporarily blocked. You cannot navigate to any pages on this platform.
+                Your account is frozen. You can only access the Report and Wallet pages during this time.
               </p>
             </div>
             
@@ -28,14 +28,22 @@ const AccountBlockedPage = () => {
               <span>Contact support to resolve this issue</span>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-4 flex gap-2">
               <Button 
                 onClick={() => navigate('/dashboard/report')}
                 variant="outline"
-                className="w-full"
+                className="flex-1"
               >
                 <Mail className="h-4 w-4 mr-2" />
                 File a Report
+              </Button>
+              <Button 
+                onClick={() => navigate('/dashboard/wallet')}
+                variant="outline"
+                className="flex-1"
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                View Wallet
               </Button>
             </div>
           </div>

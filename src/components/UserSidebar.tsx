@@ -9,9 +9,12 @@ import {
   GamepadIcon,
   LogOut,
   MessageSquare,
-  Flag
+  Flag,
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useProfile } from '@/hooks/useProfile';
+import { useToast } from '@/hooks/use-toast';
 
 const sidebarItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,6 +29,23 @@ const sidebarItems = [
 
 const UserSidebar = () => {
   const location = useLocation();
+  const { profile } = useProfile();
+  const { toast } = useToast();
+  
+  const isFrozen = profile?.role === 'frozen';
+  
+  const handleLockedClick = (e: React.MouseEvent, label: string) => {
+    e.preventDefault();
+    toast({
+      title: "Account Frozen",
+      description: "Your account is frozen. Please contact the platform administrator.",
+      variant: "destructive"
+    });
+  };
+  
+  const isPageAllowed = (path: string) => {
+    return path.includes('/report') || path.includes('/wallet');
+  };
 
   return (
     <div className="w-64 bg-card border-r border-border h-screen flex flex-col">
@@ -48,6 +68,8 @@ const UserSidebar = () => {
             const isActive = location.pathname === item.path || 
               (item.path === '/dashboard' && location.pathname === '/dashboard');
             
+            const isLocked = isFrozen && !isPageAllowed(item.path);
+            
             return (
               <li key={item.path}>
                 {item.comingSoon ? (
@@ -58,6 +80,18 @@ const UserSidebar = () => {
                     <Icon className="h-5 w-5" />
                     <span>{item.label}</span>
                     <span className="text-xs bg-muted px-2 py-1 rounded ml-auto">Soon</span>
+                  </div>
+                ) : isLocked ? (
+                  <div 
+                    onClick={(e) => handleLockedClick(e, item.label)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer",
+                      "text-muted-foreground hover:bg-accent opacity-60"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                    <Lock className="h-4 w-4 ml-auto text-destructive" />
                   </div>
                 ) : (
                   <NavLink

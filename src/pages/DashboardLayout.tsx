@@ -25,8 +25,8 @@ const DashboardLayout = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  // Check if user is frozen and not accessing the report page
-  if (profile.role === 'frozen' && !location.pathname.includes('/report')) {
+  // Check if user is frozen and not accessing allowed pages (report or wallet)
+  if (profile.role === 'frozen' && !location.pathname.includes('/report') && !location.pathname.includes('/wallet')) {
     return <AccountBlockedPage />;
   }
 

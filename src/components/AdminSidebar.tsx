@@ -10,9 +10,12 @@ import {
   MessageSquare,
   UserCheck,
   Flag,
-  LogOut
+  LogOut,
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useProfile } from '@/hooks/useProfile';
+import { useToast } from '@/hooks/use-toast';
 
 const sidebarItems = [
   {
@@ -70,6 +73,23 @@ const sidebarItems = [
 const AdminSidebar = () => {
   const location = useLocation();
   const currentPath = location.pathname + location.search;
+  const { profile } = useProfile();
+  const { toast } = useToast();
+  
+  const isFrozen = profile?.role === 'frozen';
+  
+  const handleLockedClick = (e: React.MouseEvent, title: string) => {
+    e.preventDefault();
+    toast({
+      title: "Account Frozen",
+      description: "Your account is frozen. Please contact the platform administrator.",
+      variant: "destructive"
+    });
+  };
+  
+  const isPageAllowed = (url: string) => {
+    return url.includes('report') || url.includes('wallets');
+  };
 
   const isActive = (path: string) => {
     if (path === "/org-dashboard" && location.pathname === "/org-dashboard" && !location.search) {
@@ -97,20 +117,35 @@ const AdminSidebar = () => {
           {sidebarItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.url);
+            const isLocked = isFrozen && !isPageAllowed(item.url);
             
             return (
               <li key={item.title}>
-                <Link
-                  to={item.url}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    active 
-                      ? "bg-primary text-primary-foreground font-medium" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.title}</span>
-                </Link>
+                {isLocked ? (
+                  <div
+                    onClick={(e) => handleLockedClick(e, item.title)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer opacity-60",
+                      "text-muted-foreground hover:bg-accent"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.title}</span>
+                    <Lock className="h-4 w-4 ml-auto text-destructive" />
+                  </div>
+                ) : (
+                  <Link
+                    to={item.url}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+                      active 
+                        ? "bg-primary text-primary-foreground font-medium" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.title}</span>
+                  </Link>
+                )}
               </li>
             );
           })}
