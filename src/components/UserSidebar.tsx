@@ -72,21 +72,23 @@ const UserSidebar = () => {
             
             const isLocked = isFrozen && !isPageAllowed(item.path);
             
-            // Hide locked items completely for frozen users
-            if (isLocked) {
-              return null;
-            }
-            
             return (
               <li key={item.path}>
-                {item.comingSoon ? (
-                  <div className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 cursor-not-allowed opacity-60",
-                    "text-muted-foreground"
-                  )}>
+                {item.comingSoon || isLocked ? (
+                  <div 
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 cursor-not-allowed opacity-60",
+                      "text-muted-foreground"
+                    )}
+                    {...(isLocked && { onClick: (e) => handleLockedClick(e, item.label) })}
+                  >
                     <Icon className="h-5 w-5" />
                     <span>{item.label}</span>
-                    <span className="text-xs bg-muted px-2 py-1 rounded ml-auto">Soon</span>
+                    {isLocked ? (
+                      <Lock className="h-4 w-4 ml-auto text-destructive" />
+                    ) : (
+                      <span className="text-xs bg-muted px-2 py-1 rounded ml-auto">Soon</span>
+                    )}
                   </div>
                 ) : (
                   <NavLink
