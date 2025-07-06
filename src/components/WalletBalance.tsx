@@ -21,7 +21,7 @@ const WalletBalance = ({ balance, children }: WalletBalanceProps) => {
           {balance} rdCoins
         </div>
         <p className="text-muted-foreground mb-6">
-          = ₹{balance} (1 rdCoin = ₹1)
+          Your current balance in RD Coins
         </p>
         <div className="flex gap-4">
           {children}

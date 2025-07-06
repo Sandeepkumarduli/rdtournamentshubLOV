@@ -54,7 +54,7 @@ const AccountStats = ({ balance, memberSince, stats, children }: AccountStatsPro
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/20">
               <p className="text-muted-foreground">Earnings</p>
-              <p className="text-xl font-bold">₹{stats.earnings}</p>
+              <p className="text-xl font-bold">{stats.earnings} rdCoins</p>
             </div>
           </div>
         </div>

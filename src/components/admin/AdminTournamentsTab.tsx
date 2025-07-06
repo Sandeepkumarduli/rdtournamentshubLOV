@@ -148,12 +148,12 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Prize Pool:</span>
-                  <span className="font-semibold text-gaming-gold">₹{tournament.prize.toLocaleString()}</span>
+                  <span className="font-semibold text-gaming-gold">{tournament.prize.toLocaleString()} rdCoins</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Entry Fee:</span>
-                  <span className="font-medium">₹{tournament.entryFee.toLocaleString()}</span>
+                  <span className="font-medium">{tournament.entryFee.toLocaleString()} rdCoins</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">

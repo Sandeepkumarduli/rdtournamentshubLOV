@@ -131,7 +131,7 @@ const EditTournamentDialog = ({ tournament, onUpdate }: EditTournamentDialogProp
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="prize_pool">Prize Pool (₹)</Label>
+              <Label htmlFor="prize_pool">Prize Pool (rdCoins)</Label>
               <Input
                 id="prize_pool"
                 type="number"
@@ -143,7 +143,7 @@ const EditTournamentDialog = ({ tournament, onUpdate }: EditTournamentDialogProp
             </div>
             
             <div>
-              <Label htmlFor="entry_fee">Entry Fee (₹)</Label>
+              <Label htmlFor="entry_fee">Entry Fee (rdCoins)</Label>
               <Input
                 id="entry_fee"
                 type="number"

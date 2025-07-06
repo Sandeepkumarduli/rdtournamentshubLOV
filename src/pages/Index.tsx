@@ -153,8 +153,8 @@ const Index = () => {
           </div>
           <div className="gaming-card">
             <div className="p-8">
-              <div className="text-4xl font-black text-gaming-gold mb-2">₹2M+</div>
-              <div className="text-muted-foreground">Prize Money Distributed</div>
+              <div className="text-4xl font-black text-gaming-gold mb-2">2M+</div>
+              <div className="text-muted-foreground">rdCoins Prize Money Distributed</div>
             </div>
           </div>
         </div>

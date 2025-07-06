@@ -57,7 +57,7 @@ const CreateTournamentDialog = ({ onTournamentCreated }: CreateTournamentDialogP
   const onSubmit = async (data: TournamentFormData) => {
     const tournamentData = {
       name: data.name,
-      description: `Prize Pool: ₹${data.prizePool} | Game Mode: ${data.gameMode}`,
+      description: `Prize Pool: ${data.prizePool} rdCoins | Game Mode: ${data.gameMode}`,
       game_type: data.gameMode,
       entry_fee: 0,
       prize_pool: data.prizePool,
@@ -123,7 +123,7 @@ const CreateTournamentDialog = ({ onTournamentCreated }: CreateTournamentDialogP
                 name="prizePool"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prize Pool (₹)</FormLabel>
+                    <FormLabel>Prize Pool (rdCoins)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 

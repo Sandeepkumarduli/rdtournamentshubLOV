@@ -114,7 +114,7 @@ const WalletSystem = () => {
                   <AlertTriangle className="h-5 w-5 text-primary" />
                   <span className="font-semibold">Conversion Rate</span>
                 </div>
-                <p className="text-sm">1 rdCoin = ₹1 (One rdCoin equals One Indian Rupee)</p>
+                <p className="text-sm">1 rdCoin = 1 INR (One rdCoin equals One Indian Rupee)</p>
               </div>
             </CardContent>
           </Card>
@@ -195,11 +195,11 @@ const WalletSystem = () => {
                   <ul className="space-y-2">
                     <li className="flex justify-between">
                       <span>Minimum Deposit:</span>
-                      <span className="font-medium">₹10</span>
+                      <span className="font-medium">10 rdCoins</span>
                     </li>
                     <li className="flex justify-between">
                       <span>Maximum Deposit:</span>
-                      <span className="font-medium">₹50,000/day</span>
+                      <span className="font-medium">50,000 rdCoins/day</span>
                     </li>
                     <li className="flex justify-between">
                       <span>Deposit Fee:</span>
@@ -212,11 +212,11 @@ const WalletSystem = () => {
                   <ul className="space-y-2">
                     <li className="flex justify-between">
                       <span>Minimum Withdrawal:</span>
-                      <span className="font-medium">₹100</span>
+                      <span className="font-medium">100 rdCoins</span>
                     </li>
                     <li className="flex justify-between">
                       <span>Maximum Withdrawal:</span>
-                      <span className="font-medium">₹25,000/day</span>
+                      <span className="font-medium">25,000 rdCoins/day</span>
                     </li>
                     <li className="flex justify-between">
                       <span>Processing Time:</span>

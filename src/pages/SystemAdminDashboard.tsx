@@ -126,7 +126,7 @@ const SystemAdminDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">System Revenue</p>
-                    <p className="text-2xl font-bold text-gaming-gold">₹{(systemMetrics.totalRevenue / 100000).toFixed(1)}L</p>
+                    <p className="text-2xl font-bold text-gaming-gold">{(systemMetrics.totalRevenue / 100000).toFixed(1)}L rdCoins</p>
                   </div>
                   <DollarSign className="h-8 w-8 text-gaming-gold" />
                 </div>
@@ -225,7 +225,7 @@ const SystemAdminDashboard = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Platform Revenue</span>
-                  <span className="font-semibold text-gaming-gold">₹{(systemMetrics.totalRevenue / 100000).toFixed(1)}L</span>
+                  <span className="font-semibold text-gaming-gold">{(systemMetrics.totalRevenue / 100000).toFixed(1)}L rdCoins</span>
                 </div>
               </CardContent>
             </Card>

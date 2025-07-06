@@ -60,7 +60,7 @@ const AdminDashboardStats = ({ onRefresh }: AdminDashboardStatsProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Wallet Balance</p>
-                <p className="text-2xl font-bold text-gaming-gold">₹{stats.walletBalance.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gaming-gold">{stats.walletBalance.toLocaleString()} rdCoins</p>
               </div>
               <Wallet className="h-8 w-8 text-gaming-gold" />
             </div>
@@ -84,7 +84,7 @@ const AdminDashboardStats = ({ onRefresh }: AdminDashboardStatsProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Prize Spent</p>
-                <p className="text-2xl font-bold text-slate-50">₹{stats.totalPrizeMoneySpent.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-slate-50">{stats.totalPrizeMoneySpent.toLocaleString()} rdCoins</p>
               </div>
               <TrendingUp className="h-8 w-8 text-primary" />
             </div>

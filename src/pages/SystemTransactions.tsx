@@ -80,7 +80,7 @@ const SystemTransactions = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Volume</p>
-                    <p className="text-2xl font-bold text-primary">₹{stats.totalAmount.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-primary">{stats.totalAmount.toLocaleString()} rdCoins</p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-primary" />
                 </div>
@@ -133,7 +133,7 @@ const SystemTransactions = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-lg font-semibold">₹{transaction.amount}</h3>
+                        <h3 className="text-lg font-semibold">{transaction.amount} rdCoins</h3>
                         <Badge variant={
                           transaction.status === "Completed" ? "default" : 
                           transaction.status === "Pending" ? "secondary" : "destructive"

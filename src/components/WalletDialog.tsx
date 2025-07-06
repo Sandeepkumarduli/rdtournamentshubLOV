@@ -40,21 +40,21 @@ const WalletDialog = ({
         <div className="space-y-4">
           <div>
             <Label htmlFor={`${type}Amount`} className="px-0 py-0 my-[10px]">
-              Amount (₹)
+              Amount (rdCoins)
             </Label>
             <Input
               id={`${type}Amount`}
               type="number"
               value={amount}
               onChange={(e) => onAmountChange(e.target.value)}
-              placeholder={`Enter amount (min ₹${minAmount})`}
+              placeholder={`Enter amount (min ${minAmount} rdCoins)`}
               min={minAmount}
               max={!isAdd ? currentBalance : undefined}
               className="my-px"
             />
             {!isAdd && currentBalance && (
               <p className="text-muted-foreground mt-1">
-                Available: ₹{currentBalance}
+                Available: {currentBalance} rdCoins
               </p>
             )}
           </div>

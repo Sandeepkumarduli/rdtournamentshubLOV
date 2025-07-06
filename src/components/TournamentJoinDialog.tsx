@@ -146,7 +146,7 @@ const TournamentJoinDialog = ({
                   <span className="text-sm font-medium">Insufficient Balance</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Your wallet balance (₹{walletBalance}) is less than the entry fee (₹{tournament.entry_fee}).
+                  Your wallet balance ({walletBalance} rdCoins) is less than the entry fee ({tournament.entry_fee} rdCoins).
                 </p>
                 <Button variant="outline" size="sm" className="mt-2 w-full">
                   <Wallet className="h-4 w-4 mr-2" />

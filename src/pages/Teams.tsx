@@ -737,7 +737,7 @@ const Teams = () => {
                       </div>
                       <div>
                         <p className="text-muted-foreground">Earnings</p>
-                        <p className="font-semibold">₹{team.total_earnings || 0}</p>
+                        <p className="font-semibold">{team.total_earnings || 0} rdCoins</p>
                       </div>
                     </div>
                     

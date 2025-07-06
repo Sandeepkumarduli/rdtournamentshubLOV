@@ -33,7 +33,7 @@ const Rules = () => {
 
   const walletRules = [
     "rdCoins are non-refundable digital currency",
-    "Minimum withdrawal amount is ₹100",
+    "Minimum withdrawal amount is 100 rdCoins",
     "Winnings will be credited within 24-48 hours",
     "Transaction fees may apply for withdrawals",
     "Account verification required for large transactions",

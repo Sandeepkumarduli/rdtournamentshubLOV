@@ -28,7 +28,7 @@ const WalletTransaction = ({ transaction }: WalletTransactionProps) => {
         </div>
       </div>
       <div className={`font-semibold ${transaction.type === 'credit' ? 'text-success' : 'text-destructive'}`}>
-        {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount}
+        {transaction.type === 'credit' ? '+' : '-'}{transaction.amount} rdCoins
       </div>
     </div>
   );

@@ -201,7 +201,7 @@ const SystemTeams = () => {
                         </div>
                         <div>
                           <span className="text-muted-foreground">Earnings:</span>
-                          <div className="font-medium text-gaming-gold">₹{team.totalEarnings.toLocaleString()}</div>
+                          <div className="font-medium text-gaming-gold">{team.totalEarnings.toLocaleString()} rdCoins</div>
                         </div>
                       </div>
                       <div className="bg-muted/50 p-3 rounded-lg">
@@ -303,7 +303,7 @@ const SystemTeams = () => {
                   </div>
                   <div>
                     <span className="text-sm text-muted-foreground">Total Earnings:</span>
-                    <div className="font-medium text-gaming-gold">₹{selectedTeam.totalEarnings?.toLocaleString()}</div>
+                    <div className="font-medium text-gaming-gold">{selectedTeam.totalEarnings?.toLocaleString()} rdCoins</div>
                   </div>
                   <div>
                     <span className="text-sm text-muted-foreground">Tournaments:</span>

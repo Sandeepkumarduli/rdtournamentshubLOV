@@ -75,7 +75,7 @@ const AdminTeamsTab = ({ onRefresh }: AdminTeamsTabProps) => {
                     <div>Leader: {team.leader_name}</div>
                     <div>Tournaments: {team.tournaments_played || 0}</div>
                     <div>Wins: {team.wins || 0}</div>
-                    <div>Earnings: ₹{team.total_earnings || 0}</div>
+                    <div>Earnings: {team.total_earnings || 0} rdCoins</div>
                   </div>
                 </div>
                 <div className="flex gap-2">

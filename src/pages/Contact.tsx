@@ -117,7 +117,7 @@ const Contact = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <Target className="h-5 w-5 text-primary" />
-                    <span>₹2M+ Prize Money Distributed</span>
+                    <span>2M+ rdCoins Prize Money Distributed</span>
                   </div>
                 </div>
               </CardContent>

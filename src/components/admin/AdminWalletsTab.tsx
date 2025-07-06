@@ -47,7 +47,7 @@ const AdminWalletsTab = ({ onRefresh }: AdminWalletsTabProps) => {
     if (result.success) {
       toast({
         title: "Money Sent Successfully",
-        description: `₹${amount} sent to ${selectedUser}`
+        description: `${amount} rdCoins sent to ${selectedUser}`
       });
       setSearchTerm('');
       setSelectedUser('');
@@ -82,7 +82,7 @@ const AdminWalletsTab = ({ onRefresh }: AdminWalletsTabProps) => {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-gaming-gold/10 rounded-lg">
             <div>
-              <p className="text-2xl font-bold text-gaming-gold">₹{orgBalance.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gaming-gold">{orgBalance.toLocaleString()} rdCoins</p>
             </div>
             <div className="flex gap-2">
               <Button variant="rdcoin">
@@ -141,7 +141,7 @@ const AdminWalletsTab = ({ onRefresh }: AdminWalletsTabProps) => {
                   >
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{user.username}</span>
-                      <span className="text-sm text-muted-foreground">₹{user.wallet}</span>
+                      <span className="text-sm text-muted-foreground">{user.wallet} rdCoins</span>
                     </div>
                   </div>
                 ))}
@@ -149,7 +149,7 @@ const AdminWalletsTab = ({ onRefresh }: AdminWalletsTabProps) => {
             </div>}
 
           <div className="space-y-2">
-            <Label>Amount (₹)</Label>
+            <Label>Amount (rdCoins)</Label>
             <Input type="number" placeholder="Enter prize amount" value={amount} onChange={e => setAmount(e.target.value)} />
           </div>
 
@@ -174,7 +174,7 @@ const AdminWalletsTab = ({ onRefresh }: AdminWalletsTabProps) => {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
-                    <div>Balance: ₹{user.wallet}</div>
+                    <div>Balance: {user.wallet} rdCoins</div>
                     <div>Status: {user.status}</div>
                     <div>Last Activity: {user.lastActivity}</div>
                   </div>

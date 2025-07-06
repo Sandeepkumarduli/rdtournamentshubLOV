@@ -48,7 +48,7 @@ const WalletPage = () => {
     if (amount < 10) {
       toast({
         title: "Minimum Amount",
-        description: "Minimum deposit amount is ₹10",
+        description: "Minimum deposit amount is 10 rdCoins",
         variant: "destructive"
       });
       return;
@@ -69,7 +69,7 @@ const WalletPage = () => {
     setIsAddDialogOpen(false);
     toast({
       title: "Funds Added",
-      description: `₹${amount} added to your wallet successfully`
+      description: `${amount} rdCoins added to your wallet successfully`
     });
   };
 
@@ -94,7 +94,7 @@ const WalletPage = () => {
     if (amount < 50) {
       toast({
         title: "Minimum Withdrawal",
-        description: "Minimum withdrawal amount is ₹50",
+        description: "Minimum withdrawal amount is 50 rdCoins",
         variant: "destructive"
       });
       return;
@@ -115,7 +115,7 @@ const WalletPage = () => {
     setIsWithdrawDialogOpen(false);
     toast({
       title: "Withdrawal Successful",
-      description: `₹${amount} will be transferred to your bank account within 2-3 business days`
+      description: `${amount} rdCoins will be transferred to your bank account within 2-3 business days`
     });
   };
   

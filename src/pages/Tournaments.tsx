@@ -144,20 +144,20 @@ const Tournaments = () => {
                        <span className="font-medium text-primary">{tournament.organization || 'N/A'}</span>
                      </div>
                      
-                     <div className="flex justify-between text-sm">
-                       <span className="text-muted-foreground">Prize Pool:</span>
-                       <span className="font-semibold text-gaming-gold">₹{tournament.prize_pool}</span>
-                     </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Prize Pool:</span>
+                        <span className="font-semibold text-gaming-gold">{tournament.prize_pool} rdCoins</span>
+                      </div>
                      
                      <div className="flex justify-between text-sm">
                        <span className="text-muted-foreground">Start Date:</span>
                        <span className="font-medium">{tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : 'TBA'}</span>
                      </div>
                      
-                     <div className="flex justify-between text-sm">
-                       <span className="text-muted-foreground">Entry Fee:</span>
-                       <span className="font-medium">₹{tournament.entry_fee}</span>
-                     </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Entry Fee:</span>
+                        <span className="font-medium">{tournament.entry_fee} rdCoins</span>
+                      </div>
                      
                      <div className="flex justify-between text-sm">
                        <span className="text-muted-foreground">Game:</span>
