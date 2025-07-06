@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { RefreshCw, Trophy, Users, Calendar, Target, Filter, X } from 'lucide-react';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useTeams } from '@/hooks/useTeams';
@@ -18,8 +20,7 @@ import FrozenAccountBanner from '@/components/FrozenAccountBanner';
 const DashboardHome = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
-  const [dateFilter, setDateFilter] = useState('');
-  const [timeFilter, setTimeFilter] = useState('');
+  const [dateTimeFilter, setDateTimeFilter] = useState<Date | undefined>(undefined);
   const [selectedTournament, setSelectedTournament] = useState<any>(null);
   const { toast } = useToast();
   const { tournaments, loading: tournamentsLoading, refetch: refetchTournaments } = useTournaments();
@@ -43,21 +44,22 @@ const DashboardHome = () => {
       const dbStatus = statusMap[statusFilter];
       if (tournament.status !== dbStatus) return false;
     }
-    if (dateFilter && tournament.start_date) {
-      const tournamentDate = new Date(tournament.start_date).toISOString().split('T')[0];
-      if (tournamentDate !== dateFilter) return false;
-    }
-    if (timeFilter && tournament.start_date) {
-      const tournamentTime = new Date(tournament.start_date).toTimeString().split(':').slice(0, 2).join(':');
-      if (tournamentTime !== timeFilter) return false;
+    if (dateTimeFilter && tournament.start_date) {
+      const tournamentDate = new Date(tournament.start_date);
+      const filterDate = new Date(dateTimeFilter);
+      
+      // Compare dates (same day)
+      const tournamentDateOnly = new Date(tournamentDate.getFullYear(), tournamentDate.getMonth(), tournamentDate.getDate());
+      const filterDateOnly = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
+      
+      if (tournamentDateOnly.getTime() !== filterDateOnly.getTime()) return false;
     }
     return true;
   });
 
   const clearFilters = () => {
     setStatusFilter('All');
-    setDateFilter('');
-    setTimeFilter('');
+    setDateTimeFilter(undefined);
   };
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -215,21 +217,26 @@ const DashboardHome = () => {
               </SelectContent>
             </Select>
             
-            <Input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="w-40"
-              placeholder="Date Filter"
-            />
-            
-            <Input
-              type="time"
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value)}
-              className="w-32"
-              placeholder="Time Filter"
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-64 justify-start text-left font-normal"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {dateTimeFilter ? format(dateTimeFilter, "PPP 'at' p") : "Select date & time"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-card border" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={dateTimeFilter}
+                  onSelect={setDateTimeFilter}
+                  initialFocus
+                  className="p-3 pointer-events-auto bg-card"
+                />
+              </PopoverContent>
+            </Popover>
             
             <Button variant="outline" onClick={clearFilters} size="sm">
               <X className="h-4 w-4 mr-2" />
