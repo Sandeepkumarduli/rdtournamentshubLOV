@@ -33,10 +33,16 @@ export const useTeams = () => {
   const [teamMembersMap, setTeamMembersMap] = useState<Record<string, TeamMember[]>>({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUserTeams = async () => {
-      if (!user) return;
+  const fetchUserTeams = async () => {
+    if (!user) {
+      setUserTeams([]);
+      setTeamMembersMap({});
+      setLoading(false);
+      return;
+    }
 
+    setLoading(true);
+    try {
       // Fetch teams where user is a member
       const { data: memberData, error } = await supabase
         .from('team_members')
@@ -67,12 +73,17 @@ export const useTeams = () => {
         
         setTeamMembersMap(membersMap);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUserTeams();
-    setLoading(false);
 
-    // Subscribe to team changes
+    // Subscribe to team changes and team member changes
     const teamsChannel = supabase
       .channel('team-changes')
       .on(
@@ -81,6 +92,17 @@ export const useTeams = () => {
           event: '*',
           schema: 'public',
           table: 'teams',
+        },
+        () => {
+          fetchUserTeams();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'team_members',
         },
         () => {
           fetchUserTeams();
@@ -286,6 +308,34 @@ export const useTeams = () => {
     return { error };
   };
 
+  const leaveTeam = async (teamId: string) => {
+    if (!user) return { error: 'No user found' };
+
+    // Check if user is team leader
+    const { data: teamData } = await supabase
+      .from('teams')
+      .select('leader_id')
+      .eq('id', teamId)
+      .single();
+
+    if (teamData && teamData.leader_id === user.id) {
+      return { error: 'Team leaders cannot leave. Delete the team instead or transfer leadership first.' };
+    }
+
+    // Remove user from team
+    const { error } = await supabase
+      .from('team_members')
+      .delete()
+      .eq('team_id', teamId)
+      .eq('user_id', user.id);
+
+    return { error };
+  };
+
+  const refetch = async () => {
+    await fetchUserTeams();
+  };
+
   return {
     teams,
     userTeams,
@@ -296,5 +346,7 @@ export const useTeams = () => {
     joinTeam,
     deleteTeam,
     removeMemberFromTeam,
+    leaveTeam,
+    refetch,
   };
 };
