@@ -59,6 +59,11 @@ const sidebarItems = [
     title: "Report",
     url: "/org-dashboard?tab=report",
     icon: Flag,
+  },
+  {
+    title: "View Reports",
+    url: "/org-dashboard?tab=view-reports",
+    icon: Flag,
   }
 ];
 
