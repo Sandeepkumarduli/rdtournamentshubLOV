@@ -16,24 +16,28 @@ export const useFreezeStatus = () => {
 
     const checkFreezeStatus = async () => {
       try {
+        console.log('Checking freeze status for user:', user.id);
+        
         const { data: freezeStatus, error } = await supabase
           .from('user_freeze_status')
-          .select('is_frozen')
+          .select('is_frozen, frozen_at, user_id')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no record exists
         
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+        if (error) {
           console.error('Error checking freeze status:', error);
+          setIsFrozen(false); // Default to not frozen on error
+        } else {
+          const frozen = freezeStatus?.is_frozen || false;
+          setIsFrozen(frozen);
+          
+          console.log('Freeze status check result:', { 
+            userId: user.id, 
+            frozen, 
+            freezeStatus,
+            rawData: freezeStatus
+          });
         }
-        
-        const frozen = freezeStatus?.is_frozen || false;
-        setIsFrozen(frozen);
-        
-        console.log('Freeze status check:', { 
-          userId: user.id, 
-          frozen, 
-          freezeStatus 
-        });
       } catch (error) {
         console.error('Error in freeze status check:', error);
         setIsFrozen(false); // Default to not frozen on error
@@ -59,9 +63,12 @@ export const useFreezeStatus = () => {
           console.log('Freeze status real-time update:', payload);
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             const newRecord = payload.new as { is_frozen: boolean };
-            setIsFrozen(newRecord.is_frozen || false);
+            const frozen = newRecord.is_frozen || false;
+            setIsFrozen(frozen);
+            console.log('Real-time freeze status updated:', frozen);
           } else if (payload.eventType === 'DELETE') {
             setIsFrozen(false);
+            console.log('Freeze status deleted - user unfrozen');
           }
         }
       )
