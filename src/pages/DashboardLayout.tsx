@@ -26,10 +26,19 @@ const DashboardLayout = () => {
   }
 
   // Check if user is frozen and not accessing allowed pages (report or wallet)
-  const isFrozen = profile.role === 'frozen';
+  const isFrozen = profile?.role === 'frozen';
   const isOnAllowedPage = location.pathname.includes('/report') || location.pathname.includes('/wallet');
   
+  console.log('DashboardLayout check:', { 
+    userId: user?.id, 
+    userRole: profile?.role, 
+    isFrozen, 
+    currentPath: location.pathname,
+    isOnAllowedPage 
+  });
+  
   if (isFrozen && !isOnAllowedPage) {
+    console.log('Redirecting frozen user to blocked page');
     return <AccountBlockedPage />;
   }
 

@@ -71,12 +71,43 @@ export const useSystemUsers = () => {
   const freezeUser = async (userId: string) => {
     try {
       console.log('Freezing user:', userId);
+      
+      // First check current user data
+      const { data: currentUser, error: fetchError } = await supabase
+        .from('profiles')
+        .select('user_id, role, display_name')
+        .eq('user_id', userId)
+        .single();
+        
+      if (fetchError) {
+        console.error('Error fetching user before freeze:', fetchError);
+        throw fetchError;
+      }
+      
+      console.log('Current user data before freeze:', currentUser);
+      
       const { error } = await supabase
         .from('profiles')
         .update({ role: 'frozen' })
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database update error:', error);
+        throw error;
+      }
+      
+      // Verify the update
+      const { data: updatedUser, error: verifyError } = await supabase
+        .from('profiles')
+        .select('user_id, role, display_name')
+        .eq('user_id', userId)
+        .single();
+        
+      console.log('User data after freeze update:', updatedUser);
+      
+      if (verifyError) {
+        console.error('Error verifying freeze update:', verifyError);
+      }
       
       // Force immediate UI update by updating the users state directly
       setUsers(prevUsers => 
@@ -98,12 +129,43 @@ export const useSystemUsers = () => {
   const unfreezeUser = async (userId: string) => {
     try {
       console.log('Unfreezing user:', userId);
+      
+      // First check current user data
+      const { data: currentUser, error: fetchError } = await supabase
+        .from('profiles')
+        .select('user_id, role, display_name')
+        .eq('user_id', userId)
+        .single();
+        
+      if (fetchError) {
+        console.error('Error fetching user before unfreeze:', fetchError);
+        throw fetchError;
+      }
+      
+      console.log('Current user data before unfreeze:', currentUser);
+      
       const { error } = await supabase
         .from('profiles')
         .update({ role: 'user' })
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database update error:', error);
+        throw error;
+      }
+      
+      // Verify the update
+      const { data: updatedUser, error: verifyError } = await supabase
+        .from('profiles')
+        .select('user_id, role, display_name')
+        .eq('user_id', userId)
+        .single();
+        
+      console.log('User data after unfreeze update:', updatedUser);
+      
+      if (verifyError) {
+        console.error('Error verifying unfreeze update:', verifyError);
+      }
       
       // Force immediate UI update by updating the users state directly
       setUsers(prevUsers => 
