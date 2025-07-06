@@ -138,9 +138,56 @@ export const useTournamentRegistrations = () => {
   };
 
   const refreshRegistrations = async () => {
+    if (!user) {
+      setRegistrations([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    // Trigger useEffect by updating a dependency or call fetchRegistrations directly
-    window.location.reload(); // Temporary solution, better to extract fetchRegistrations
+    
+    // Get user's teams first
+    const { data: userTeams } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', user.id);
+
+    if (!userTeams || userTeams.length === 0) {
+      setRegistrations([]);
+      setLoading(false);
+      return;
+    }
+
+    const teamIds = userTeams.map(t => t.team_id);
+
+    // Get tournament registrations for user's teams
+    const { data: regsData, error } = await supabase
+      .from('tournament_registrations')
+      .select(`
+        *,
+        tournaments (
+          id,
+          name,
+          game_type,
+          entry_fee,
+          prize_pool,
+          start_date,
+          end_date,
+          status,
+          description,
+          room_id,
+          room_password,
+          organization
+        )
+      `)
+      .in('team_id', teamIds);
+
+    if (error) {
+      console.error('Error fetching tournament registrations:', error);
+    } else {
+      setRegistrations(regsData || []);
+    }
+    setLoading(false);
   };
 
   return {

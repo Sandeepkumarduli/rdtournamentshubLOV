@@ -22,19 +22,27 @@ const DashboardHome = () => {
   const [timeFilter, setTimeFilter] = useState('');
   const [selectedTournament, setSelectedTournament] = useState<any>(null);
   const { toast } = useToast();
-  const { tournaments, loading: tournamentsLoading } = useTournaments();
+  const { tournaments, loading: tournamentsLoading, refetch: refetchTournaments } = useTournaments();
   const { teams, userTeams, teamMembersMap, loading: teamsLoading } = useTeams();
   const { user } = useAuth();
   const { profile } = useProfile();
   const { balance, loading: walletLoading } = useWallet();
-  const { registrations, registerForTournament } = useTournamentRegistrations();
+  const { registrations, registerForTournament, refreshRegistrations } = useTournamentRegistrations();
 
   if (tournamentsLoading || teamsLoading || walletLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
   const filteredTournaments = tournaments.filter(tournament => {
-    if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
+    // Map filter values to database status values
+    if (statusFilter !== 'All') {
+      const statusMap: { [key: string]: string } = {
+        'Live': 'active',
+        'Upcoming': 'upcoming'
+      };
+      const dbStatus = statusMap[statusFilter];
+      if (tournament.status !== dbStatus) return false;
+    }
     if (dateFilter && tournament.start_date) {
       const tournamentDate = new Date(tournament.start_date).toISOString().split('T')[0];
       if (tournamentDate !== dateFilter) return false;
@@ -53,8 +61,27 @@ const DashboardHome = () => {
   };
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // Refresh data without full page reload
-    setTimeout(() => setIsRefreshing(false), 1000);
+    try {
+      // Fetch all data from database
+      await Promise.all([
+        refetchTournaments(),
+        refreshRegistrations()
+      ]);
+      
+      toast({
+        title: "Data Refreshed",
+        description: "All tournament data has been successfully updated",
+      });
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh data. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleJoinTournament = (tournament: any) => {

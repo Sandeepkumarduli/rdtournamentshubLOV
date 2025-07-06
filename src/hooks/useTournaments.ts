@@ -79,9 +79,25 @@ export const useTournaments = () => {
     return { data, error };
   };
 
+  const refetch = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('tournaments')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching tournaments:', error);
+    } else {
+      setTournaments(data || []);
+    }
+    setLoading(false);
+  };
+
   return {
     tournaments,
     loading,
     createTournament,
+    refetch,
   };
 };
