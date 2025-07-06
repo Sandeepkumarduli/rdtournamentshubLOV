@@ -15,9 +15,15 @@ export const useAuth = () => {
       // Check freeze status with proper error handling
       const { data: freezeRecord, error } = await supabase
         .from('user_freeze_status')
-        .select('is_frozen, frozen_at, user_id')
+        .select('is_frozen, frozen_at, user_id, id, updated_at')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
+      
+      console.log('🔍 Raw query result:', { 
+        data: freezeRecord, 
+        error: error?.code || 'no-error',
+        errorMessage: error?.message 
+      });
       
       if (error && error.code !== 'PGRST116') {
         console.error('❌ Error checking freeze status:', error);
@@ -25,7 +31,7 @@ export const useAuth = () => {
         return;
       }
       
-      const frozen = freezeRecord?.is_frozen || false;
+      const frozen = freezeRecord?.is_frozen === true;
       setIsFrozen(frozen);
       
       console.log('✅ Freeze status result:', { 
@@ -33,7 +39,8 @@ export const useAuth = () => {
         frozen, 
         freezeRecord,
         hasRecord: !!freezeRecord,
-        error: error?.code 
+        is_frozen_value: freezeRecord?.is_frozen,
+        typeof_is_frozen: typeof freezeRecord?.is_frozen
       });
       
     } catch (error) {
