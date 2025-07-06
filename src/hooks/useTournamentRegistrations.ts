@@ -119,7 +119,7 @@ export const useTournamentRegistrations = () => {
       .select('id')
       .eq('tournament_id', tournamentId)
       .eq('team_id', teamId)
-      .single();
+      .maybeSingle();
 
     if (existingReg) {
       return { error: 'Already registered for this tournament' };
