@@ -131,17 +131,28 @@ export const useTeamRequests = () => {
       return { error: 'User is already part of two teams.' };
     }
 
-    // Check if request already exists
+    // Check if any request already exists (regardless of status)
     const { data: existingRequest } = await supabase
       .from('team_join_requests')
-      .select('id')
+      .select('id, status')
       .eq('team_id', teamId)
       .eq('requested_user_id', requestedUserId)
-      .eq('status', 'pending')
-      .single();
+      .maybeSingle();
 
     if (existingRequest) {
-      return { error: 'Request already sent to this user' };
+      if (existingRequest.status === 'pending') {
+        return { error: 'Request already sent to this user' };
+      } else {
+        // Delete old request (accepted/declined) to allow new request
+        const { error: deleteError } = await supabase
+          .from('team_join_requests')
+          .delete()
+          .eq('id', existingRequest.id);
+
+        if (deleteError) {
+          return { error: 'Failed to process previous request' };
+        }
+      }
     }
 
     const { error } = await supabase
