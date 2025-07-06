@@ -167,6 +167,8 @@ export const useSystemUsers = () => {
           is_frozen: false,
           unfrozen_at: new Date().toISOString(),
           unfrozen_by: currentUser?.id
+        }, {
+          onConflict: 'user_id'
         });
 
       if (error) {
