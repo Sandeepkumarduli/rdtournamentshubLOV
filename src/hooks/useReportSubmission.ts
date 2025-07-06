@@ -7,6 +7,7 @@ export interface ReportSubmissionData {
   description: string;
   priority: string;
   category: string;
+  orgName?: string;
 }
 
 export const useReportSubmission = () => {
@@ -34,6 +35,7 @@ export const useReportSubmission = () => {
         'player': 'player_misconduct', 
         'payment': 'payment_issue',
         'technical': 'technical_issue',
+        'org': 'org_report',
         'bug': 'bug_report',
         'account': 'account_issue',
         'general': 'general_inquiry',
@@ -43,16 +45,22 @@ export const useReportSubmission = () => {
 
       const dbType = validTypeMap[data.type] || 'other';
 
+      let description = `${data.description}\n\n--- Additional Info ---\nUsername: ${profile?.display_name || 'Not Set'}\nUser Role: ${profile?.role || 'user'}`;
+      
+      if (data.orgName) {
+        description += `\nReported Organization: ${data.orgName}`;
+      }
+
       const { error } = await supabase
         .from('reports')
         .insert([{
           reporter_id: session.user.id,
           type: dbType,
           title: data.title,
-          description: `${data.description}\n\n--- Additional Info ---\nUsername: ${profile?.display_name || 'Not Set'}\nUser Role: ${profile?.role || 'user'}`,
+          description: description,
           priority: data.priority,
           category: data.category,
-          reported_entity: 'General',
+          reported_entity: data.orgName || 'General',
         }]);
 
       if (error) throw error;
