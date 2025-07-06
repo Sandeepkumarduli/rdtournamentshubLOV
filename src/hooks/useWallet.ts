@@ -28,7 +28,7 @@ export const useWallet = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchWalletData = async () => {
     if (!user) {
       setBalance(null);
       setTransactions([]);
@@ -36,37 +36,39 @@ export const useWallet = () => {
       return;
     }
 
-    const fetchWalletData = async () => {
-      // Fetch balance
-      const { data: balanceData, error: balanceError } = await supabase
-        .from('wallet_balances')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+    // Fetch balance
+    const { data: balanceData, error: balanceError } = await supabase
+      .from('wallet_balances')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
 
-      if (balanceError) {
-        console.error('Error fetching wallet balance:', balanceError);
-      } else {
-        setBalance(balanceData);
-      }
+    if (balanceError) {
+      console.error('Error fetching wallet balance:', balanceError);
+    } else {
+      setBalance(balanceData);
+    }
 
-      // Fetch transactions
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+    // Fetch transactions
+    const { data: transactionsData, error: transactionsError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
 
-      if (transactionsError) {
-        console.error('Error fetching transactions:', transactionsError);
-      } else {
-        setTransactions(transactionsData || []);
-      }
+    if (transactionsError) {
+      console.error('Error fetching transactions:', transactionsError);
+    } else {
+      setTransactions(transactionsData || []);
+    }
 
-      setLoading(false);
-    };
+    setLoading(false);
+  };
 
+  useEffect(() => {
     fetchWalletData();
+
+    if (!user) return;
 
     // Subscribe to wallet changes
     const balanceChannel = supabase
@@ -152,5 +154,6 @@ export const useWallet = () => {
     transactions,
     loading,
     addTransaction,
+    refetch: fetchWalletData,
   };
 };

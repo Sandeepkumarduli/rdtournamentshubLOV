@@ -9,13 +9,15 @@ import ChangePasswordDialog from '@/components/ChangePasswordDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useWallet } from '@/hooks/useWallet';
+import { useProfileStats } from '@/hooks/useProfileStats';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Key } from 'lucide-react';
+import { Key, RefreshCw } from 'lucide-react';
 
 const Profile = () => {
   const { user } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
-  const { balance } = useWallet();
+  const { balance, refetch: refetchBalance } = useWallet();
+  const { stats, loading: statsLoading, refetch: refetchStats } = useProfileStats();
   const [formData, setFormData] = useState({
     username: profile?.display_name || '',
     email: profile?.email || '',
@@ -25,6 +27,7 @@ const Profile = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -39,7 +42,7 @@ const Profile = () => {
     }
   }, [profile]);
 
-  if (profileLoading) {
+  if (profileLoading || statsLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -115,6 +118,36 @@ const Profile = () => {
     });
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refetchBalance(),
+        refetchStats()
+      ]);
+      toast({
+        title: "Success",
+        description: "Profile data refreshed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refresh profile data",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const formatMemberSince = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long' 
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -123,27 +156,39 @@ const Profile = () => {
           <h1 className="text-4xl font-bold">Profile</h1>
           <p className="text-lg text-muted-foreground">Manage your account information</p>
         </div>
-        {!isEditing ? (
-          <Button variant="outline" onClick={() => setIsEditing(true)}>
-            Edit Profile
+        <div className="flex gap-2 items-center">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button variant="default" onClick={handleSave}>
-              Save Changes
+          
+          {!isEditing ? (
+            <Button variant="outline" onClick={() => setIsEditing(true)}>
+              Edit Profile
             </Button>
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel
+          ) : (
+            <div className="flex gap-2">
+              <Button variant="default" onClick={handleSave}>
+                Save Changes
+              </Button>
+              <Button variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
+            </div>
+          )}
+          
+          <ChangePasswordDialog>
+            <Button variant="outline" size="sm">
+              <Key className="h-4 w-4 mr-2" />
+              Change Password
             </Button>
-          </div>
-        )}
-        
-        <ChangePasswordDialog>
-          <Button variant="outline" size="sm">
-            <Key className="h-4 w-4 mr-2" />
-            Change Password
-          </Button>
-        </ChangePasswordDialog>
+          </ChangePasswordDialog>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -153,7 +198,11 @@ const Profile = () => {
           onInputChange={handleInputChange}
         />
 
-        <AccountStats balance={balance?.balance || 0}>
+        <AccountStats 
+          balance={balance?.balance || 0}
+          memberSince={profile ? formatMemberSince(profile.created_at) : 'Unknown'}
+          stats={stats}
+        >
           <DeleteAccount
             isOpen={isDeleteDialogOpen}
             onOpenChange={setIsDeleteDialogOpen}
