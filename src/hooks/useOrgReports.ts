@@ -11,6 +11,7 @@ export interface OrgReport {
   resolution?: string;
   created_at: string;
   resolved_at?: string;
+  isSubmittedByOrg?: boolean;
 }
 
 export const useOrgReports = () => {
@@ -42,11 +43,11 @@ export const useOrgReports = () => {
         return;
       }
 
-      // Get reports where the reported_entity is the organization
+      // Get reports submitted BY the organization admin OR reports ABOUT the organization
       const { data, error } = await supabase
         .from('reports')
         .select('*')
-        .eq('reported_entity', profile.organization)
+        .or(`reporter_id.eq.${session.user.id},reported_entity.eq.${profile.organization}`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -61,6 +62,7 @@ export const useOrgReports = () => {
         resolution: report.resolution || undefined,
         created_at: report.created_at,
         resolved_at: report.resolved_at || undefined,
+        isSubmittedByOrg: report.reporter_id === session.user.id,
       })) || [];
 
       setReports(formattedReports);
