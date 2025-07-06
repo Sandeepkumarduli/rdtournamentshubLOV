@@ -49,24 +49,59 @@ const SystemUserManagement = () => {
     }
   };
 
-  const handleFreezeUser = async (userId: string, currentStatus: string) => {
-    console.log('handleFreezeUser called with:', { userId, currentStatus });
+  const handleFreezeUser = async (userId: string, currentStatus: string, username: string) => {
+    console.log('handleFreezeUser called with:', { userId, currentStatus, username });
     
-    const result = currentStatus === 'Frozen' 
-      ? await unfreezeUser(userId)
-      : await freezeUser(userId);
+    // Find the user to check if they're a system admin
+    const user = users.find(u => u.id === userId);
+    if (user?.role === 'systemadmin') {
+      toast({
+        title: "Cannot Freeze System Admin",
+        description: "System administrator accounts cannot be frozen.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // If unfreezing, proceed directly
+    if (currentStatus === 'Frozen') {
+      const result = await unfreezeUser(userId);
+      
+      if (result.success) {
+        toast({
+          title: "User Unfrozen",
+          description: "User account has been reactivated with full access.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to unfreeze user",
+          variant: "destructive"
+        });
+      }
+      return;
+    }
+
+    // For freezing, show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to freeze ${username}? They will lose access to most features and can only access Wallet and Report pages.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const result = await freezeUser(userId);
     
     if (result.success) {
       toast({
-        title: currentStatus === 'Frozen' ? "User Unfrozen" : "User Frozen",
-        description: currentStatus === 'Frozen' 
-          ? "User account has been reactivated" 
-          : "User account has been frozen. They can only file reports now.",
+        title: "User Frozen",
+        description: "User account has been frozen. They can only access Wallet and Report pages now.",
       });
     } else {
       toast({
         title: "Error",
-        description: result.error || "Failed to update user status",
+        description: result.error || "Failed to freeze user",
         variant: "destructive"
       });
     }
@@ -200,14 +235,17 @@ const SystemUserManagement = () => {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant={user.status === 'Frozen' ? "default" : "outline"} 
-                        size="sm"
-                        onClick={() => handleFreezeUser(user.id, user.status)}
-                      >
-                        <Snowflake className="h-4 w-4" />
-                        {user.status === 'Frozen' ? 'Unfreeze' : 'Freeze'}
-                      </Button>
+                      {/* Only show freeze button for non-system admins */}
+                      {user.role !== 'systemadmin' && (
+                        <Button 
+                          variant={user.status === 'Frozen' ? "default" : "outline"} 
+                          size="sm"
+                          onClick={() => handleFreezeUser(user.id, user.status, user.username)}
+                        >
+                          <Snowflake className="h-4 w-4" />
+                          {user.status === 'Frozen' ? 'Unfreeze' : 'Freeze'}
+                        </Button>
+                      )}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="destructive" size="sm">

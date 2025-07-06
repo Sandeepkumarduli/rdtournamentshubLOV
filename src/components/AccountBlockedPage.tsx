@@ -19,13 +19,13 @@ const AccountBlockedPage = () => {
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-destructive">Account Frozen</h2>
               <p className="text-muted-foreground max-w-md">
-                Your account is frozen. You can only access the Report and Wallet pages during this time.
+                Your account has been frozen by the system administrator. You can only access the Report and Wallet pages during this time.
               </p>
             </div>
             
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <AlertTriangle className="h-4 w-4" />
-              <span>Contact support to resolve this issue</span>
+              <span>Please contact support to resolve this issue</span>
             </div>
 
             <div className="pt-4 flex gap-2">

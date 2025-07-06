@@ -39,6 +39,7 @@ export const useSystemUsers = () => {
         role: profile.role || 'user',
       })) || [];
 
+      console.log('Database profiles:', data?.map(p => ({ user_id: p.user_id, role: p.role, display_name: p.display_name })));
       console.log('Formatted users with status:', formattedUsers.map(u => ({ id: u.id, username: u.username, status: u.status, role: u.role })));
       setUsers(formattedUsers);
     } catch (error) {
