@@ -25,9 +25,8 @@ const DashboardLayout = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  // Check if user is frozen and not accessing allowed pages (dashboard, report or wallet)
-  const isOnAllowedPage = location.pathname === '/dashboard' || 
-                         location.pathname.startsWith('/dashboard/report') || 
+  // Check if user is frozen and not accessing allowed pages (only report and wallet)
+  const isOnAllowedPage = location.pathname.startsWith('/dashboard/report') || 
                          location.pathname.startsWith('/dashboard/wallet');
   
   console.log('🛡️ DashboardLayout freeze check:', { 
