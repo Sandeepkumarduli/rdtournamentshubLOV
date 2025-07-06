@@ -115,7 +115,7 @@ export const useTeams = () => {
     };
   }, [user]);
 
-  const createTeam = async (teamName: string, memberEmails?: string[]) => {
+  const createTeam = async (teamName: string) => {
     if (!user) return { error: 'No user found' };
 
     // Check team limit (2 teams max)
@@ -144,9 +144,6 @@ export const useTeams = () => {
       }]);
 
     if (memberError) return { error: memberError };
-
-    // Add initial members if provided (placeholder for now)
-    // In real implementation, you'd look up users by email first
 
     return { data: team, error: null };
   };
@@ -182,58 +179,12 @@ export const useTeams = () => {
       return { error: 'You are already a member of this team' };
     }
 
-    // Check team member limit
-    const { data: currentMembers } = await supabase
-      .from('team_members')
-      .select('id')
-      .eq('team_id', teamId);
-
-    if (currentMembers && currentMembers.length >= 5) {
-      return { error: 'Team is full (maximum 5 members)' };
-    }
-
     // Add user to team
     const { error } = await supabase
       .from('team_members')
       .insert([{
         team_id: teamId,
         user_id: user.id,
-        role: 'member',
-      }]);
-
-    return { error };
-  };
-
-  const addTeamMember = async (teamId: string, userIdToAdd: string) => {
-    if (!user) return { error: 'No user found' };
-
-    // Check if current user is team leader
-    const { data: teamData } = await supabase
-      .from('teams')
-      .select('leader_id')
-      .eq('id', teamId)
-      .single();
-
-    if (!teamData || teamData.leader_id !== user.id) {
-      return { error: 'Only team leader can add members' };
-    }
-
-    // Check team member limit (5 members max)
-    const { data: currentMembers } = await supabase
-      .from('team_members')
-      .select('id')
-      .eq('team_id', teamId);
-
-    if (currentMembers && currentMembers.length >= 5) {
-      return { error: 'Team is full (maximum 5 members)' };
-    }
-
-    // Add member
-    const { error } = await supabase
-      .from('team_members')
-      .insert([{
-        team_id: teamId,
-        user_id: userIdToAdd,
         role: 'member',
       }]);
 
@@ -342,7 +293,6 @@ export const useTeams = () => {
     teamMembersMap,
     loading,
     createTeam,
-    addTeamMember,
     joinTeam,
     deleteTeam,
     removeMemberFromTeam,

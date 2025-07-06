@@ -5,9 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X, Trash2, Settings, UserMinus } from 'lucide-react';
+import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X, Trash2, Settings, UserMinus, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTeams } from '@/hooks/useTeams';
+import { useTeamRequests } from '@/hooks/useTeamRequests';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserSearch } from '@/hooks/useUserSearch';
@@ -17,7 +18,6 @@ import FrozenAccountBanner from '@/components/FrozenAccountBanner';
 const Teams = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [teamName, setTeamName] = useState('');
-  const [memberEmails, setMemberEmails] = useState(['']);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedTeamForAddMember, setSelectedTeamForAddMember] = useState<string | null>(null);
@@ -25,8 +25,10 @@ const Teams = () => {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const [selectedTeamForEdit, setSelectedTeamForEdit] = useState<string | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<string | null>(null);
+  const [isRequestsDialogOpen, setIsRequestsDialogOpen] = useState(false);
   const { toast } = useToast();
-  const { userTeams, teamMembersMap, loading, createTeam, addTeamMember, joinTeam, deleteTeam, removeMemberFromTeam, leaveTeam, refetch } = useTeams();
+  const { userTeams, teamMembersMap, loading, createTeam, joinTeam, deleteTeam, removeMemberFromTeam, leaveTeam, refetch } = useTeams();
+  const { incomingRequests, sendRequest, acceptRequest, declineRequest, refetch: refetchRequests } = useTeamRequests();
   const { user } = useAuth();
   const { profile } = useProfile();
   const { loading: searchLoading, results: searchResults, searchUsers, clearResults } = useUserSearch();
@@ -74,21 +76,15 @@ const Teams = () => {
   };
 
   const addMemberEmailField = () => {
-    if (memberEmails.length < 4) { // Max 4 additional members (5 total including leader)
-      setMemberEmails([...memberEmails, '']);
-    }
+    // Removed - no longer needed for request-based system
   };
 
   const removeMemberEmailField = (index: number) => {
-    if (memberEmails.length > 1) {
-      setMemberEmails(memberEmails.filter((_, i) => i !== index));
-    }
+    // Removed - no longer needed for request-based system
   };
 
   const updateMemberEmail = (index: number, value: string) => {
-    const updated = [...memberEmails];
-    updated[index] = value;
-    setMemberEmails(updated);
+    // Removed - no longer needed for request-based system
   };
 
   const handleCreateTeam = async () => {
@@ -119,19 +115,7 @@ const Teams = () => {
       return;
     }
 
-    // Filter out empty emails
-    const validEmails = memberEmails.filter(email => email.trim());
-    
-    if (validEmails.length > 4) {
-      toast({
-        title: "Too Many Members",
-        description: "Maximum 5 members per team (including leader)",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const { error } = await createTeam(teamName, validEmails);
+    const { error } = await createTeam(teamName);
     
     if (error) {
       toast({
@@ -143,7 +127,6 @@ const Teams = () => {
     }
 
     setTeamName('');
-    setMemberEmails(['']);
     setIsCreateDialogOpen(false);
     toast({
       title: "Team Created",
@@ -151,7 +134,7 @@ const Teams = () => {
     });
   };
 
-  const handleAddMemberToTeam = async (selectedUserId: string, teamId: string) => {
+  const handleSendTeamRequest = async (selectedUserId: string, teamId: string) => {
     if (profile?.role === 'frozen') {
       toast({
         title: "Account Frozen",
@@ -161,17 +144,7 @@ const Teams = () => {
       return;
     }
     
-    const teamMembers = teamMembersMap[teamId] || [];
-    if (teamMembers.length >= 5) {
-      toast({
-        title: "Team Full",
-        description: "Maximum 5 members allowed per team",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const { error } = await addTeamMember(teamId, selectedUserId);
+    const { error } = await sendRequest(teamId, selectedUserId);
     
     if (error) {
       toast({
@@ -183,12 +156,50 @@ const Teams = () => {
     }
 
     toast({
-      title: "Member Added",
-      description: "Team member added successfully!"
+      title: "Request Sent",
+      description: "Team join request sent successfully!"
     });
     setNewMemberEmail('');
     setSelectedTeamForAddMember(null);
     clearResults();
+  };
+
+  const handleAcceptRequest = async (requestId: string) => {
+    const { error } = await acceptRequest(requestId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: typeof error === 'string' ? error : error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Request Accepted",
+      description: "You have joined the team!"
+    });
+    refetchRequests();
+  };
+
+  const handleDeclineRequest = async (requestId: string) => {
+    const { error } = await declineRequest(requestId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: typeof error === 'string' ? error : error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Request Declined",
+      description: "Team join request declined"
+    });
+    refetchRequests();
   };
 
   const copyTeamId = (teamId: string) => {
@@ -298,6 +309,65 @@ const Teams = () => {
           <p className="text-lg text-muted-foreground">Create and manage your gaming teams (Max 2 teams)</p>
         </div>
         <div className="flex gap-2">
+          {/* Requests Button */}
+          <Dialog open={isRequestsDialogOpen} onOpenChange={setIsRequestsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="relative">
+                <Bell className="h-4 w-4" />
+                Requests
+                {incomingRequests.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {incomingRequests.length}
+                  </span>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Team Join Requests</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                {incomingRequests.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">
+                    No pending requests
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {incomingRequests.map((request) => (
+                      <div key={request.id} className="border rounded-lg p-3 space-y-2">
+                        <div>
+                          <p className="font-medium text-sm">
+                            Team: {request.teams?.name || 'Unknown Team'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            From: {request.requester_profile?.display_name || 'Unknown User'}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleAcceptRequest(request.id)}
+                            className="flex-1"
+                          >
+                            Accept
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeclineRequest(request.id)}
+                            className="flex-1"
+                          >
+                            Decline
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -366,46 +436,8 @@ const Teams = () => {
                     onChange={e => setTeamName(e.target.value)} 
                     placeholder="Enter team name" 
                   />
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label>Team Members ({memberEmails.length}/4 additional)</Label>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={addMemberEmailField}
-                      disabled={memberEmails.length >= 4}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Member
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {memberEmails.map((email, index) => (
-                      <div key={index} className="flex gap-2">
-                        <Input
-                          value={email}
-                          onChange={(e) => updateMemberEmail(index, e.target.value)}
-                          placeholder={`Member ${index + 1} email (optional)`}
-                        />
-                        {memberEmails.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => removeMemberEmailField(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    You will be the team leader. Members must have accounts to join.
+                    You will be the team leader. Add members after creating the team.
                   </p>
                 </div>
                 
@@ -535,7 +567,7 @@ const Teams = () => {
                                             <div 
                                               key={user.user_id} 
                                               className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
-                                              onClick={() => handleAddMemberToTeam(user.user_id, team.id)}
+                                               onClick={() => handleSendTeamRequest(user.user_id, team.id)}
                                             >
                                               <div>
                                                 <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
@@ -645,7 +677,7 @@ const Teams = () => {
                                        <div 
                                          key={user.user_id} 
                                          className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
-                                         onClick={() => handleAddMemberToTeam(user.user_id, team.id)}
+                                         onClick={() => handleSendTeamRequest(user.user_id, team.id)}
                                        >
                                          <div>
                                            <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
