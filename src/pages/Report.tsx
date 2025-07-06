@@ -128,88 +128,6 @@ const Report = () => {
         </Button>
       </div>
 
-      {/* My Reports Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            My Reports ({totalReports})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {reportsLoading ? (
-            <div className="text-center py-4">Loading reports...</div>
-          ) : reports.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              No reports submitted yet
-            </div>
-          ) : (
-            <>
-              <div className="space-y-4">
-                {reports.map((report) => (
-                  <div key={report.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">{report.title}</h3>
-                      <div className="flex gap-2">
-                        <Badge variant={getStatusBadgeVariant(report.status)}>
-                          {report.status}
-                        </Badge>
-                        <Badge variant={getPriorityBadgeVariant(report.priority)}>
-                          {report.priority}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      <span className="font-medium">Type:</span> {report.type} | 
-                      <span className="font-medium"> Submitted:</span> {new Date(report.created_at).toLocaleDateString()}
-                      {report.resolved_at && (
-                        <> | <span className="font-medium">Resolved:</span> {new Date(report.resolved_at).toLocaleDateString()}</>
-                      )}
-                    </div>
-                    <p className="text-sm">{report.description.split('\n\n--- Additional Info ---')[0]}</p>
-                    {report.resolution && (
-                      <div className="bg-muted/50 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-success mb-1">Resolution:</p>
-                        <p className="text-sm">{report.resolution}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              
-              {totalPages > 1 && (
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                        style={{ pointerEvents: currentPage === 1 ? 'none' : 'auto', opacity: currentPage === 1 ? 0.5 : 1 }}
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => setCurrentPage(page)}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                        style={{ pointerEvents: currentPage === totalPages ? 'none' : 'auto', opacity: currentPage === totalPages ? 0.5 : 1 }}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-
       <div className="grid md:grid-cols-2 gap-6">
         {/* Report Form */}
         <Card>
@@ -356,6 +274,88 @@ const Report = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* My Reports Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            My Reports ({totalReports})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {reportsLoading ? (
+            <div className="text-center py-4">Loading reports...</div>
+          ) : reports.length === 0 ? (
+            <div className="text-center py-4 text-muted-foreground">
+              No reports submitted yet
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {reports.map((report) => (
+                  <div key={report.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">{report.title}</h3>
+                      <div className="flex gap-2">
+                        <Badge variant={getStatusBadgeVariant(report.status)}>
+                          {report.status}
+                        </Badge>
+                        <Badge variant={getPriorityBadgeVariant(report.priority)}>
+                          {report.priority}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium">Type:</span> {report.type} | 
+                      <span className="font-medium"> Submitted:</span> {new Date(report.created_at).toLocaleDateString()}
+                      {report.resolved_at && (
+                        <> | <span className="font-medium">Resolved:</span> {new Date(report.resolved_at).toLocaleDateString()}</>
+                      )}
+                    </div>
+                    <p className="text-sm">{report.description.split('\n\n--- Additional Info ---')[0]}</p>
+                    {report.resolution && (
+                      <div className="bg-muted/50 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-success mb-1">Resolution:</p>
+                        <p className="text-sm">{report.resolution}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        style={{ pointerEvents: currentPage === 1 ? 'none' : 'auto', opacity: currentPage === 1 ? 0.5 : 1 }}
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        style={{ pointerEvents: currentPage === totalPages ? 'none' : 'auto', opacity: currentPage === totalPages ? 0.5 : 1 }}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
