@@ -275,12 +275,15 @@ const DashboardHome = () => {
                       <span className="font-semibold text-gaming-gold">{tournament.prize_pool} rdCoins</span>
                     </div>
                     
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Date & Time:</span>
-                      <span className="font-medium">
-                        {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : 'TBA'}
-                      </span>
-                    </div>
+                     <div className="flex justify-between text-sm">
+                       <span className="text-muted-foreground">Date & Time:</span>
+                       <span className="font-medium">
+                         {tournament.start_date 
+                           ? `${new Date(tournament.start_date).toLocaleDateString()} at ${new Date(tournament.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                           : 'TBA'
+                         }
+                       </span>
+                     </div>
                     
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Max Teams:</span>
