@@ -38,24 +38,17 @@ export const useOrgReportsView = () => {
         .eq('user_id', session.user.id)
         .single();
 
-      console.log('Admin profile:', profile);
-
       if (!profile?.organization || profile.role !== 'admin') {
-        console.log('No organization or not admin:', profile);
         setReports([]);
         setLoading(false);
         return;
       }
-
-      console.log('Searching for reports about organization:', profile.organization);
 
       // Build query - only reports ABOUT the organization
       let query = supabase
         .from('reports')
         .select('*')
         .eq('reported_entity', profile.organization);
-
-      console.log('Query being executed for reported_entity:', profile.organization);
 
       // Apply status filter
       if (statusFilter !== 'All') {
@@ -74,9 +67,6 @@ export const useOrgReportsView = () => {
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
-
-      console.log('Query result:', { data, error });
-      console.log('Number of reports found:', data?.length || 0);
 
       if (error) throw error;
 
