@@ -99,7 +99,11 @@ const SystemReports = () => {
       if (statusFilter === "All") return true;
       return report.status.toLowerCase() === statusFilter.toLowerCase();
     })
-    .filter(report => !dateFilter || report.date === dateFilter)
+    .filter(report => {
+      if (!dateFilter) return true;
+      const reportDate = new Date(report.date).toISOString().split('T')[0];
+      return reportDate === dateFilter;
+    })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const openReports = reports.filter(report => report.status === "Pending").length;

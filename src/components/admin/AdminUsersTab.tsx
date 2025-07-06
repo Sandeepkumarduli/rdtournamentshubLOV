@@ -17,7 +17,9 @@ const AdminUsersTab = ({ onRefresh }: AdminUsersTabProps) => {
   const { toast } = useToast();
 
   const { users, loading, refetch, banUser, unbanUser } = useAdminUsers();
-  const filteredUsers = users.filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredUsers = users.filter(user => 
+    user.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleRefresh = async () => {
     await refetch();

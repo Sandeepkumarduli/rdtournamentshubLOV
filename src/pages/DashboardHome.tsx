@@ -35,7 +35,14 @@ const DashboardHome = () => {
 
   const filteredTournaments = tournaments.filter(tournament => {
     if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
-    if (dateFilter && tournament.start_date && new Date(tournament.start_date).toISOString().split('T')[0] !== dateFilter) return false;
+    if (dateFilter && tournament.start_date) {
+      const tournamentDate = new Date(tournament.start_date).toISOString().split('T')[0];
+      if (tournamentDate !== dateFilter) return false;
+    }
+    if (timeFilter && tournament.start_date) {
+      const tournamentTime = new Date(tournament.start_date).toTimeString().split(':').slice(0, 2).join(':');
+      if (tournamentTime !== timeFilter) return false;
+    }
     return true;
   });
 

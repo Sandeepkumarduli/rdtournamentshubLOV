@@ -25,6 +25,23 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
 
   const handleDeleteTournament = async (tournamentId: string) => {
     try {
+      // First, delete related org_user_registrations
+      const { error: registrationError } = await supabase
+        .from('org_user_registrations')
+        .delete()
+        .eq('tournament_id', tournamentId);
+
+      if (registrationError) throw registrationError;
+
+      // Then, delete related tournament_registrations
+      const { error: tournamentRegError } = await supabase
+        .from('tournament_registrations')
+        .delete()
+        .eq('tournament_id', tournamentId);
+
+      if (tournamentRegError) throw tournamentRegError;
+
+      // Finally, delete the tournament
       const { error } = await supabase
         .from('tournaments')
         .delete()
@@ -34,7 +51,7 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
 
       toast({
         title: "Tournament Deleted",
-        description: "Tournament has been successfully deleted",
+        description: "Tournament and all related registrations have been successfully deleted",
       });
       
       refetch();
@@ -42,7 +59,7 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
       console.error('Error deleting tournament:', error);
       toast({
         title: "Error",
-        description: "Failed to delete tournament",
+        description: "Failed to delete tournament. Please try again.",
         variant: "destructive"
       });
     }
@@ -51,7 +68,10 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
 
   const filteredTournaments = tournaments.filter(tournament => {
     if (statusFilter !== 'All' && tournament.status !== statusFilter) return false;
-    if (dateFilter && tournament.startDate !== dateFilter) return false;
+    if (dateFilter && tournament.startDate) {
+      const tournamentDate = tournament.startDate.split(' ')[0]; // Extract date part
+      if (tournamentDate !== dateFilter) return false;
+    }
     return true;
   });
 
