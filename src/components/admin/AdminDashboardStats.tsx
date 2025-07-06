@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { RefreshCw, TrendingUp, Wallet, Clock, CheckCircle, Play, Calendar } from 'lucide-react';
+import { RefreshCw, TrendingUp, Wallet, Clock, CheckCircle, Play, Calendar, Users, Shield, ShieldAlert, Flag, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -24,8 +24,8 @@ const AdminDashboardStats = ({ onRefresh }: AdminDashboardStatsProps) => {
     await refetch();
     onRefresh();
     toast({
-      title: "Data Fetched Successfully",
-      description: "Dashboard data has been refreshed",
+      title: "Dashboard data refreshed successfully",
+      description: "All data has been updated from the database",
     });
   };
 
@@ -53,7 +53,85 @@ const AdminDashboardStats = ({ onRefresh }: AdminDashboardStatsProps) => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* New Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Users</p>
+                <p className="text-2xl font-bold text-slate-50">{stats.totalUsers}</p>
+              </div>
+              <Users className="h-8 w-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Teams</p>
+                <p className="text-2xl font-bold text-slate-50">{stats.totalTeams}</p>
+              </div>
+              <Shield className="h-8 w-8 text-accent" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Banned Teams</p>
+                <p className="text-2xl font-bold text-destructive">{stats.bannedTeams}</p>
+              </div>
+              <ShieldAlert className="h-8 w-8 text-destructive" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* More Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Banned Users</p>
+                <p className="text-2xl font-bold text-destructive">{stats.bannedUsers}</p>
+              </div>
+              <ShieldAlert className="h-8 w-8 text-destructive" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Reports on This Org</p>
+                <p className="text-2xl font-bold text-warning">{stats.reportsOnOrg}</p>
+              </div>
+              <Flag className="h-8 w-8 text-warning" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="gaming-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Reports I Submitted</p>
+                <p className="text-2xl font-bold text-slate-50">{stats.reportsSubmittedByMe}</p>
+              </div>
+              <FileText className="h-8 w-8 text-slate-50" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Wallet & Finance Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="gaming-card">
           <CardContent className="p-6">

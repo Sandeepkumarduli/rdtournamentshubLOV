@@ -8,6 +8,12 @@ export interface AdminStats {
   liveTournaments: number;
   upcomingTournaments: number;
   totalPrizeMoneySpent: number;
+  totalUsers: number;
+  totalTeams: number;
+  bannedTeams: number;
+  bannedUsers: number;
+  reportsOnOrg: number;
+  reportsSubmittedByMe: number;
 }
 
 export const useAdminStats = () => {
@@ -18,6 +24,12 @@ export const useAdminStats = () => {
     liveTournaments: 0,
     upcomingTournaments: 0,
     totalPrizeMoneySpent: 0,
+    totalUsers: 0,
+    totalTeams: 0,
+    bannedTeams: 0,
+    bannedUsers: 0,
+    reportsOnOrg: 0,
+    reportsSubmittedByMe: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -72,6 +84,37 @@ export const useAdminStats = () => {
       // Calculate total prize money spent (sum of all prize pools)
       const totalPrizeMoneySpent = tournaments?.reduce((sum, t) => sum + (t.prize_pool || 0), 0) || 0;
 
+      // Fetch org user registrations to get total users and teams
+      const { data: orgRegistrations } = await supabase
+        .from('org_user_registrations')
+        .select('user_id, team_id, registration_type')
+        .eq('org_name', adminOrg);
+
+      // Get unique users and teams count
+      const uniqueUsers = new Set(orgRegistrations?.map(reg => reg.user_id) || []);
+      const uniqueTeams = new Set(orgRegistrations?.filter(reg => reg.team_id).map(reg => reg.team_id) || []);
+
+      // Fetch organization bans
+      const { data: orgBans } = await supabase
+        .from('organization_bans')
+        .select('banned_user_id, banned_team_id')
+        .eq('organization', adminOrg);
+
+      const bannedUsers = orgBans?.filter(ban => ban.banned_user_id).length || 0;
+      const bannedTeams = orgBans?.filter(ban => ban.banned_team_id).length || 0;
+
+      // Fetch reports about this org (where reported_entity contains the org name)
+      const { data: reportsOnOrg } = await supabase
+        .from('reports')
+        .select('id')
+        .ilike('reported_entity', `%${adminOrg}%`);
+
+      // Fetch reports submitted by this admin
+      const { data: reportsSubmittedByMe } = await supabase
+        .from('reports')
+        .select('id')
+        .eq('reporter_id', session.user.id);
+
       setStats({
         walletBalance: adminWallet?.balance || 0,
         tournamentsNeedingRoomUpdates,
@@ -79,6 +122,12 @@ export const useAdminStats = () => {
         liveTournaments,
         upcomingTournaments,
         totalPrizeMoneySpent,
+        totalUsers: uniqueUsers.size,
+        totalTeams: uniqueTeams.size,
+        bannedTeams,
+        bannedUsers,
+        reportsOnOrg: reportsOnOrg?.length || 0,
+        reportsSubmittedByMe: reportsSubmittedByMe?.length || 0,
       });
     } catch (error) {
       console.error('Error fetching admin stats:', error);
@@ -95,6 +144,9 @@ export const useAdminStats = () => {
       .channel('admin-stats-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, fetchAdminStats)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'wallet_balances' }, fetchAdminStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'org_user_registrations' }, fetchAdminStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'organization_bans' }, fetchAdminStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, fetchAdminStats)
       .subscribe();
 
     return () => {
