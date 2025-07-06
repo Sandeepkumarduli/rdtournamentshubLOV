@@ -60,15 +60,17 @@ export const useUserReports = () => {
   useEffect(() => {
     fetchReports();
 
-    // Subscribe to real-time changes
+    // Subscribe to real-time changes for reports table
     const channel = supabase
       .channel('user-reports-changes')
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'reports',
-        filter: `reporter_id=eq.${supabase.auth.getUser().then(u => u.data.user?.id)}`
-      }, fetchReports)
+        table: 'reports'
+      }, () => {
+        // Refresh reports when any change occurs
+        fetchReports();
+      })
       .subscribe();
 
     return () => {

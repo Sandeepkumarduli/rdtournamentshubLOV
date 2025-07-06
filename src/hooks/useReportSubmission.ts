@@ -35,7 +35,7 @@ export const useReportSubmission = () => {
         'player': 'player_misconduct', 
         'payment': 'payment_issue',
         'technical': 'technical_issue',
-        'org': 'org_report',
+        'org': 'other',
         'bug': 'bug_report',
         'account': 'account_issue',
         'general': 'general_inquiry',

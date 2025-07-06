@@ -11,6 +11,7 @@ import { AlertTriangle, Mail, Phone, MessageSquare, RefreshCw, FileText } from '
 import { useToast } from '@/hooks/use-toast';
 import { useReportSubmission } from '@/hooks/useReportSubmission';
 import { useUserReports } from '@/hooks/useUserReports';
+import { useOrgNames } from '@/hooks/useOrgNames';
 
 const Report = () => {
   const [reportData, setReportData] = useState({
@@ -23,6 +24,7 @@ const Report = () => {
   const { toast } = useToast();
   const { loading, submitReport } = useReportSubmission();
   const { reports, totalReports, loading: reportsLoading, currentPage, totalPages, setCurrentPage, refetch } = useUserReports();
+  const { orgNames, loading: orgNamesLoading } = useOrgNames();
 
   const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,13 +241,23 @@ const Report = () => {
               {reportData.type === 'org' && (
                 <div className="space-y-2">
                   <Label htmlFor="orgName">ORG Name</Label>
-                  <Input
-                    id="orgName"
-                    value={reportData.orgName}
-                    onChange={(e) => setReportData({...reportData, orgName: e.target.value})}
-                    placeholder="Enter the organization name"
-                    required
-                  />
+                  <Select value={reportData.orgName} onValueChange={(value) => setReportData({...reportData, orgName: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={orgNamesLoading ? "Loading organizations..." : "Select an organization"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {orgNames.map((orgName) => (
+                        <SelectItem key={orgName} value={orgName}>
+                          {orgName}
+                        </SelectItem>
+                      ))}
+                      {orgNames.length === 0 && !orgNamesLoading && (
+                        <SelectItem value="" disabled>
+                          No organizations found
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 
