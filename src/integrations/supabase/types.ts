@@ -611,6 +611,67 @@ export type Database = {
           },
         ]
       }
+      user_freeze_status: {
+        Row: {
+          created_at: string
+          frozen_at: string | null
+          frozen_by: string | null
+          id: string
+          is_frozen: boolean
+          reason: string | null
+          unfrozen_at: string | null
+          unfrozen_by: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          frozen_at?: string | null
+          frozen_by?: string | null
+          id?: string
+          is_frozen?: boolean
+          reason?: string | null
+          unfrozen_at?: string | null
+          unfrozen_by?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          frozen_at?: string | null
+          frozen_by?: string | null
+          id?: string
+          is_frozen?: boolean
+          reason?: string | null
+          unfrozen_at?: string | null
+          unfrozen_by?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_freeze_status_frozen_by_fkey"
+            columns: ["frozen_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_freeze_status_unfrozen_by_fkey"
+            columns: ["unfrozen_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_freeze_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       wallet_balances: {
         Row: {
           balance: number | null

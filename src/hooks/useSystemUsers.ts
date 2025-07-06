@@ -11,6 +11,7 @@ export interface SystemUser {
   status: string;
   organization?: string;
   role?: string;
+  isFrozen?: boolean;
 }
 
 export const useSystemUsers = () => {
@@ -22,25 +23,49 @@ export const useSystemUsers = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          user_freeze_status(
+            is_frozen,
+            frozen_at,
+            frozen_by
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedUsers = data?.map(profile => ({
-        id: profile.user_id, // Use user_id instead of id
-        username: profile.display_name || profile.email || 'Unknown',
-        email: profile.email || '',
-        bgmiId: profile.bgmi_id || 'Not Set',
-        phone: '(Not Available)', // Phone not in profiles table
-        createdAt: new Date(profile.created_at).toLocaleDateString(),
-        status: profile.role === 'banned' ? 'Inactive' : profile.role === 'frozen' ? 'Frozen' : 'Active',
-        organization: profile.organization || 'None',
-        role: profile.role || 'user',
-      })) || [];
+      const formattedUsers = data?.map(profile => {
+        const freezeStatus = profile.user_freeze_status?.[0]; // Get first record
+        return {
+          id: profile.user_id, // Use user_id instead of id
+          username: profile.display_name || profile.email || 'Unknown',
+          email: profile.email || '',
+          bgmiId: profile.bgmi_id || 'Not Set',
+          phone: '(Not Available)', // Phone not in profiles table
+          createdAt: new Date(profile.created_at).toLocaleDateString(),
+          status: freezeStatus?.is_frozen ? 'Frozen' : 'Active',
+          organization: profile.organization || 'None',
+          role: profile.role || 'user',
+          isFrozen: freezeStatus?.is_frozen || false,
+        };
+      }) || [];
 
-      console.log('Database profiles:', data?.map(p => ({ user_id: p.user_id, role: p.role, display_name: p.display_name })));
-      console.log('Formatted users with status:', formattedUsers.map(u => ({ id: u.id, username: u.username, status: u.status, role: u.role })));
+      console.log('Database profiles with freeze status:', data?.map(p => ({ 
+        user_id: p.user_id, 
+        role: p.role, 
+        display_name: p.display_name,
+        freeze_status: p.user_freeze_status 
+      })));
+      
+      console.log('Formatted users with status:', formattedUsers.map(u => ({ 
+        id: u.id, 
+        username: u.username, 
+        status: u.status, 
+        role: u.role,
+        isFrozen: u.isFrozen 
+      })));
+      
       setUsers(formattedUsers);
     } catch (error) {
       console.error('Error fetching system users:', error);
@@ -72,48 +97,43 @@ export const useSystemUsers = () => {
     try {
       console.log('Freezing user:', userId);
       
-      // First check current user data
-      const { data: currentUser, error: fetchError } = await supabase
-        .from('profiles')
-        .select('user_id, role, display_name')
-        .eq('user_id', userId)
-        .single();
-        
-      if (fetchError) {
-        console.error('Error fetching user before freeze:', fetchError);
-        throw fetchError;
-      }
+      // Get current admin info
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      console.log('Current user data before freeze:', currentUser);
-      
+      // Insert or update freeze status
       const { error } = await supabase
-        .from('profiles')
-        .update({ role: 'frozen' })
-        .eq('user_id', userId);
+        .from('user_freeze_status')
+        .upsert({
+          user_id: userId,
+          is_frozen: true,
+          frozen_at: new Date().toISOString(),
+          frozen_by: currentUser?.id,
+          reason: 'Frozen by system administrator'
+        });
 
       if (error) {
-        console.error('Database update error:', error);
+        console.error('Database freeze error:', error);
         throw error;
       }
       
       // Verify the update
-      const { data: updatedUser, error: verifyError } = await supabase
-        .from('profiles')
-        .select('user_id, role, display_name')
+      const { data: freezeStatus, error: verifyError } = await supabase
+        .from('user_freeze_status')
+        .select('*')
         .eq('user_id', userId)
         .single();
         
-      console.log('User data after freeze update:', updatedUser);
+      console.log('Freeze status after update:', freezeStatus);
       
       if (verifyError) {
         console.error('Error verifying freeze update:', verifyError);
       }
       
-      // Force immediate UI update by updating the users state directly
+      // Force immediate UI update
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === userId 
-            ? { ...user, status: 'Frozen', role: 'frozen' }
+            ? { ...user, status: 'Frozen', isFrozen: true }
             : user
         )
       );
@@ -130,48 +150,42 @@ export const useSystemUsers = () => {
     try {
       console.log('Unfreezing user:', userId);
       
-      // First check current user data
-      const { data: currentUser, error: fetchError } = await supabase
-        .from('profiles')
-        .select('user_id, role, display_name')
-        .eq('user_id', userId)
-        .single();
-        
-      if (fetchError) {
-        console.error('Error fetching user before unfreeze:', fetchError);
-        throw fetchError;
-      }
+      // Get current admin info
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      console.log('Current user data before unfreeze:', currentUser);
-      
+      // Update freeze status
       const { error } = await supabase
-        .from('profiles')
-        .update({ role: 'user' })
-        .eq('user_id', userId);
+        .from('user_freeze_status')
+        .upsert({
+          user_id: userId,
+          is_frozen: false,
+          unfrozen_at: new Date().toISOString(),
+          unfrozen_by: currentUser?.id
+        });
 
       if (error) {
-        console.error('Database update error:', error);
+        console.error('Database unfreeze error:', error);
         throw error;
       }
       
       // Verify the update
-      const { data: updatedUser, error: verifyError } = await supabase
-        .from('profiles')
-        .select('user_id, role, display_name')
+      const { data: freezeStatus, error: verifyError } = await supabase
+        .from('user_freeze_status')
+        .select('*')
         .eq('user_id', userId)
         .single();
         
-      console.log('User data after unfreeze update:', updatedUser);
+      console.log('Freeze status after unfreeze update:', freezeStatus);
       
       if (verifyError) {
         console.error('Error verifying unfreeze update:', verifyError);
       }
       
-      // Force immediate UI update by updating the users state directly
+      // Force immediate UI update
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === userId 
-            ? { ...user, status: 'Active', role: 'user' }
+            ? { ...user, status: 'Active', isFrozen: false }
             : user
         )
       );
@@ -187,21 +201,34 @@ export const useSystemUsers = () => {
   useEffect(() => {
     fetchUsers();
 
-    // Subscribe to real-time changes
-    const channel = supabase
-      .channel('system-users-changes')
+    // Subscribe to real-time changes for both profiles and freeze status
+    const profileChannel = supabase
+      .channel('system-users-profiles')
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
         table: 'profiles' 
       }, (payload) => {
-        console.log('Real-time update received:', payload);
+        console.log('Profiles real-time update:', payload);
+        fetchUsers();
+      })
+      .subscribe();
+
+    const freezeChannel = supabase
+      .channel('system-users-freeze-status')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'user_freeze_status' 
+      }, (payload) => {
+        console.log('Freeze status real-time update:', payload);
         fetchUsers();
       })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(freezeChannel);
     };
   }, []);
 

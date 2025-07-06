@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
+import { useFreezeStatus } from '@/hooks/useFreezeStatus';
 
 const sidebarItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -31,14 +32,13 @@ const UserSidebar = () => {
   const location = useLocation();
   const { profile } = useProfile();
   const { toast } = useToast();
-  
-  const isFrozen = profile?.role === 'frozen';
+  const { isFrozen } = useFreezeStatus();
   
   const handleLockedClick = (e: React.MouseEvent, label: string) => {
     e.preventDefault();
     toast({
       title: "Account Frozen",
-      description: "Your account is frozen. Please contact the platform administrator.",
+      description: "Your account has been frozen by the system administrator. Please contact support.",
       variant: "destructive"
     });
   };
