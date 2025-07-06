@@ -21,28 +21,37 @@ export const useSystemUsers = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get all profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_freeze_status(
-            is_frozen,
-            frozen_at,
-            frozen_by
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
-      const formattedUsers = data?.map(profile => {
-        const freezeStatus = profile.user_freeze_status?.[0]; // Get first record
+      // Then get freeze status for all users (if any exist)
+      const { data: freezeStatuses, error: freezeError } = await supabase
+        .from('user_freeze_status')
+        .select('user_id, is_frozen, frozen_at, frozen_by');
+
+      if (freezeError && freezeError.code !== 'PGRST116') {
+        console.error('Error fetching freeze statuses:', freezeError);
+      }
+
+      // Create a map of freeze statuses for quick lookup
+      const freezeMap = new Map();
+      freezeStatuses?.forEach(status => {
+        freezeMap.set(status.user_id, status);
+      });
+
+      const formattedUsers = profiles?.map(profile => {
+        const freezeStatus = freezeMap.get(profile.user_id);
         return {
-          id: profile.user_id, // Use user_id instead of id
+          id: profile.user_id,
           username: profile.display_name || profile.email || 'Unknown',
           email: profile.email || '',
           bgmiId: profile.bgmi_id || 'Not Set',
-          phone: '(Not Available)', // Phone not in profiles table
+          phone: '(Not Available)',
           createdAt: new Date(profile.created_at).toLocaleDateString(),
           status: freezeStatus?.is_frozen ? 'Frozen' : 'Active',
           organization: profile.organization || 'None',
@@ -51,13 +60,8 @@ export const useSystemUsers = () => {
         };
       }) || [];
 
-      console.log('Database profiles with freeze status:', data?.map(p => ({ 
-        user_id: p.user_id, 
-        role: p.role, 
-        display_name: p.display_name,
-        freeze_status: p.user_freeze_status 
-      })));
-      
+      console.log('Database profiles:', profiles?.length || 0);
+      console.log('Freeze statuses found:', freezeStatuses?.length || 0);
       console.log('Formatted users with status:', formattedUsers.map(u => ({ 
         id: u.id, 
         username: u.username, 
