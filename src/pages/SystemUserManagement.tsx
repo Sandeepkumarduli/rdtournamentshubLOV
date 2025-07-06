@@ -50,6 +50,8 @@ const SystemUserManagement = () => {
   };
 
   const handleFreezeUser = async (userId: string, currentStatus: string) => {
+    console.log('handleFreezeUser called with:', { userId, currentStatus });
+    
     const result = currentStatus === 'Frozen' 
       ? await unfreezeUser(userId)
       : await freezeUser(userId);

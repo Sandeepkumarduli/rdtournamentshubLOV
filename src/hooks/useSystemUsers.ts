@@ -39,6 +39,7 @@ export const useSystemUsers = () => {
         role: profile.role || 'user',
       })) || [];
 
+      console.log('Formatted users with status:', formattedUsers.map(u => ({ id: u.id, username: u.username, status: u.status, role: u.role })));
       setUsers(formattedUsers);
     } catch (error) {
       console.error('Error fetching system users:', error);
@@ -68,6 +69,7 @@ export const useSystemUsers = () => {
 
   const freezeUser = async (userId: string) => {
     try {
+      console.log('Freezing user:', userId);
       const { error } = await supabase
         .from('profiles')
         .update({ role: 'frozen' })
@@ -75,7 +77,9 @@ export const useSystemUsers = () => {
 
       if (error) throw error;
       
-      fetchUsers();
+      // Force immediate refetch to ensure UI updates
+      await fetchUsers();
+      console.log('User frozen successfully');
       return { success: true };
     } catch (error) {
       console.error('Error freezing user:', error);
@@ -85,6 +89,7 @@ export const useSystemUsers = () => {
 
   const unfreezeUser = async (userId: string) => {
     try {
+      console.log('Unfreezing user:', userId);
       const { error } = await supabase
         .from('profiles')
         .update({ role: 'user' })
@@ -92,7 +97,9 @@ export const useSystemUsers = () => {
 
       if (error) throw error;
       
-      fetchUsers();
+      // Force immediate refetch to ensure UI updates
+      await fetchUsers();
+      console.log('User unfrozen successfully');
       return { success: true };
     } catch (error) {
       console.error('Error unfreezing user:', error);
