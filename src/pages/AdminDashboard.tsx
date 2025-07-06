@@ -12,6 +12,7 @@ import AdminTeamsTab from "@/components/admin/AdminTeamsTab";
 import AdminWalletsTab from "@/components/admin/AdminWalletsTab";
 import AdminGroupTab from "@/components/admin/AdminGroupTab";
 import AdminReportPage from "@/components/AdminReportPage";
+import AdminReportsTab from "@/components/admin/AdminReportsTab";
 import TopBar from "@/components/TopBar";
 import PageTransition from "@/components/PageTransition";
 import { LogOut } from "lucide-react";
@@ -109,7 +110,7 @@ const AdminDashboard = () => {
       case 'org-chat':
         return <ChatComingSoon />;
       case 'report':
-        return <AdminReportPage />;
+        return <AdminReportsTab onRefresh={refreshData} />;
       default:
         return <AdminDashboardStats onRefresh={refreshData} />;
     }
