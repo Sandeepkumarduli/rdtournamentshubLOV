@@ -56,13 +56,16 @@ export const useAuth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         console.log('🔐 Auth state changed:', _event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Defer freeze status check to avoid deadlock
         if (session?.user) {
-          await checkFreezeStatus(session.user.id);
+          setTimeout(() => {
+            checkFreezeStatus(session.user.id);
+          }, 0);
         } else {
           setIsFrozen(false);
         }
