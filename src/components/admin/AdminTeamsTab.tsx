@@ -17,12 +17,20 @@ const AdminTeamsTab = ({ onRefresh }: AdminTeamsTabProps) => {
   const { toast } = useToast();
 
   const handleRefresh = async () => {
-    onRefresh();
-    await refetch();
-    toast({
-      title: "Teams Updated",
-      description: "Teams loaded successfully for this organization",
-    });
+    try {
+      onRefresh();
+      await refetch();
+      toast({
+        title: "Data refreshed successfully",
+        description: "Teams data has been updated",
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh teams data",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleBanTeam = async (teamId: string, currentStatus: string) => {

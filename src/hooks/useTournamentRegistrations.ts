@@ -125,6 +125,39 @@ export const useTournamentRegistrations = () => {
       return { error: 'Already registered for this tournament' };
     }
 
+    // Get tournament info to check for organization bans
+    const { data: tournament } = await supabase
+      .from('tournaments')
+      .select('organization')
+      .eq('id', tournamentId)
+      .single();
+
+    if (tournament?.organization) {
+      // Check if user is banned from this organization
+      const { data: userBan } = await supabase
+        .from('organization_bans')
+        .select('id')
+        .eq('organization', tournament.organization)
+        .eq('banned_user_id', user.id)
+        .maybeSingle();
+
+      if (userBan) {
+        return { error: `You have been banned from ${tournament.organization} Org. You cannot join tournaments hosted by this Org.` };
+      }
+
+      // Check if team is banned from this organization
+      const { data: teamBan } = await supabase
+        .from('organization_bans')
+        .select('id')
+        .eq('organization', tournament.organization)
+        .eq('banned_team_id', teamId)
+        .maybeSingle();
+
+      if (teamBan) {
+        return { error: `Your team has been banned from ${tournament.organization} Org. You cannot join tournaments hosted by this Org.` };
+      }
+    }
+
     const { data, error } = await supabase
       .from('tournament_registrations')
       .insert([{

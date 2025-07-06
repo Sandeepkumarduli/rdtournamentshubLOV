@@ -22,12 +22,20 @@ const AdminUsersTab = ({ onRefresh }: AdminUsersTabProps) => {
   );
 
   const handleRefresh = async () => {
-    await refetch();
-    onRefresh();
-    toast({
-      title: "Users Updated",
-      description: "Users fetched for this organization",
-    });
+    try {
+      await refetch();
+      onRefresh();
+      toast({
+        title: "Data refreshed successfully",
+        description: "Users data has been updated",
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh users data",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleBanUser = async (userId: string, currentStatus: string) => {
