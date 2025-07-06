@@ -27,6 +27,7 @@ const SystemUserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
+  const [userToFreeze, setUserToFreeze] = useState<{id: string, username: string, status: string} | null>(null);
   const { toast } = useToast();
   const { users, loading: usersLoading, refetch, deleteUser, freezeUser, unfreezeUser } = useSystemUsers();
   
@@ -82,16 +83,14 @@ const SystemUserManagement = () => {
       return;
     }
 
-    // For freezing, show confirmation dialog
-    const confirmed = window.confirm(
-      `Are you sure you want to freeze ${username}? They will lose access to most features and can only access Wallet and Report pages.`
-    );
+    // For freezing, show confirmation modal
+    setUserToFreeze({ id: userId, username, status: currentStatus });
+  };
 
-    if (!confirmed) {
-      return;
-    }
+  const confirmFreezeUser = async () => {
+    if (!userToFreeze) return;
 
-    const result = await freezeUser(userId);
+    const result = await freezeUser(userToFreeze.id);
     
     if (result.success) {
       toast({
@@ -105,6 +104,8 @@ const SystemUserManagement = () => {
         variant: "destructive"
       });
     }
+    
+    setUserToFreeze(null);
   };
 
   const handleAddUser = () => {
@@ -330,6 +331,31 @@ const SystemUserManagement = () => {
           onClose={() => setSelectedUser(null)}
           user={selectedUser}
         />
+
+        {/* Freeze Confirmation Dialog */}
+        <AlertDialog open={!!userToFreeze} onOpenChange={() => setUserToFreeze(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Snowflake className="h-5 w-5 text-primary" />
+                Freeze User Account
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to freeze <strong>{userToFreeze?.username}</strong>? 
+                They will lose access to most features and can only use Wallet and Report pages.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmFreezeUser}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Confirm Freeze
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ const AccountBlockedPage = () => {
               <span>Please contact support to resolve this issue</span>
             </div>
 
-            <div className="pt-4 flex gap-2">
+            <div className="pt-4 flex gap-2 w-full">
               <Button 
                 onClick={() => navigate('/dashboard/report')}
                 variant="outline"

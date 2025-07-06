@@ -78,8 +78,15 @@ export const useSystemUsers = () => {
 
       if (error) throw error;
       
-      // Force immediate refetch to ensure UI updates
-      await fetchUsers();
+      // Force immediate UI update by updating the users state directly
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, status: 'Frozen', role: 'frozen' }
+            : user
+        )
+      );
+      
       console.log('User frozen successfully');
       return { success: true };
     } catch (error) {
@@ -98,8 +105,15 @@ export const useSystemUsers = () => {
 
       if (error) throw error;
       
-      // Force immediate refetch to ensure UI updates
-      await fetchUsers();
+      // Force immediate UI update by updating the users state directly
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, status: 'Active', role: 'user' }
+            : user
+        )
+      );
+      
       console.log('User unfrozen successfully');
       return { success: true };
     } catch (error) {
@@ -114,7 +128,14 @@ export const useSystemUsers = () => {
     // Subscribe to real-time changes
     const channel = supabase
       .channel('system-users-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchUsers)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'profiles' 
+      }, (payload) => {
+        console.log('Real-time update received:', payload);
+        fetchUsers();
+      })
       .subscribe();
 
     return () => {
