@@ -17,9 +17,9 @@ export const useAuth = () => {
         .from('user_freeze_status')
         .select('is_frozen, frozen_at, user_id')
         .eq('user_id', userId)
-        .maybeSingle();
+        .single();
       
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('❌ Error checking freeze status:', error);
         setIsFrozen(false);
         return;
@@ -32,7 +32,8 @@ export const useAuth = () => {
         userId, 
         frozen, 
         freezeRecord,
-        hasRecord: !!freezeRecord 
+        hasRecord: !!freezeRecord,
+        error: error?.code 
       });
       
     } catch (error) {
