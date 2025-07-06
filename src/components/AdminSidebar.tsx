@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
-import { useFreezeStatus } from '@/hooks/useFreezeStatus';
+import { useAuth } from '@/hooks/useAuth';
 
 const sidebarItems = [
   {
@@ -76,7 +76,7 @@ const AdminSidebar = () => {
   const currentPath = location.pathname + location.search;
   const { profile } = useProfile();
   const { toast } = useToast();
-  const { isFrozen } = useFreezeStatus();
+  const { isFrozen } = useAuth();
   
   const handleLockedClick = (e: React.MouseEvent, title: string) => {
     e.preventDefault();

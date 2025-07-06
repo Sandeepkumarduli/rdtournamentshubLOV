@@ -9,17 +9,15 @@ import PageTransition from "@/components/PageTransition";
 import AccountBlockedPage from "@/components/AccountBlockedPage";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { useFreezeStatus } from "@/hooks/useFreezeStatus";
 import { useWallet } from "@/hooks/useWallet";
 
 const DashboardLayout = () => {
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isFrozen } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { balance } = useWallet();
-  const { isFrozen, loading: freezeLoading } = useFreezeStatus();
 
-  if (authLoading || profileLoading || freezeLoading) {
+  if (authLoading || profileLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -30,18 +28,17 @@ const DashboardLayout = () => {
   // Check if user is frozen and not accessing allowed pages (report or wallet)
   const isOnAllowedPage = location.pathname.includes('/report') || location.pathname.includes('/wallet');
   
-  console.log('DashboardLayout freeze check:', { 
+  console.log('🛡️ DashboardLayout freeze check:', { 
     userId: user?.id, 
     userRole: profile?.role, 
     isFrozen, 
     currentPath: location.pathname,
-    isOnAllowedPage,
-    freezeLoading
+    isOnAllowedPage
   });
   
   // If user is frozen and trying to access a non-allowed page, show blocked page
   if (isFrozen && !isOnAllowedPage) {
-    console.log('🚫 Blocking frozen user from accessing:', location.pathname);
+    console.log('🚫 BLOCKING frozen user from accessing:', location.pathname);
     return <AccountBlockedPage />;
   }
 

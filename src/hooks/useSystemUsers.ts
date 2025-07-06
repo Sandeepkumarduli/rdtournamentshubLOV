@@ -99,7 +99,7 @@ export const useSystemUsers = () => {
 
   const freezeUser = async (userId: string) => {
     try {
-      console.log('Freezing user:', userId);
+      console.log('🔒 Freezing user:', userId);
       
       // Get current admin info
       const { data: { user: currentUser } } = await supabase.auth.getUser();
@@ -113,10 +113,12 @@ export const useSystemUsers = () => {
           frozen_at: new Date().toISOString(),
           frozen_by: currentUser?.id,
           reason: 'Frozen by system administrator'
+        }, {
+          onConflict: 'user_id'
         });
 
       if (error) {
-        console.error('Database freeze error:', error);
+        console.error('❌ Database freeze error:', error);
         throw error;
       }
       
@@ -127,10 +129,10 @@ export const useSystemUsers = () => {
         .eq('user_id', userId)
         .single();
         
-      console.log('Freeze status after update:', freezeStatus);
+      console.log('✅ Freeze status after update:', freezeStatus);
       
       if (verifyError) {
-        console.error('Error verifying freeze update:', verifyError);
+        console.error('❌ Error verifying freeze update:', verifyError);
       }
       
       // Force immediate UI update
@@ -142,10 +144,10 @@ export const useSystemUsers = () => {
         )
       );
       
-      console.log('User frozen successfully');
+      console.log('✅ User frozen successfully');
       return { success: true };
     } catch (error) {
-      console.error('Error freezing user:', error);
+      console.error('❌ Error freezing user:', error);
       return { error: 'Failed to freeze user' };
     }
   };

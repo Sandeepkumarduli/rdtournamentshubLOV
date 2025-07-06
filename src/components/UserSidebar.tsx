@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
-import { useFreezeStatus } from '@/hooks/useFreezeStatus';
+import { useAuth } from '@/hooks/useAuth';
 
 const sidebarItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -32,7 +32,7 @@ const UserSidebar = () => {
   const location = useLocation();
   const { profile } = useProfile();
   const { toast } = useToast();
-  const { isFrozen } = useFreezeStatus();
+  const { isFrozen } = useAuth();
   
   const handleLockedClick = (e: React.MouseEvent, label: string) => {
     e.preventDefault();
