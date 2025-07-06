@@ -26,7 +26,9 @@ const DashboardLayout = () => {
   }
 
   // Check if user is frozen and not accessing allowed pages (dashboard, report or wallet)
-  const isOnAllowedPage = location.pathname === '/dashboard' || location.pathname.includes('/report') || location.pathname.includes('/wallet');
+  const isOnAllowedPage = location.pathname === '/dashboard' || 
+                         location.pathname.startsWith('/dashboard/report') || 
+                         location.pathname.startsWith('/dashboard/wallet');
   
   console.log('🛡️ DashboardLayout freeze check:', { 
     userId: user?.id, 

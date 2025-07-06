@@ -44,7 +44,9 @@ const UserSidebar = () => {
   };
   
   const isPageAllowed = (path: string) => {
-    return path === '/dashboard' || path.includes('/report') || path.includes('/wallet');
+    return path === '/dashboard' || 
+           path.startsWith('/dashboard/report') || 
+           path.startsWith('/dashboard/wallet');
   };
 
   return (
