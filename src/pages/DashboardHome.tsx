@@ -272,7 +272,7 @@ const DashboardHome = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Prize Pool:</span>
-                      <span className="font-semibold text-gaming-gold">₹{tournament.prize_pool}</span>
+                      <span className="font-semibold text-gaming-gold">{tournament.prize_pool} rdCoins</span>
                     </div>
                     
                     <div className="flex justify-between text-sm">
