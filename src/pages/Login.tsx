@@ -32,30 +32,48 @@ const Login = () => {
         description: error.message,
         variant: "destructive",
       });
-    } else if (data.user) {
-      toast({
-        title: "Login Successful!",
-        description: "Welcome to BGMI Tournament Hub"
-      });
-      
-      // Check if user is frozen and redirect accordingly
+      setIsLoading(false);
+      return;
+    }
+
+    if (data.user) {
+      // Get user's phone number from profile
       try {
-        const { data: freezeRecord } = await supabase
-          .from('user_freeze_status')
-          .select('is_frozen')
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('bgmi_id')
           .eq('user_id', data.user.id)
-          .maybeSingle();
-        
-        if (freezeRecord?.is_frozen) {
-          console.log('🚫 User is frozen, redirecting to reports page');
-          navigate("/dashboard/report");
-        } else {
-          console.log('✅ User is active, redirecting to dashboard');
-          navigate("/dashboard");
+          .single();
+
+        if (profileError || !profile?.bgmi_id) {
+          toast({
+            title: "Profile Incomplete",
+            description: "Please contact support to add your phone number",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
         }
+
+        // For now, we'll use BGMI ID field to store phone number or prompt user
+        // Navigate to OTP verification for login
+        navigate('/otp-verification-login', {
+          state: {
+            loginData: {
+              email: formData.email,
+              password: formData.password,
+              user: data.user,
+              phone: profile.bgmi_id, // Assuming phone is stored here temporarily
+            }
+          }
+        });
       } catch (err) {
-        console.error('Error checking freeze status during login:', err);
-        navigate("/dashboard"); // Default fallback
+        console.error('Error fetching user profile:', err);
+        toast({
+          title: "Error",
+          description: "Failed to fetch user profile",
+          variant: "destructive",
+        });
       }
     }
     

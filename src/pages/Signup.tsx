@@ -35,21 +35,29 @@ const Signup = () => {
       return;
     }
 
-    const { data, error } = await signUp(formData.email, formData.password, formData.username);
-
-    if (error) {
+    // Validate phone number format
+    const phoneRegex = /^(\+91|91)?[6-9]\d{9}$/;
+    if (!phoneRegex.test(formData.phone.replace(/\s+/g, ''))) {
       toast({
-        title: "Signup Failed",
-        description: error.message,
+        title: "Invalid Phone Number",
+        description: "Please enter a valid Indian phone number",
         variant: "destructive",
       });
-    } else if (data.user) {
-      toast({
-        title: "Account Created!",
-        description: "Welcome to BGMI Tournament Hub! Please check your email to verify your account.",
-      });
-      navigate("/login");
+      return;
     }
+
+    // Navigate to OTP verification instead of creating account directly
+    navigate('/otp-verification-signup', {
+      state: {
+        signupData: {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          bgmiId: formData.bgmiId,
+          phone: formData.phone,
+        }
+      }
+    });
   };
 
   return (
