@@ -74,11 +74,23 @@ async function handleCreateOrder(req: Request, supabase: any) {
     throw new Error('Authorization header is required')
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser(
-    authorization.replace('Bearer ', '')
+  // Create a client with the user's token for authentication
+  const userSupabase = createClient(
+    'https://rwhxtiiyfsjdqftwpsis.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aHh0aWl5ZnNqZHFmdHdwc2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MzAwNTAsImV4cCI6MjA2NzEwNjA1MH0.aFJvD-TDanJb3jWGIkXFrpz0f3d_MCO7IfDe8yNJfbE',
+    {
+      global: {
+        headers: {
+          Authorization: authorization,
+        },
+      },
+    }
   )
 
+  const { data: { user }, error: userError } = await userSupabase.auth.getUser()
+
   if (userError || !user) {
+    console.error('User authentication error:', userError)
     throw new Error('Invalid user token')
   }
 
