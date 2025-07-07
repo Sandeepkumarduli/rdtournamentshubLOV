@@ -76,16 +76,45 @@ export const useTournamentRegistrations = () => {
 
       if (error) {
         console.error('Error fetching tournament registrations:', error);
-      } else {
-        setRegistrations(regsData || []);
+        setLoading(false);
+        return;
       }
+
+      // Get organization bans for this user and their teams
+      let banQuery = supabase
+        .from('organization_bans')
+        .select('organization, banned_user_id, banned_team_id');
+
+      if (teamIds.length > 0) {
+        banQuery = banQuery.or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
+      } else {
+        banQuery = banQuery.eq('banned_user_id', user.id);
+      }
+
+      const { data: bans } = await banQuery;
+      const bannedOrgs = new Set(bans?.map(ban => ban.organization) || []);
+
+      console.log('🚫 My Tournaments - Banned organizations:', Array.from(bannedOrgs));
+
+      // Filter out registrations for tournaments from banned organizations
+      const filteredRegistrations = regsData?.filter(reg => {
+        const tournament = reg.tournaments;
+        if (!tournament?.organization) return true;
+        const shouldShow = !bannedOrgs.has(tournament.organization);
+        console.log(`🏆 My Tournament "${tournament.name}" from org "${tournament.organization}": ${shouldShow ? 'SHOW' : 'HIDE'}`);
+        return shouldShow;
+      }) || [];
+
+      console.log('🏆 My Tournaments - Total registrations:', regsData?.length, 'Filtered registrations:', filteredRegistrations.length);
+
+      setRegistrations(filteredRegistrations);
       setLoading(false);
     };
 
     fetchRegistrations();
 
     // Subscribe to registration changes
-    const channel = supabase
+    const registrationChannel = supabase
       .channel('tournament-registration-changes')
       .on(
         'postgres_changes',
@@ -100,8 +129,26 @@ export const useTournamentRegistrations = () => {
       )
       .subscribe();
 
+    // Subscribe to organization ban changes to refresh registrations
+    const banChannel = supabase
+      .channel('org-ban-registration-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'organization_bans',
+        },
+        () => {
+          console.log('🚫 Organization ban changed, refreshing registrations...');
+          fetchRegistrations();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(registrationChannel);
+      supabase.removeChannel(banChannel);
     };
   }, [user]);
 
@@ -217,9 +264,38 @@ export const useTournamentRegistrations = () => {
 
     if (error) {
       console.error('Error fetching tournament registrations:', error);
-    } else {
-      setRegistrations(regsData || []);
+      setLoading(false);
+      return;
     }
+
+    // Get organization bans for this user and their teams
+    let banQuery = supabase
+      .from('organization_bans')
+      .select('organization, banned_user_id, banned_team_id');
+
+    if (teamIds.length > 0) {
+      banQuery = banQuery.or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
+    } else {
+      banQuery = banQuery.eq('banned_user_id', user.id);
+    }
+
+    const { data: bans } = await banQuery;
+    const bannedOrgs = new Set(bans?.map(ban => ban.organization) || []);
+
+    console.log('🚫 Refresh My Tournaments - Banned organizations:', Array.from(bannedOrgs));
+
+    // Filter out registrations for tournaments from banned organizations
+    const filteredRegistrations = regsData?.filter(reg => {
+      const tournament = reg.tournaments;
+      if (!tournament?.organization) return true;
+      const shouldShow = !bannedOrgs.has(tournament.organization);
+      console.log(`🏆 Refresh My Tournament "${tournament.name}" from org "${tournament.organization}": ${shouldShow ? 'SHOW' : 'HIDE'}`);
+      return shouldShow;
+    }) || [];
+
+    console.log('🏆 Refresh My Tournaments - Total registrations:', regsData?.length, 'Filtered registrations:', filteredRegistrations.length);
+
+    setRegistrations(filteredRegistrations);
     setLoading(false);
   };
 

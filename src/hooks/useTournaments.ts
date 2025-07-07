@@ -52,23 +52,36 @@ export const useTournaments = () => {
         .eq('user_id', user.id);
 
       const teamIds = userTeams?.map(t => t.team_id) || [];
+      console.log('🔍 User teams:', teamIds);
 
       // Get organization bans for this user and their teams
-      const { data: bans } = await supabase
+      let banQuery = supabase
         .from('organization_bans')
-        .select('organization, banned_user_id, banned_team_id')
-        .or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
+        .select('organization, banned_user_id, banned_team_id');
+
+      // Build the OR condition properly
+      if (teamIds.length > 0) {
+        banQuery = banQuery.or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
+      } else {
+        banQuery = banQuery.eq('banned_user_id', user.id);
+      }
+
+      const { data: bans, error: banError } = await banQuery;
+      
+      console.log('🚫 Organization bans query result:', { bans, banError, userId: user.id, teamIds });
 
       // Get list of organizations that banned this user or their teams
       const bannedOrgs = new Set(bans?.map(ban => ban.organization) || []);
+      console.log('🚫 Banned organizations:', Array.from(bannedOrgs));
 
       // Filter out tournaments from organizations that banned the user or their teams
       const filteredTournaments = allTournaments?.filter(tournament => {
-        // If tournament has no organization, show it
-        if (!tournament.organization) return true;
-        // If tournament is from a banned organization, hide it
-        return !bannedOrgs.has(tournament.organization);
+        const shouldShow = !tournament.organization || !bannedOrgs.has(tournament.organization);
+        console.log(`🏆 Tournament "${tournament.name}" from org "${tournament.organization}": ${shouldShow ? 'SHOW' : 'HIDE'}`);
+        return shouldShow;
       }) || [];
+
+      console.log('🏆 Total tournaments:', allTournaments?.length, 'Filtered tournaments:', filteredTournaments.length);
 
       setTournaments(filteredTournaments);
       setLoading(false);
@@ -77,7 +90,7 @@ export const useTournaments = () => {
     fetchTournaments();
 
     // Subscribe to tournament changes
-    const channel = supabase
+    const tournamentChannel = supabase
       .channel('tournament-changes')
       .on(
         'postgres_changes',
@@ -100,8 +113,26 @@ export const useTournaments = () => {
       )
       .subscribe();
 
+    // Subscribe to organization ban changes to refresh tournaments
+    const banChannel = supabase
+      .channel('organization-ban-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'organization_bans',
+        },
+        () => {
+          console.log('🚫 Organization ban changed, refreshing tournaments...');
+          fetchTournaments();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(tournamentChannel);
+      supabase.removeChannel(banChannel);
     };
   }, [user]);
 
@@ -143,23 +174,36 @@ export const useTournaments = () => {
       .eq('user_id', user.id);
 
     const teamIds = userTeams?.map(t => t.team_id) || [];
+    console.log('🔍 Refetch - User teams:', teamIds);
 
     // Get organization bans for this user and their teams
-    const { data: bans } = await supabase
+    let banQuery = supabase
       .from('organization_bans')
-      .select('organization, banned_user_id, banned_team_id')
-      .or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
+      .select('organization, banned_user_id, banned_team_id');
+
+    // Build the OR condition properly
+    if (teamIds.length > 0) {
+      banQuery = banQuery.or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
+    } else {
+      banQuery = banQuery.eq('banned_user_id', user.id);
+    }
+
+    const { data: bans, error: banError } = await banQuery;
+    
+    console.log('🚫 Refetch - Organization bans query result:', { bans, banError, userId: user.id, teamIds });
 
     // Get list of organizations that banned this user or their teams
     const bannedOrgs = new Set(bans?.map(ban => ban.organization) || []);
+    console.log('🚫 Refetch - Banned organizations:', Array.from(bannedOrgs));
 
     // Filter out tournaments from organizations that banned the user or their teams
     const filteredTournaments = allTournaments?.filter(tournament => {
-      // If tournament has no organization, show it
-      if (!tournament.organization) return true;
-      // If tournament is from a banned organization, hide it
-      return !bannedOrgs.has(tournament.organization);
+      const shouldShow = !tournament.organization || !bannedOrgs.has(tournament.organization);
+      console.log(`🏆 Refetch - Tournament "${tournament.name}" from org "${tournament.organization}": ${shouldShow ? 'SHOW' : 'HIDE'}`);
+      return shouldShow;
     }) || [];
+
+    console.log('🏆 Refetch - Total tournaments:', allTournaments?.length, 'Filtered tournaments:', filteredTournaments.length);
 
     setTournaments(filteredTournaments);
     setLoading(false);
