@@ -1,18 +1,33 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 
-// Firebase configuration - these are public API keys
-// Replace with your actual Firebase project config
+// Firebase configuration using environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyDVl8Dg8Z0t4H9Fz8Y1M2J3K4L5N6O7P8Q", // Replace with your actual API key
-  authDomain: "rdth-tournaments.firebaseapp.com", // Replace with your actual auth domain  
-  projectId: "rdth-tournaments", // Replace with your actual project ID
-  messagingSenderId: "123456789012", // Replace with your actual sender ID
-  appId: "1:123456789012:web:abc123def456ghi789jkl" // Replace with your actual app ID
+  apiKey: import.meta.env.VITE_SUPABASE_SECRET_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_SUPABASE_SECRET_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_SUPABASE_SECRET_FIREBASE_PROJECT_ID,
+  messagingSenderId: import.meta.env.VITE_SUPABASE_SECRET_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_SUPABASE_SECRET_FIREBASE_APP_ID
 };
 
+// Debug logging
+console.log('🔥 Firebase Config Debug:', {
+  apiKey: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 10)}...` : 'MISSING',
+  authDomain: firebaseConfig.authDomain || 'MISSING',
+  projectId: firebaseConfig.projectId || 'MISSING',
+  messagingSenderId: firebaseConfig.messagingSenderId || 'MISSING',
+  appId: firebaseConfig.appId ? `${firebaseConfig.appId.substring(0, 10)}...` : 'MISSING'
+});
+
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log('✅ Firebase initialized successfully');
+} catch (error) {
+  console.error('❌ Firebase initialization failed:', error);
+  throw error;
+}
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);

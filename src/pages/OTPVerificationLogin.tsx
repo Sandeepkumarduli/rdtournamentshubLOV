@@ -22,6 +22,7 @@ const OTPVerificationLogin = () => {
   
   const [loginData, setLoginData] = useState<LoginData | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
 
   useEffect(() => {
     const data = location.state?.loginData;
@@ -31,9 +32,16 @@ const OTPVerificationLogin = () => {
     }
     setLoginData(data);
     
-    // Send OTP automatically when component mounts
-    sendOTP(data.phone);
-  }, [location.state, navigate, sendOTP]);
+    // Send OTP automatically when component mounts, but only once
+    if (!otpSent && !isLoading) {
+      console.log('🚀 Auto-sending OTP on component mount');
+      sendOTP(data.phone).then((success) => {
+        if (success) {
+          setOtpSent(true);
+        }
+      });
+    }
+  }, [location.state, navigate, sendOTP, otpSent, isLoading]);
 
   const handleVerificationSuccess = async (verificationId: string, code: string) => {
     if (!loginData) return;
@@ -83,7 +91,12 @@ const OTPVerificationLogin = () => {
 
   const handleResendOTP = () => {
     if (loginData) {
-      sendOTP(loginData.phone);
+      console.log('🔄 Manually resending OTP');
+      sendOTP(loginData.phone).then((success) => {
+        if (success) {
+          setOtpSent(true);
+        }
+      });
     }
   };
 
