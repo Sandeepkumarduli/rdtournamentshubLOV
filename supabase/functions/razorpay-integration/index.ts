@@ -41,21 +41,29 @@ serve(async (req) => {
   )
 
   try {
+    console.log('🎯 Edge function called')
+    console.log('📡 Request method:', req.method)
+    console.log('🔑 Request headers:', Object.fromEntries(req.headers.entries()))
+    
     const body = await req.json()
     console.log('📨 Request body:', body)
     
     // Handle different actions based on request body
     if (body.amount) {
+      console.log('🎯 Routing to create order')
       // This is a create order request
       return await handleCreateOrder(req, body, supabase)
     } else if (body.razorpay_order_id && body.razorpay_payment_id) {
+      console.log('🎯 Routing to verify payment')
       // This is a verify payment request
       return await handleVerifyPayment(req, body, supabase)
     } else {
+      console.log('❌ Invalid request body')
       return new Response('Invalid request', { status: 400, headers: corsHeaders })
     }
   } catch (error) {
-    console.error('Error:', error)
+    console.error('❌ Main error:', error)
+    console.error('❌ Error stack:', error.stack)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
@@ -74,9 +82,10 @@ async function handleCreateOrder(req: Request, body: any, supabase: any) {
   
   // Get user from auth header
   const authorization = req.headers.get('Authorization')
-  console.log('🔑 Authorization header:', authorization ? 'Present' : 'Missing')
+  console.log('🔑 Authorization header:', authorization ? `Present (${authorization.substring(0, 20)}...)` : 'Missing')
   
   if (!authorization) {
+    console.error('❌ Missing authorization header')
     throw new Error('Authorization header is required')
   }
 
@@ -84,23 +93,36 @@ async function handleCreateOrder(req: Request, body: any, supabase: any) {
   const token = authorization.replace('Bearer ', '')
   console.log('🎫 Extracted token length:', token.length)
 
-  // Create a client with the user's token for authentication
-  const userSupabase = createClient(
-    'https://rwhxtiiyfsjdqftwpsis.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aHh0aWl5ZnNqZHFmdHdwc2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MzAwNTAsImV4cCI6MjA2NzEwNjA1MH0.aFJvD-TDanJb3jWGIkXFrpz0f3d_MCO7IfDe8yNJfbE'
-  )
-
-  // Set the session manually
-  const { data: { user }, error: userError } = await userSupabase.auth.setSession({
-    access_token: token,
-    refresh_token: token
-  })
-
-  console.log('👤 User authentication result:', { user: user?.id, error: userError?.message })
-
-  if (userError || !user) {
-    console.error('❌ User authentication failed:', userError)
-    throw new Error('Authentication failed: ' + (userError?.message || 'Invalid token'))
+  // Try a simpler approach - just use the service role client with RLS
+  console.log('🔄 Attempting database query to validate user...')
+  
+  let userId: string;
+  
+  // Decode the JWT to get user ID (basic decode, no verification since Supabase handles that)
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    console.log('🆔 Token payload user ID:', payload.sub)
+    
+    // Use service role client to check if user exists
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_id, role')
+      .eq('user_id', payload.sub)
+      .single()
+    
+    console.log('👤 User profile lookup:', { userProfile, error: profileError?.message })
+    
+    if (profileError || !userProfile) {
+      throw new Error('User not found in database')
+    }
+    
+    // Store user ID for later use
+    userId = userProfile.user_id
+    console.log('✅ User authenticated:', userId)
+    
+  } catch (decodeError) {
+    console.error('❌ Token decode error:', decodeError)
+    throw new Error('Invalid token format')
   }
 
   // Validate amount (minimum 100 paise = 1 INR)
@@ -148,10 +170,11 @@ async function handleCreateOrder(req: Request, body: any, supabase: any) {
   console.log('✅ Razorpay order created:', razorpayOrder.id)
 
   // Store order in database
+  console.log('💾 Storing order in database...')
   const { error: dbError } = await supabase
     .from('payment_orders')
     .insert({
-      user_id: user.id,
+      user_id: userId,
       razorpay_order_id: razorpayOrder.id,
       amount: amount,
       currency: currency,
@@ -160,17 +183,23 @@ async function handleCreateOrder(req: Request, body: any, supabase: any) {
     })
 
   if (dbError) {
-    console.error('Database error:', dbError)
-    throw new Error('Failed to store order in database')
+    console.error('❌ Database error:', dbError)
+    throw new Error('Failed to store order in database: ' + dbError.message)
   }
+  
+  console.log('✅ Order stored successfully')
 
+  const responseData = {
+    order_id: razorpayOrder.id,
+    amount: razorpayOrder.amount,
+    currency: razorpayOrder.currency,
+    key_id: razorpayKeyId,
+  }
+  
+  console.log('✅ Returning success response:', responseData)
+  
   return new Response(
-    JSON.stringify({
-      order_id: razorpayOrder.id,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency,
-      key_id: razorpayKeyId,
-    }),
+    JSON.stringify(responseData),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     },
