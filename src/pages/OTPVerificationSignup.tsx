@@ -35,16 +35,9 @@ const OTPVerificationSignup = () => {
     }
     setSignupData(data);
     
-    // Send OTP automatically when component mounts, but only once
-    if (!otpSent && !isLoading) {
-      console.log('🚀 Auto-sending OTP on component mount');
-      sendOTP(data.phone).then((success) => {
-        if (success) {
-          setOtpSent(true);
-        }
-      });
-    }
-  }, [location.state, navigate, sendOTP, otpSent, isLoading]);
+    // Don't auto-send OTP - wait for user to manually request it
+    console.log('📋 OTP verification page loaded, waiting for manual OTP request');
+  }, [location.state, navigate]);
 
   const handleVerificationSuccess = async (verificationId: string, code: string) => {
     if (!signupData) return;

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, GamepadIcon, Mail, User, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -46,18 +47,36 @@ const Signup = () => {
       return;
     }
 
-    // Navigate to OTP verification instead of creating account directly
-    navigate('/otp-verification-signup', {
-      state: {
-        signupData: {
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          bgmiId: formData.bgmiId,
+    // Create account directly without OTP verification for now
+    const { data, error } = await signUp(formData.email, formData.password, formData.username);
+
+    if (error) {
+      toast({
+        title: "Signup Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else if (data.user) {
+      // Update profile with additional info
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          bgmi_id: formData.bgmiId,
+          display_name: formData.username,
           phone: formData.phone,
-        }
+        })
+        .eq('user_id', data.user.id);
+
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
       }
-    });
+
+      toast({
+        title: "Account Created!",
+        description: "Welcome to RDTH! You can now login with your credentials.",
+      });
+      navigate("/login");
+    }
   };
 
   return (

@@ -37,42 +37,30 @@ const Login = () => {
     }
 
     if (data.user) {
-      // Get user's phone number from profile
+      // Login successful - redirect directly without OTP for now
+      toast({
+        title: "Login Successful!",
+        description: "Welcome back to RDTH"
+      });
+      
+      // Check if user is frozen and redirect accordingly
       try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('phone')
+        const { data: freezeRecord } = await supabase
+          .from('user_freeze_status')
+          .select('is_frozen')
           .eq('user_id', data.user.id)
-          .single();
-
-        if (profileError || !profile?.phone) {
-          toast({
-            title: "Phone Number Required", 
-            description: "Please update your profile with a phone number first",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
+          .maybeSingle();
+        
+        if (freezeRecord?.is_frozen) {
+          console.log('🚫 User is frozen, redirecting to reports page');
+          navigate("/dashboard/report");
+        } else {
+          console.log('✅ User is active, redirecting to dashboard');
+          navigate("/dashboard");
         }
-
-        // Navigate to OTP verification for login
-        navigate('/otp-verification-login', {
-          state: {
-            loginData: {
-              email: formData.email,
-              password: formData.password,
-              user: data.user,
-              phone: profile.phone,
-            }
-          }
-        });
       } catch (err) {
-        console.error('Error fetching user profile:', err);
-        toast({
-          title: "Error",
-          description: "Failed to fetch user profile",
-          variant: "destructive",
-        });
+        console.error('Error checking freeze status during login:', err);
+        navigate("/dashboard"); // Default fallback
       }
     }
     
