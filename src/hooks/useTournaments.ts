@@ -24,6 +24,8 @@ export const useTournaments = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  
+  console.log('🎯 useTournaments hook initialized, user:', user?.id);
 
   useEffect(() => {
     console.log('🔄 useTournaments useEffect triggered, user:', user?.id);

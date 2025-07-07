@@ -24,8 +24,10 @@ const DashboardHome = () => {
   const [selectedTournament, setSelectedTournament] = useState<any>(null);
   const { toast } = useToast();
   const { tournaments, loading: tournamentsLoading, refetch: refetchTournaments } = useTournaments();
+  console.log('🏠 DashboardHome - tournaments loaded:', tournaments.length, 'loading:', tournamentsLoading);
   const { teams, userTeams, teamMembersMap, loading: teamsLoading } = useTeams();
   const { user, isFrozen } = useAuth();
+  console.log('🏠 DashboardHome - user from useAuth:', user?.id);
   const { profile } = useProfile();
   const { balance, loading: walletLoading } = useWallet();
   const { registrations, registerForTournament, refreshRegistrations } = useTournamentRegistrations();
