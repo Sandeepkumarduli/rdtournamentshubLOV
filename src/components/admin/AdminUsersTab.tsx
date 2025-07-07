@@ -96,10 +96,6 @@ const AdminUsersTab = ({ onRefresh }: AdminUsersTabProps) => {
                         Unban User
                       </>}
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <UserX className="h-4 w-4 mr-2" />
-                    Remove from ORG
-                  </Button>
                 </div>
               </div>
             </CardContent>

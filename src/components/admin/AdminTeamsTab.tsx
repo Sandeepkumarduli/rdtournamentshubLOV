@@ -95,10 +95,6 @@ const AdminTeamsTab = ({ onRefresh }: AdminTeamsTabProps) => {
                     <Ban className="h-4 w-4 mr-2" />
                     {team.status === "active" ? "Ban Team" : "Unban Team"}
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <UserX className="h-4 w-4 mr-2" />
-                    Remove from ORG
-                  </Button>
                 </div>
               </div>
             </CardContent>
