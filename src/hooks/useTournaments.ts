@@ -63,18 +63,10 @@ export const useTournaments = () => {
       console.log('🔍 User teams:', teamIds);
 
       // Get organization bans for this user and their teams
-      let banQuery = supabase
+      const { data: bans, error: banError } = await supabase
         .from('organization_bans')
-        .select('organization, banned_user_id, banned_team_id');
-
-      // Build the OR condition properly
-      if (teamIds.length > 0) {
-        banQuery = banQuery.or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
-      } else {
-        banQuery = banQuery.eq('banned_user_id', user.id);
-      }
-
-      const { data: bans, error: banError } = await banQuery;
+        .select('organization, banned_user_id, banned_team_id')
+        .or(`banned_user_id.eq.${user.id}${teamIds.length > 0 ? `,banned_team_id.in.(${teamIds.join(',')})` : ''}`);
       
       console.log('🚫 Organization bans query result:', { bans, banError, userId: user.id, teamIds });
 
@@ -185,18 +177,10 @@ export const useTournaments = () => {
     console.log('🔍 Refetch - User teams:', teamIds);
 
     // Get organization bans for this user and their teams
-    let banQuery = supabase
+    const { data: bans, error: banError } = await supabase
       .from('organization_bans')
-      .select('organization, banned_user_id, banned_team_id');
-
-    // Build the OR condition properly
-    if (teamIds.length > 0) {
-      banQuery = banQuery.or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
-    } else {
-      banQuery = banQuery.eq('banned_user_id', user.id);
-    }
-
-    const { data: bans, error: banError } = await banQuery;
+      .select('organization, banned_user_id, banned_team_id')
+      .or(`banned_user_id.eq.${user.id}${teamIds.length > 0 ? `,banned_team_id.in.(${teamIds.join(',')})` : ''}`);
     
     console.log('🚫 Refetch - Organization bans query result:', { bans, banError, userId: user.id, teamIds });
 

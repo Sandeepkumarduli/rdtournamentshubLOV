@@ -80,21 +80,15 @@ export const useTournamentRegistrations = () => {
         return;
       }
 
-      // Get organization bans for this user and their teams
-      let banQuery = supabase
-        .from('organization_bans')
-        .select('organization, banned_user_id, banned_team_id');
+    // Get organization bans for this user and their teams
+    const { data: bans } = await supabase
+      .from('organization_bans')
+      .select('organization, banned_user_id, banned_team_id')
+      .or(`banned_user_id.eq.${user.id}${teamIds.length > 0 ? `,banned_team_id.in.(${teamIds.join(',')})` : ''}`);
 
-      if (teamIds.length > 0) {
-        banQuery = banQuery.or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
-      } else {
-        banQuery = banQuery.eq('banned_user_id', user.id);
-      }
+    const bannedOrgs = new Set(bans?.map(ban => ban.organization) || []);
 
-      const { data: bans } = await banQuery;
-      const bannedOrgs = new Set(bans?.map(ban => ban.organization) || []);
-
-      console.log('🚫 My Tournaments - Banned organizations:', Array.from(bannedOrgs));
+    console.log('🚫 My Tournaments - Banned organizations:', Array.from(bannedOrgs));
 
       // Filter out registrations for tournaments from banned organizations
       const filteredRegistrations = regsData?.filter(reg => {
@@ -269,17 +263,11 @@ export const useTournamentRegistrations = () => {
     }
 
     // Get organization bans for this user and their teams
-    let banQuery = supabase
+    const { data: bans } = await supabase
       .from('organization_bans')
-      .select('organization, banned_user_id, banned_team_id');
+      .select('organization, banned_user_id, banned_team_id')
+      .or(`banned_user_id.eq.${user.id}${teamIds.length > 0 ? `,banned_team_id.in.(${teamIds.join(',')})` : ''}`);
 
-    if (teamIds.length > 0) {
-      banQuery = banQuery.or(`banned_user_id.eq.${user.id},banned_team_id.in.(${teamIds.join(',')})`);
-    } else {
-      banQuery = banQuery.eq('banned_user_id', user.id);
-    }
-
-    const { data: bans } = await banQuery;
     const bannedOrgs = new Set(bans?.map(ban => ban.organization) || []);
 
     console.log('🚫 Refresh My Tournaments - Banned organizations:', Array.from(bannedOrgs));
