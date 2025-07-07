@@ -27,6 +27,7 @@ export const useWallet = () => {
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   const fetchWalletData = async () => {
     if (!user) {
@@ -111,6 +112,57 @@ export const useWallet = () => {
     };
   }, [user]);
 
+  const createRazorpayOrder = async (amount: number) => {
+    if (!user) return { error: 'No user found' };
+    
+    // Prevent frozen users from making transactions
+    if (profile?.role === 'frozen') {
+      return { error: 'Account is frozen. Contact support to resolve.' };
+    }
+
+    setPaymentLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('razorpay-integration/create-order', {
+        body: { amount: amount * 100 }, // Convert to paise
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error creating Razorpay order:', error);
+      return { error: error.message || 'Failed to create payment order' };
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const verifyRazorpayPayment = async (paymentData: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('razorpay-integration/verify-payment', {
+        body: paymentData,
+      });
+
+      if (error) throw error;
+
+      // Refresh wallet data after successful payment
+      await fetchWalletData();
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      return { error: error.message || 'Failed to verify payment' };
+    }
+  };
+
   const addTransaction = async (
     type: string,
     amount: number,
@@ -153,7 +205,10 @@ export const useWallet = () => {
     balance,
     transactions,
     loading,
+    paymentLoading,
     addTransaction,
+    createRazorpayOrder,
+    verifyRazorpayPayment,
     refetch: fetchWalletData,
   };
 };

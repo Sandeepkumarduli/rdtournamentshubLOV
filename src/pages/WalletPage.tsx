@@ -119,7 +119,8 @@ const WalletPage = () => {
     });
   };
   
-  return <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       {/* Frozen Account Banner */}
       <FrozenAccountBanner />
       
@@ -127,7 +128,7 @@ const WalletPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold">Wallet</h1>
-          <p className="text-lg text-muted-foreground">Manage your rdCoins and transactions</p>
+          <p className="text-lg text-muted-foreground">Manage your funds and transactions</p>
         </div>
         <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -193,6 +194,7 @@ const WalletPage = () => {
           </div>
         </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 };
 export default WalletPage;

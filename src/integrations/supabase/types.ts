@@ -221,6 +221,42 @@ export type Database = {
           },
         ]
       }
+      payment_orders: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          razorpay_order_id: string
+          receipt: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          razorpay_order_id: string
+          receipt?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          razorpay_order_id?: string
+          receipt?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -573,7 +609,12 @@ export type Database = {
           amount: number
           created_at: string
           description: string | null
+          gateway: string | null
+          gateway_response: Json | null
           id: string
+          payment_method: string | null
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
           status: string | null
           tournament_id: string | null
           type: string
@@ -583,7 +624,12 @@ export type Database = {
           amount: number
           created_at?: string
           description?: string | null
+          gateway?: string | null
+          gateway_response?: Json | null
           id?: string
+          payment_method?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
           status?: string | null
           tournament_id?: string | null
           type: string
@@ -593,7 +639,12 @@ export type Database = {
           amount?: number
           created_at?: string
           description?: string | null
+          gateway?: string | null
+          gateway_response?: Json | null
           id?: string
+          payment_method?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
           status?: string | null
           tournament_id?: string | null
           type?: string
