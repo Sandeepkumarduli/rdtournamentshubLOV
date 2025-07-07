@@ -64,6 +64,15 @@ export const useTournaments = () => {
 
       // Get organization bans for this user and their teams
       console.log('🔍 Querying bans for user:', user.id, 'and teams:', teamIds);
+      console.log('🔍 Current auth user from supabase:', (await supabase.auth.getUser()).data.user?.id);
+      
+      // Test if we can read organization_bans table at all
+      const { data: allBans, error: allBansError } = await supabase
+        .from('organization_bans')
+        .select('*')
+        .limit(5);
+      
+      console.log('🔍 Can we read organization_bans table?', { allBans, allBansError });
       
       // Try direct user ban query first
       const { data: userBans, error: userBanError } = await supabase
@@ -71,7 +80,7 @@ export const useTournaments = () => {
         .select('organization, banned_user_id, banned_team_id')
         .eq('banned_user_id', user.id);
       
-      console.log('👤 User bans query result:', { userBans, userBanError });
+      console.log('👤 User bans query result:', { userBans, userBanError, queriedUserId: user.id });
       
       // Try team bans query if user has teams
       let teamBans = [];
@@ -81,7 +90,7 @@ export const useTournaments = () => {
           .select('organization, banned_user_id, banned_team_id')
           .in('banned_team_id', teamIds);
         
-        console.log('👥 Team bans query result:', { teamBansData, teamBanError });
+        console.log('👥 Team bans query result:', { teamBansData, teamBanError, queriedTeamIds: teamIds });
         teamBans = teamBansData || [];
       }
       
