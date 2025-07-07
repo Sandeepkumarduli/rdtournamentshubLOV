@@ -123,7 +123,7 @@ export const useWallet = () => {
     setPaymentLoading(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('razorpay-integration/create-order', {
+      const { data, error } = await supabase.functions.invoke('razorpay-integration', {
         body: { amount: amount * 100 }, // Convert to paise
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
@@ -147,7 +147,7 @@ export const useWallet = () => {
     razorpay_signature: string;
   }) => {
     try {
-      const { data, error } = await supabase.functions.invoke('razorpay-integration/verify-payment', {
+      const { data, error } = await supabase.functions.invoke('razorpay-integration', {
         body: paymentData,
       });
 

@@ -40,18 +40,19 @@ serve(async (req) => {
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aHh0aWl5ZnNqZHFmdHdwc2lzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTUzMDA1MCwiZXhwIjoyMDY3MTA2MDUwfQ.A1AUzfhKVGWsQ5JtMaOPdD6LqwRJJEL0SWOLlJdUmfE'
   )
 
-  const url = new URL(req.url)
-  const path = url.pathname
-
   try {
-    if (path === '/razorpay-integration/create-order' && req.method === 'POST') {
-      return await handleCreateOrder(req, supabase)
-    } else if (path === '/razorpay-integration/webhook' && req.method === 'POST') {
-      return await handleWebhook(req, supabase)
-    } else if (path === '/razorpay-integration/verify-payment' && req.method === 'POST') {
-      return await handleVerifyPayment(req, supabase)
+    const body = await req.json()
+    console.log('📨 Request body:', body)
+    
+    // Handle different actions based on request body
+    if (body.amount) {
+      // This is a create order request
+      return await handleCreateOrder(req, body, supabase)
+    } else if (body.razorpay_order_id && body.razorpay_payment_id) {
+      // This is a verify payment request
+      return await handleVerifyPayment(req, body, supabase)
     } else {
-      return new Response('Not Found', { status: 404, headers: corsHeaders })
+      return new Response('Invalid request', { status: 400, headers: corsHeaders })
     }
   } catch (error) {
     console.error('Error:', error)
@@ -65,43 +66,53 @@ serve(async (req) => {
   }
 })
 
-async function handleCreateOrder(req: Request, supabase: any) {
-  const { amount, currency = 'INR', receipt }: CreateOrderRequest = await req.json()
+async function handleCreateOrder(req: Request, body: any, supabase: any) {
+  console.log('🚀 Creating Razorpay order...')
+  
+  const { amount, currency = 'INR', receipt } = body
+  console.log('📝 Request data:', { amount, currency, receipt })
   
   // Get user from auth header
   const authorization = req.headers.get('Authorization')
+  console.log('🔑 Authorization header:', authorization ? 'Present' : 'Missing')
+  
   if (!authorization) {
     throw new Error('Authorization header is required')
   }
 
+  // Extract token from Bearer format
+  const token = authorization.replace('Bearer ', '')
+  console.log('🎫 Extracted token length:', token.length)
+
   // Create a client with the user's token for authentication
   const userSupabase = createClient(
     'https://rwhxtiiyfsjdqftwpsis.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aHh0aWl5ZnNqZHFmdHdwc2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MzAwNTAsImV4cCI6MjA2NzEwNjA1MH0.aFJvD-TDanJb3jWGIkXFrpz0f3d_MCO7IfDe8yNJfbE',
-    {
-      global: {
-        headers: {
-          Authorization: authorization,
-        },
-      },
-    }
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aHh0aWl5ZnNqZHFmdHdwc2lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MzAwNTAsImV4cCI6MjA2NzEwNjA1MH0.aFJvD-TDanJb3jWGIkXFrpz0f3d_MCO7IfDe8yNJfbE'
   )
 
-  const { data: { user }, error: userError } = await userSupabase.auth.getUser()
+  // Set the session manually
+  const { data: { user }, error: userError } = await userSupabase.auth.setSession({
+    access_token: token,
+    refresh_token: token
+  })
+
+  console.log('👤 User authentication result:', { user: user?.id, error: userError?.message })
 
   if (userError || !user) {
-    console.error('User authentication error:', userError)
-    throw new Error('Invalid user token')
+    console.error('❌ User authentication failed:', userError)
+    throw new Error('Authentication failed: ' + (userError?.message || 'Invalid token'))
   }
 
   // Validate amount (minimum 100 paise = 1 INR)
   if (amount < 100) {
+    console.log('❌ Amount validation failed:', amount)
     throw new Error('Minimum amount is ₹1')
   }
 
   // Create Razorpay order
   const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID')
   const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET')
+  console.log('🔐 Razorpay credentials:', { keyId: razorpayKeyId ? 'Present' : 'Missing', keySecret: razorpayKeySecret ? 'Present' : 'Missing' })
 
   if (!razorpayKeyId || !razorpayKeySecret) {
     throw new Error('Razorpay credentials not configured')
@@ -114,6 +125,7 @@ async function handleCreateOrder(req: Request, supabase: any) {
   }
 
   const basicAuth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`)
+  console.log('🔒 Making Razorpay API call...')
   
   const razorpayResponse = await fetch('https://api.razorpay.com/v1/orders', {
     method: 'POST',
@@ -124,13 +136,16 @@ async function handleCreateOrder(req: Request, supabase: any) {
     body: JSON.stringify(orderData),
   })
 
+  console.log('📡 Razorpay API response status:', razorpayResponse.status)
+
   if (!razorpayResponse.ok) {
     const errorData = await razorpayResponse.text()
-    console.error('Razorpay API Error:', errorData)
-    throw new Error('Failed to create Razorpay order')
+    console.error('❌ Razorpay API Error:', errorData)
+    throw new Error('Failed to create Razorpay order: ' + errorData)
   }
 
   const razorpayOrder = await razorpayResponse.json()
+  console.log('✅ Razorpay order created:', razorpayOrder.id)
 
   // Store order in database
   const { error: dbError } = await supabase
@@ -249,8 +264,8 @@ async function handleWebhook(req: Request, supabase: any) {
   return new Response('OK', { headers: corsHeaders })
 }
 
-async function handleVerifyPayment(req: Request, supabase: any) {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json()
+async function handleVerifyPayment(req: Request, body: any, supabase: any) {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body
   
   const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET')
   if (!razorpayKeySecret) {
@@ -258,9 +273,9 @@ async function handleVerifyPayment(req: Request, supabase: any) {
   }
 
   // Verify signature
-  const body = razorpay_order_id + '|' + razorpay_payment_id
+  const signatureData = razorpay_order_id + '|' + razorpay_payment_id
   const expectedSignature = createHmac('sha256', razorpayKeySecret)
-    .update(body)
+    .update(signatureData)
     .digest('hex')
 
   const isValid = expectedSignature === razorpay_signature
