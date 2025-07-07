@@ -31,6 +31,16 @@ export const useFirebaseOTP = () => {
   };
 
   const sendOTP = async (phoneNumber: string): Promise<boolean> => {
+    // Check if Firebase auth is available
+    if (!auth) {
+      toast({
+        title: "Service Unavailable",
+        description: "Firebase authentication is not configured. Please contact support.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     // Prevent sending OTP if already loading
     if (isLoading) {
       console.log('⏳ OTP send already in progress, skipping...');
@@ -64,35 +74,12 @@ export const useFirebaseOTP = () => {
       return true;
     } catch (error: any) {
       console.error('❌ Error sending OTP:', error);
-      console.error('❌ Error code:', error.code);
-      console.error('❌ Error message:', error.message);
-      
-      // Provide more specific error messages
-      let errorMessage = "Please try again";
-      if (error.code === 'auth/invalid-phone-number') {
-        errorMessage = "Invalid phone number format. Please check and try again.";
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = "Too many attempts. Please try again later.";
-      } else if (error.code === 'auth/internal-error') {
-        errorMessage = "Service temporarily unavailable. Please check your Firebase configuration.";
-      }
       
       toast({
         title: "Failed to Send OTP",
-        description: errorMessage,
+        description: "OTP service is temporarily unavailable. Please try again later.",
         variant: "destructive",
       });
-      
-      // Reset recaptcha on error
-      if (window.recaptchaVerifier) {
-        try {
-          window.recaptchaVerifier.clear();
-          window.recaptchaVerifier = null;
-          console.log('🧹 reCAPTCHA cleared after error');
-        } catch (clearError) {
-          console.error('❌ Error clearing reCAPTCHA:', clearError);
-        }
-      }
       
       return false;
     } finally {
