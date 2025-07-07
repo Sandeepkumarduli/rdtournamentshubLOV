@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   AlertTriangle, 
   Search, 
@@ -15,7 +15,8 @@ import {
   Flag,
   Clock,
   Trash2,
-  CalendarDays
+  CalendarDays,
+  Eye
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
@@ -26,8 +27,10 @@ const SystemReports = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("Pending");
   const [dateFilter, setDateFilter] = useState("");
+  const [viewDetailsModal, setViewDetailsModal] = useState<string | null>(null);
+  const [resolveModal, setResolveModal] = useState<string | null>(null);
   const { toast } = useToast();
   const { reports, loading: reportsLoading, refetch, resolveReport, deleteReport } = useReports();
 
@@ -49,7 +52,7 @@ const SystemReports = () => {
         description: "Issue has been marked as resolved with your solution",
         variant: "default"
       });
-      setSelectedReport(null);
+      setResolveModal(null);
       setResolutions(prev => ({ ...prev, [reportId]: "" }));
     } else {
       toast({
@@ -58,6 +61,18 @@ const SystemReports = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const formatDescription = (description: string) => {
+    // Split by "--- Additional Info ---" to separate main description from additional info
+    const parts = description.split('\n\n--- Additional Info ---');
+    const mainDescription = parts[0];
+    const additionalInfo = parts[1];
+
+    return {
+      mainDescription,
+      additionalInfo
+    };
   };
 
   const handleDeleteReport = async (reportId: string) => {
@@ -96,7 +111,6 @@ const SystemReports = () => {
       report.reportedEntity.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .filter(report => {
-      if (statusFilter === "All") return true;
       return report.status.toLowerCase() === statusFilter.toLowerCase();
     })
     .filter(report => {
@@ -138,16 +152,24 @@ const SystemReports = () => {
         <main className="flex-1 p-6 space-y-6">
           {/* Filters */}
           <div className="flex items-center gap-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Reports</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Resolved">Resolved</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Button
+                variant={statusFilter === "Pending" ? "default" : "outline"}
+                onClick={() => setStatusFilter("Pending")}
+                size="sm"
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                Pending
+              </Button>
+              <Button
+                variant={statusFilter === "Resolved" ? "default" : "outline"}
+                onClick={() => setStatusFilter("Resolved")}
+                size="sm"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Resolved
+              </Button>
+            </div>
             <div className="relative">
               <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -263,47 +285,25 @@ const SystemReports = () => {
                           <div className="font-medium">{report.type}</div>
                         </div>
                       </div>
-                      <div className="bg-muted/50 p-4 rounded-lg mb-4">
-                        <span className="text-sm text-muted-foreground">Description:</span>
-                        <p className="mt-1 text-sm">{report.description}</p>
-                      </div>
-                      
-                       {selectedReport === report.id && report.status !== "Resolved" && (
-                        <div className="space-y-4">
-                          <Textarea
-                            placeholder="Provide your resolution details..."
-                            value={resolutions[report.id] || ""}
-                            onChange={(e) => setResolutions(prev => ({ ...prev, [report.id]: e.target.value }))}
-                            rows={3}
-                          />
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="default" 
-                              size="sm"
-                              onClick={() => handleResolve(report.id)}
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                              Mark as Resolved
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setSelectedReport(null)}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      )}
+                       <div className="flex gap-2 mb-4">
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => setViewDetailsModal(report.id)}
+                         >
+                           <Eye className="h-4 w-4 mr-2" />
+                           View Details
+                         </Button>
+                       </div>
                     </div>
-                    {report.status !== "Resolved" && selectedReport !== report.id && (
+                    {report.status !== "Resolved" && (
                       <div className="flex gap-2 ml-4">
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => setSelectedReport(report.id)}
+                          onClick={() => setResolveModal(report.id)}
                         >
-                          <MessageSquare className="h-4 w-4" />
+                          <MessageSquare className="h-4 w-4 mr-2" />
                           Resolve
                         </Button>
                         <Button 
@@ -311,7 +311,7 @@ const SystemReports = () => {
                           size="sm"
                           onClick={() => handleDeleteReport(report.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </Button>
                       </div>
@@ -331,6 +331,138 @@ const SystemReports = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* View Details Modal */}
+          <Dialog open={!!viewDetailsModal} onOpenChange={() => setViewDetailsModal(null)}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Report Details</DialogTitle>
+              </DialogHeader>
+              {viewDetailsModal && (
+                <div className="space-y-4">
+                  {(() => {
+                    const report = reports.find(r => r.id === viewDetailsModal);
+                    if (!report) return null;
+                    
+                    const { mainDescription, additionalInfo } = formatDescription(report.description);
+                    
+                    return (
+                      <>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-muted-foreground">Report ID:</span>
+                            <p>#{report.id}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Title:</span>
+                            <p>{report.title}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Reporter:</span>
+                            <p>{report.reporter}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Reported Entity:</span>
+                            <p>{report.reportedEntity}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Type:</span>
+                            <p>{report.type}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Priority:</span>
+                            <Badge variant={report.priority === "High" ? "destructive" : "outline"}>
+                              {report.priority}
+                            </Badge>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Status:</span>
+                            <Badge variant={report.status === "Pending" ? "destructive" : "default"}>
+                              {report.status}
+                            </Badge>
+                          </div>
+                          <div>
+                            <span className="font-medium text-muted-foreground">Date:</span>
+                            <p>{report.date}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <span className="font-medium text-muted-foreground">Description:</span>
+                            <div className="mt-2 p-4 bg-muted/50 rounded-lg">
+                              <p className="text-sm whitespace-pre-wrap">{mainDescription}</p>
+                            </div>
+                          </div>
+                          
+                          {additionalInfo && (
+                            <div>
+                              <span className="font-medium text-muted-foreground">Additional Information:</span>
+                              <div className="mt-2 p-4 bg-muted/30 rounded-lg">
+                                <p className="text-sm whitespace-pre-wrap font-mono">{additionalInfo}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Resolve Modal */}
+          <Dialog open={!!resolveModal} onOpenChange={() => setResolveModal(null)}>
+            <DialogContent className="max-w-xl">
+              <DialogHeader>
+                <DialogTitle>Resolve Report</DialogTitle>
+              </DialogHeader>
+              {resolveModal && (
+                <div className="space-y-4">
+                  {(() => {
+                    const report = reports.find(r => r.id === resolveModal);
+                    if (!report) return null;
+                    
+                    return (
+                      <>
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                          <p className="text-sm font-medium mb-2">Report: {report.title}</p>
+                          <p className="text-sm text-muted-foreground">Reporter: {report.reporter}</p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Resolution Message:</label>
+                          <Textarea
+                            placeholder="Provide detailed resolution information..."
+                            value={resolutions[report.id] || ""}
+                            onChange={(e) => setResolutions(prev => ({ ...prev, [report.id]: e.target.value }))}
+                            rows={4}
+                            className="min-h-[100px]"
+                          />
+                        </div>
+                        
+                        <div className="flex gap-2 justify-end">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setResolveModal(null)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            onClick={() => handleResolve(report.id)}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Mark as Resolved
+                          </Button>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </div>
