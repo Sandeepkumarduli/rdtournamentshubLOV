@@ -43,11 +43,11 @@ export const useOrgReports = () => {
         return;
       }
 
-      // Get reports submitted BY the organization admin OR reports ABOUT the organization
+      // Get reports submitted BY the organization admin only
       const { data, error } = await supabase
         .from('reports')
         .select('*')
-        .or(`reporter_id.eq.${session.user.id},reported_entity.eq.${profile.organization}`)
+        .eq('reporter_id', session.user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
