@@ -67,6 +67,7 @@ const OTPVerificationSignup = () => {
             .update({
               bgmi_id: signupData.bgmiId,
               display_name: signupData.username,
+              phone: signupData.phone,
             })
             .eq('user_id', data.user.id);
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { auth, RecaptchaVerifier, signInWithPhoneNumber } from '@/lib/firebase';
+import { auth, RecaptchaVerifier, signInWithPhoneNumber } from '@/config/firebase';
 import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 

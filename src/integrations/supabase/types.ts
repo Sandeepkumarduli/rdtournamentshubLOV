@@ -268,6 +268,7 @@ export type Database = {
           experience: string | null
           id: string
           organization: string | null
+          phone: string | null
           role: string | null
           updated_at: string
           user_id: string
@@ -282,6 +283,7 @@ export type Database = {
           experience?: string | null
           id?: string
           organization?: string | null
+          phone?: string | null
           role?: string | null
           updated_at?: string
           user_id: string
@@ -296,6 +298,7 @@ export type Database = {
           experience?: string | null
           id?: string
           organization?: string | null
+          phone?: string | null
           role?: string | null
           updated_at?: string
           user_id?: string

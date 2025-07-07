@@ -41,21 +41,20 @@ const Login = () => {
       try {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('bgmi_id')
+          .select('phone')
           .eq('user_id', data.user.id)
           .single();
 
-        if (profileError || !profile?.bgmi_id) {
+        if (profileError || !profile?.phone) {
           toast({
-            title: "Profile Incomplete",
-            description: "Please contact support to add your phone number",
+            title: "Phone Number Required", 
+            description: "Please update your profile with a phone number first",
             variant: "destructive",
           });
           setIsLoading(false);
           return;
         }
 
-        // For now, we'll use BGMI ID field to store phone number or prompt user
         // Navigate to OTP verification for login
         navigate('/otp-verification-login', {
           state: {
@@ -63,7 +62,7 @@ const Login = () => {
               email: formData.email,
               password: formData.password,
               user: data.user,
-              phone: profile.bgmi_id, // Assuming phone is stored here temporarily
+              phone: profile.phone,
             }
           }
         });
