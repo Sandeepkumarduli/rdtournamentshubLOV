@@ -63,12 +63,31 @@ export const useTournaments = () => {
       console.log('🔍 User teams:', teamIds);
 
       // Get organization bans for this user and their teams
-      const { data: bans, error: banError } = await supabase
+      console.log('🔍 Querying bans for user:', user.id, 'and teams:', teamIds);
+      
+      // Try direct user ban query first
+      const { data: userBans, error: userBanError } = await supabase
         .from('organization_bans')
         .select('organization, banned_user_id, banned_team_id')
-        .or(`banned_user_id.eq.${user.id}${teamIds.length > 0 ? `,banned_team_id.in.(${teamIds.join(',')})` : ''}`);
+        .eq('banned_user_id', user.id);
       
-      console.log('🚫 Organization bans query result:', { bans, banError, userId: user.id, teamIds });
+      console.log('👤 User bans query result:', { userBans, userBanError });
+      
+      // Try team bans query if user has teams
+      let teamBans = [];
+      if (teamIds.length > 0) {
+        const { data: teamBansData, error: teamBanError } = await supabase
+          .from('organization_bans')
+          .select('organization, banned_user_id, banned_team_id')
+          .in('banned_team_id', teamIds);
+        
+        console.log('👥 Team bans query result:', { teamBansData, teamBanError });
+        teamBans = teamBansData || [];
+      }
+      
+      // Combine both user and team bans
+      const bans = [...(userBans || []), ...teamBans];
+      console.log('🚫 Combined bans result:', { bans, userId: user.id, teamIds });
 
       // Get list of organizations that banned this user or their teams
       const bannedOrgs = new Set(bans?.map(ban => ban.organization) || []);
