@@ -24,30 +24,47 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
   const { toast } = useToast();
 
   const handleDeleteTournament = async (tournamentId: string) => {
+    console.log('🗑️ Starting tournament deletion for ID:', tournamentId);
+    
     try {
       // First, delete related org_user_registrations
+      console.log('🗑️ Step 1: Deleting org_user_registrations...');
       const { error: registrationError } = await supabase
         .from('org_user_registrations')
         .delete()
         .eq('tournament_id', tournamentId);
 
-      if (registrationError) throw registrationError;
+      if (registrationError) {
+        console.error('❌ Error deleting org_user_registrations:', registrationError);
+        throw registrationError;
+      }
+      console.log('✅ org_user_registrations deleted successfully');
 
       // Then, delete related tournament_registrations
+      console.log('🗑️ Step 2: Deleting tournament_registrations...');
       const { error: tournamentRegError } = await supabase
         .from('tournament_registrations')
         .delete()
         .eq('tournament_id', tournamentId);
 
-      if (tournamentRegError) throw tournamentRegError;
+      if (tournamentRegError) {
+        console.error('❌ Error deleting tournament_registrations:', tournamentRegError);
+        throw tournamentRegError;
+      }
+      console.log('✅ tournament_registrations deleted successfully');
 
       // Finally, delete the tournament
+      console.log('🗑️ Step 3: Deleting tournament...');
       const { error } = await supabase
         .from('tournaments')
         .delete()
         .eq('id', tournamentId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error deleting tournament:', error);
+        throw error;
+      }
+      console.log('✅ Tournament deleted successfully');
 
       toast({
         title: "Tournament Deleted",
@@ -56,10 +73,10 @@ const AdminTournamentsTab = ({ onRefresh }: AdminTournamentsTabProps) => {
       
       refetch();
     } catch (error) {
-      console.error('Error deleting tournament:', error);
+      console.error('❌ Overall error deleting tournament:', error);
       toast({
         title: "Error",
-        description: "Failed to delete tournament. Please try again.",
+        description: `Failed to delete tournament: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     }
