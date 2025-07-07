@@ -77,8 +77,17 @@ serve(async (req) => {
 async function handleCreateOrder(req: Request, body: any, supabase: any) {
   console.log('🚀 Creating Razorpay order...')
   
-  const { amount, currency = 'INR', receipt } = body
+  const { amount, currency, receipt } = body
   console.log('📝 Request data:', { amount, currency, receipt })
+
+  // Validate required parameters
+  if (!amount || !currency || !receipt) {
+    console.error('❌ Missing required parameters:', { amount, currency, receipt })
+    return new Response(
+      JSON.stringify({ error: 'Missing required parameters: amount, currency, receipt' }),
+      { status: 400, headers: corsHeaders }
+    );
+  }
   
   // Get user from auth header
   const authorization = req.headers.get('Authorization')
@@ -128,7 +137,10 @@ async function handleCreateOrder(req: Request, body: any, supabase: any) {
   // Validate amount (minimum 100 paise = 1 INR)
   if (amount < 100) {
     console.log('❌ Amount validation failed:', amount)
-    throw new Error('Minimum amount is ₹1')
+    return new Response(
+      JSON.stringify({ error: 'Minimum amount is ₹1' }),
+      { status: 400, headers: corsHeaders }
+    );
   }
 
   // Create Razorpay order

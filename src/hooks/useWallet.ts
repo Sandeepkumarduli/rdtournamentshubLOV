@@ -123,10 +123,17 @@ export const useWallet = () => {
     setPaymentLoading(true);
     
     try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+
       const { data, error } = await supabase.functions.invoke('razorpay-integration', {
-        body: { amount: amount * 100 }, // Convert to paise
+        body: {
+          amount: amount * 100, // Convert to paise
+          currency: 'INR',
+          receipt: `rcpt_${Date.now()}`, // Unique receipt ID
+        },
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
