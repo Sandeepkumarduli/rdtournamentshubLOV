@@ -26,12 +26,16 @@ export const useTournaments = () => {
   const { user } = useAuth();
 
   useEffect(() => {
+    console.log('🔄 useTournaments useEffect triggered, user:', user?.id);
     const fetchTournaments = async () => {
       if (!user) {
+        console.log('❌ No user found, clearing tournaments');
         setTournaments([]);
         setLoading(false);
         return;
       }
+
+      console.log('🔄 Fetching tournaments for user:', user.id);
 
       // Get all tournaments first
       const { data: allTournaments, error } = await supabase
@@ -40,10 +44,12 @@ export const useTournaments = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching tournaments:', error);
+        console.error('❌ Error fetching tournaments:', error);
         setLoading(false);
         return;
       }
+
+      console.log('🏆 All tournaments fetched:', allTournaments?.length);
 
       // Get user's teams
       const { data: userTeams } = await supabase
