@@ -13,6 +13,7 @@ export interface Profile {
   role: string;
   organization: string | null;
   experience: string | null;
+  phone: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -36,7 +36,7 @@ const Profile = () => {
       setFormData({
         username: profile.display_name || '',
         email: profile.email || '',
-        phone: '',
+        phone: profile.phone || '',
         bgmiId: profile.bgmi_id || ''
       });
     }
@@ -67,7 +67,8 @@ const Profile = () => {
     const { error } = await updateProfile({
       display_name: formData.username,
       email: formData.email,
-      bgmi_id: formData.bgmiId
+      bgmi_id: formData.bgmiId,
+      phone: formData.phone
     });
 
     if (error) {
@@ -91,7 +92,7 @@ const Profile = () => {
     setFormData({
       username: profile?.display_name || '',
       email: profile?.email || '',
-      phone: '',
+      phone: profile?.phone || '',
       bgmiId: profile?.bgmi_id || ''
     });
     setIsEditing(false);

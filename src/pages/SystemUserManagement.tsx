@@ -108,10 +108,13 @@ const SystemUserManagement = () => {
     setUserToFreeze(null);
   };
 
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
+    // For now, redirect to the regular signup page
+    // In a production system, you'd want a dedicated admin user creation form
+    window.open('/signup', '_blank');
     toast({
-      title: "Add User",
-      description: "User addition feature would be implemented here",
+      title: "Create New User",
+      description: "Opening signup page in new tab for user creation",
     });
   };
 
