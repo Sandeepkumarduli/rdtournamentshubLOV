@@ -33,6 +33,7 @@ import Report from "./pages/Report";
 import SystemChatPage from "./pages/SystemChatPage";
 import OTPVerificationSignup from "./pages/OTPVerificationSignup";
 import OTPVerificationLogin from "./pages/OTPVerificationLogin";
+import ForgotPassword from "./pages/ForgotPassword";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/otp-verification-signup" element={<OTPVerificationSignup />} />
           <Route path="/otp-verification-login" element={<OTPVerificationLogin />} />
           <Route path="/admin-login" element={<AdminLogin />} />

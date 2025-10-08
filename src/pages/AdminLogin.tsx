@@ -115,14 +115,22 @@ const AdminLogin = () => {
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              <Link to="/login" className="text-primary hover:underline">
-                ← Back to Player Login
-              </Link>
-              {" | "}
-              <Link to="/admin-signup" className="text-primary hover:underline">
-                Create Admin Account
-              </Link>
+            <div className="mt-6 space-y-3">
+              <div className="text-center text-sm">
+                <Link to="/forgot-password" className="text-primary hover:underline">
+                  Forgot Password?
+                </Link>
+              </div>
+
+              <div className="text-center text-sm text-muted-foreground">
+                <Link to="/login" className="text-primary hover:underline">
+                  ← Back to Player Login
+                </Link>
+                {" | "}
+                <Link to="/admin-signup" className="text-primary hover:underline">
+                  Create Admin Account
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>
