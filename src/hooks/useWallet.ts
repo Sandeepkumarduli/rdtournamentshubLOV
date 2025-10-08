@@ -112,37 +112,58 @@ export const useWallet = () => {
     };
   }, [user]);
 
-  const createRazorpayOrder = async (amount: number) => {
-    if (!user) return { error: 'No user found' };
-    
-    // Prevent frozen users from making transactions
-    if (profile?.role === 'frozen') {
-      return { error: 'Account is frozen. Contact support to resolve.' };
-    }
-
+  const createStripeCheckout = async (amount: number) => {
     setPaymentLoading(true);
-    
     try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-
-      const { data, error } = await supabase.functions.invoke('razorpay-integration', {
-        body: {
-          amount: amount * 100, // Convert to paise
-          currency: 'INR',
-          receipt: `rcpt_${Date.now()}`, // Unique receipt ID
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const { data, error } = await supabase.functions.invoke('create-wallet-checkout', {
+        body: { amount }
       });
 
       if (error) throw error;
 
       return { data, error: null };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error creating Stripe checkout:', error);
+      return { data: null, error: error.message };
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const verifyStripePayment = async (sessionId: string) => {
+    setPaymentLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-wallet-payment', {
+        body: { sessionId }
+      });
+
+      if (error) throw error;
+
+      // Refetch wallet data after successful payment
+      await fetchWalletData();
+
+      return { data, error: null };
+    } catch (error: any) {
+      console.error('Error verifying Stripe payment:', error);
+      return { data: null, error: error.message };
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const createRazorpayOrder = async (amount: number) => {
+    setPaymentLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('razorpay-integration', {
+        body: { amount, action: 'create_order' }
+      });
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error: any) {
       console.error('Error creating Razorpay order:', error);
-      return { error: error.message || 'Failed to create payment order' };
+      return { data: null, error: error.message };
     } finally {
       setPaymentLoading(false);
     }
@@ -216,6 +237,8 @@ export const useWallet = () => {
     addTransaction,
     createRazorpayOrder,
     verifyRazorpayPayment,
+    createStripeCheckout,
+    verifyStripePayment,
     refetch: fetchWalletData,
   };
 };

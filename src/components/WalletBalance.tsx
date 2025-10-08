@@ -18,10 +18,10 @@ const WalletBalance = ({ balance, children }: WalletBalanceProps) => {
       </CardHeader>
       <CardContent>
         <div className="text-4xl font-bold text-gaming-gold mb-2">
-          ₹{balance}
+          {balance} rdCoins
         </div>
         <p className="text-muted-foreground mb-6">
-          Your current balance in Indian Rupees
+          1 USD = 1 rdCoin
         </p>
         <div className="flex gap-4">
           {children}

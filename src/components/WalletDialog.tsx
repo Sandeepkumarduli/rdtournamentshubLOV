@@ -28,18 +28,18 @@ const WalletDialog = ({
   children 
 }: WalletDialogProps) => {
   const [loading, setLoading] = useState(false);
-  const { createRazorpayOrder, verifyRazorpayPayment } = useWallet();
+  const { createStripeCheckout } = useWallet();
   const { toast } = useToast();
   const isAdd = type === 'add';
   const minAmount = isAdd ? 10 : 50;
 
-  const handleRazorpayPayment = async () => {
+  const handleStripePayment = async () => {
     const numAmount = parseFloat(amount);
     
     if (!numAmount || numAmount < minAmount) {
       toast({
         title: "Invalid Amount",
-        description: `Minimum amount is ₹${minAmount}`,
+        description: `Minimum amount is $${minAmount}`,
         variant: "destructive"
       });
       return;
@@ -48,69 +48,24 @@ const WalletDialog = ({
     setLoading(true);
     
     try {
-      // Create Razorpay order
-      const { data: orderData, error: orderError } = await createRazorpayOrder(numAmount);
+      const { data, error } = await createStripeCheckout(numAmount);
       
-      if (orderError) {
-        throw new Error(orderError);
+      if (error) {
+        throw new Error(error);
       }
 
-      // Initialize Razorpay checkout
-      const options = {
-        key: orderData.key_id,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "RD Gaming",
-        description: "Add funds to wallet",
-        order_id: orderData.order_id,
-        handler: async (response: any) => {
-          try {
-            const { data: verifyData, error: verifyError } = await verifyRazorpayPayment({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-
-            if (verifyError) {
-              throw new Error(verifyError);
-            }
-
-            toast({
-              title: "Payment Successful",
-              description: `₹${numAmount} added to your wallet`,
-            });
-            
-            onAmountChange('');
-            onOpenChange(false);
-          } catch (error) {
-            console.error('Payment verification failed:', error);
-            toast({
-              title: "Payment Verification Failed",
-              description: "Please contact support if amount was debited",
-              variant: "destructive"
-            });
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            setLoading(false);
-          }
-        },
-        prefill: {
-          email: "user@example.com",
-        },
-        theme: {
-          color: "#8B5CF6"
-        }
-      };
-
-      // Check if Razorpay is loaded
-      if (typeof (window as any).Razorpay === 'undefined') {
-        throw new Error('Razorpay SDK not loaded');
+      if (data?.url) {
+        // Open Stripe checkout in new tab
+        window.open(data.url, '_blank');
+        
+        toast({
+          title: "Redirecting to Stripe",
+          description: "Complete your payment in the new tab",
+        });
+        
+        onAmountChange('');
+        onOpenChange(false);
       }
-
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
     } catch (error) {
       console.error('Payment initiation failed:', error);
       toast({
@@ -135,36 +90,36 @@ const WalletDialog = ({
         <div className="space-y-4">
           <div>
             <Label htmlFor={`${type}Amount`} className="px-0 py-0 my-[10px]">
-              Amount (₹)
+              Amount (USD)
             </Label>
             <Input
               id={`${type}Amount`}
               type="number"
               value={amount}
               onChange={(e) => onAmountChange(e.target.value)}
-              placeholder={`Enter amount (min ₹${minAmount})`}
+              placeholder={`Enter amount (min $${minAmount})`}
               min={minAmount}
               max={!isAdd ? currentBalance : undefined}
               className="my-px"
             />
             {!isAdd && currentBalance && (
               <p className="text-muted-foreground mt-1">
-                Available: ₹{currentBalance}
+                Available: ${currentBalance}
               </p>
             )}
             {isAdd && (
               <p className="text-muted-foreground mt-1">
-                Secure payment powered by Razorpay
+                1 USD = 1 rdCoin • Secure payment powered by Stripe
               </p>
             )}
           </div>
           <div className="flex gap-2">
             <Button 
-              onClick={isAdd ? handleRazorpayPayment : onConfirm} 
+              onClick={isAdd ? handleStripePayment : onConfirm} 
               className="flex-1"
               disabled={loading}
             >
-              {loading ? 'Processing...' : (isAdd ? 'Pay with Razorpay' : 'Withdraw')}
+              {loading ? 'Processing...' : (isAdd ? 'Pay with Stripe' : 'Withdraw')}
             </Button>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel

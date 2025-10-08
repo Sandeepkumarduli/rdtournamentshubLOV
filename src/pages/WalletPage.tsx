@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
@@ -11,6 +12,8 @@ import { useProfile } from '@/hooks/useProfile';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import FrozenAccountBanner from '@/components/FrozenAccountBanner';
 const WalletPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [addAmount, setAddAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -18,14 +21,48 @@ const WalletPage = () => {
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const { toast } = useToast();
   const { profile } = useProfile();
-  const { balance, transactions, loading, addTransaction } = useWallet();
+  const { balance, transactions, loading, addTransaction, verifyStripePayment, refetch } = useWallet();
+
+  // Handle Stripe payment verification on return
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      handleStripeReturn(sessionId);
+    }
+  }, [searchParams]);
+
+  const handleStripeReturn = async (sessionId: string) => {
+    try {
+      const { data, error } = await verifyStripePayment(sessionId);
+      
+      if (error) {
+        throw new Error(error);
+      }
+
+      toast({
+        title: "Payment Successful",
+        description: `$${data.amount} (${data.amount} rdCoins) added to your wallet`,
+      });
+
+      // Clear the session_id from URL
+      navigate('/dashboard/wallet', { replace: true });
+    } catch (error) {
+      console.error('Payment verification failed:', error);
+      toast({
+        title: "Payment Verification Failed",
+        description: error.message || "Please contact support if amount was debited",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner fullScreen />;
   }
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await refetch();
     setIsRefreshing(false);
     toast({
       title: "Data Refreshed",
@@ -34,44 +71,6 @@ const WalletPage = () => {
   };
   
   const isFrozen = profile?.role === 'frozen';
-  
-  const handleAddFunds = async () => {
-    const amount = parseFloat(addAmount);
-    if (!amount || amount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid amount",
-        variant: "destructive"
-      });
-      return;
-    }
-    if (amount < 10) {
-      toast({
-        title: "Minimum Amount",
-        description: "Minimum deposit amount is 10 rdCoins",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const { error } = await addTransaction('deposit', amount, 'Funds added');
-    
-    if (error) {
-      toast({
-        title: "Error",
-        description: typeof error === 'string' ? error : error.message,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setAddAmount('');
-    setIsAddDialogOpen(false);
-    toast({
-      title: "Funds Added",
-      description: `${amount} rdCoins added to your wallet successfully`
-    });
-  };
 
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
@@ -144,7 +143,7 @@ const WalletPage = () => {
           onOpenChange={setIsAddDialogOpen}
           amount={addAmount}
           onAmountChange={setAddAmount}
-          onConfirm={handleAddFunds}
+          onConfirm={() => {}}
         >
           <Button variant="rdcoin" className="flex-1" disabled={isFrozen}>
             <ArrowUpCircle className="h-4 w-4" />
@@ -183,7 +182,7 @@ const WalletPage = () => {
                   key={transaction.id} 
                   transaction={{
                     id: parseInt(transaction.id),
-                    type: transaction.type === 'deposit' ? 'credit' : 'debit',
+                    type: transaction.type === 'deposit' || transaction.type === 'credit' ? 'credit' : 'debit',
                     amount: transaction.amount,
                     description: transaction.description || 'Transaction',
                     date: new Date(transaction.created_at).toLocaleDateString()
