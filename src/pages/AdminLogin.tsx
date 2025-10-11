@@ -12,8 +12,8 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "admin@example.com",
-    password: "password123",
+    email: "",
+    password: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -63,7 +63,7 @@ const AdminLogin = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
               <div className="space-y-2">
                 <Label htmlFor="email">Admin Email</Label>
                 <Input
@@ -72,6 +72,7 @@ const AdminLogin = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="Enter admin email"
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -85,6 +86,7 @@ const AdminLogin = () => {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Enter admin password"
+                    autoComplete="off"
                     required
                   />
                   <Button
@@ -103,11 +105,6 @@ const AdminLogin = () => {
                 </div>
               </div>
 
-              <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
-                <p className="font-medium mb-1">Demo Credentials:</p>
-                <p>Email: admin@example.com</p>
-                <p>Password: password123</p>
-              </div>
 
               <Button type="submit" variant="gaming" className="w-full" disabled={isLoading}>
                 <Shield className="h-4 w-4" />

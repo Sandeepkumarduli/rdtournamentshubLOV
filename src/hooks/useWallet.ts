@@ -112,44 +112,6 @@ export const useWallet = () => {
     };
   }, [user]);
 
-  const createStripeCheckout = async (amount: number) => {
-    setPaymentLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-wallet-checkout', {
-        body: { amount }
-      });
-
-      if (error) throw error;
-
-      return { data, error: null };
-    } catch (error: any) {
-      console.error('Error creating Stripe checkout:', error);
-      return { data: null, error: error.message };
-    } finally {
-      setPaymentLoading(false);
-    }
-  };
-
-  const verifyStripePayment = async (sessionId: string) => {
-    setPaymentLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('verify-wallet-payment', {
-        body: { sessionId }
-      });
-
-      if (error) throw error;
-
-      // Refetch wallet data after successful payment
-      await fetchWalletData();
-
-      return { data, error: null };
-    } catch (error: any) {
-      console.error('Error verifying Stripe payment:', error);
-      return { data: null, error: error.message };
-    } finally {
-      setPaymentLoading(false);
-    }
-  };
 
   const createRazorpayOrder = async (amount: number) => {
     setPaymentLoading(true);
@@ -237,8 +199,6 @@ export const useWallet = () => {
     addTransaction,
     createRazorpayOrder,
     verifyRazorpayPayment,
-    createStripeCheckout,
-    verifyStripePayment,
     refetch: fetchWalletData,
   };
 };

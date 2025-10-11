@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Disable browser autocomplete globally */
+@layer base {
+  input[type="email"],
+  input[type="password"],
+  input[type="text"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select {
+    -webkit-autocomplete: off;
+    -moz-autocomplete: off;
+    autocomplete: off;
+  }
+}
+
 /* BGMI Tournament Hub Design System - Tournafest Inspired Dark Theme */
 
 @layer base {

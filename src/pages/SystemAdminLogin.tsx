@@ -12,7 +12,7 @@ const SystemAdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "sandeepkumarduli.ai@gmail.com",
+    email: "",
     password: "",
   });
   const navigate = useNavigate();
@@ -63,7 +63,7 @@ const SystemAdminLogin = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
               <div className="space-y-2">
                 <Label htmlFor="email">System Admin Email</Label>
                 <Input
@@ -72,6 +72,7 @@ const SystemAdminLogin = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="Enter system admin email"
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -85,6 +86,7 @@ const SystemAdminLogin = () => {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Enter system password"
+                    autoComplete="off"
                     required
                   />
                   <Button
@@ -103,11 +105,6 @@ const SystemAdminLogin = () => {
                 </div>
               </div>
 
-              <div className="bg-primary/10 border border-primary/30 p-3 rounded-lg text-sm">
-                <p className="font-medium mb-1 text-primary">System Admin Access:</p>
-                <p className="text-primary/80">Email: sandeepkumarduli.ai@gmail.com</p>
-                <p className="text-primary/80">Use your registered password</p>
-              </div>
 
               <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
                 <Crown className="h-4 w-4" />

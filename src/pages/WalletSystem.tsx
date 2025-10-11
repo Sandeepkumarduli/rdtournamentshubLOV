@@ -96,7 +96,7 @@ const WalletSystem = () => {
               <h1 className="text-4xl font-bold">rdCoin Wallet System</h1>
             </div>
             <p className="text-xl text-muted-foreground">
-              Secure digital wallet powered by Razorpay & Stripe for seamless gaming transactions
+              Secure digital wallet powered by Razorpay for seamless gaming transactions
             </p>
           </div>
 
@@ -171,14 +171,6 @@ const WalletSystem = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Leading Indian payment gateway trusted by millions for secure transactions
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="bg-purple-50 p-6 rounded-lg mb-4">
-                    <h3 className="text-2xl font-bold text-purple-600">Stripe</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Global payment infrastructure for international transactions
                   </p>
                 </div>
               </div>

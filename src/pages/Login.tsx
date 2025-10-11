@@ -83,13 +83,13 @@ const Login = () => {
             <CardTitle className="text-center text-xl">Player Login</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" value={formData.email} onChange={e => setFormData({
                 ...formData,
                 email: e.target.value
-              })} placeholder="Enter your email" required />
+              })} placeholder="Enter your email" autoComplete="off" required />
               </div>
               
               <div className="space-y-2">
@@ -98,7 +98,7 @@ const Login = () => {
                   <Input id="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={e => setFormData({
                   ...formData,
                   password: e.target.value
-                })} placeholder="Enter your password" required />
+                })} placeholder="Enter your password" autoComplete="off" required />
                   <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
