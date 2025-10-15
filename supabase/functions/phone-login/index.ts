@@ -44,7 +44,7 @@ serve(async (req) => {
       const { data, error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
         options: {
-          shouldCreateUser: false, // Don't create user, just send OTP for login
+          shouldCreateUser: true, // Allow creating user or updating existing user with phone
         }
       });
 
