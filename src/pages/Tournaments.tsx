@@ -76,7 +76,7 @@ const Tournaments = () => {
           <h2 className="text-base md:text-xl font-semibold text-center md:text-left w-full md:w-auto">My Registered Tournaments</h2>
           
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-24 md:w-32 text-xs md:text-sm h-8 md:h-10">
                 <SelectValue placeholder="Status" />
