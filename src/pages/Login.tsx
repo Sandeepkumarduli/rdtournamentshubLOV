@@ -31,6 +31,19 @@ const Login = () => {
   const { toast } = useToast();
   const { signIn } = useAuth();
 
+  // Function to mask phone number for security (show first 1 and last 3 digits)
+  const maskPhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    const cleanPhone = phone.replace(/\s+/g, '');
+    if (cleanPhone.length <= 4) return cleanPhone;
+    
+    const firstPart = cleanPhone.substring(0, 1);
+    const lastPart = cleanPhone.substring(cleanPhone.length - 3);
+    const maskedMiddle = '*'.repeat(cleanPhone.length - 4);
+    
+    return `${firstPart}${maskedMiddle}${lastPart}`;
+  };
+
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -430,7 +443,7 @@ const Login = () => {
                   <div className="space-y-4">
                     <div className="text-center mb-4">
                       <p className="text-sm text-muted-foreground">
-                        For security, please verify your identity with the OTP sent to {userPhoneNumber}
+                        For security, please verify your identity with the OTP sent to {maskPhoneNumber(userPhoneNumber)}
                       </p>
                     </div>
 
@@ -516,7 +529,7 @@ const Login = () => {
                   <div className="space-y-4">
                     <div className="text-center mb-4">
                       <p className="text-sm text-muted-foreground">
-                        Enter the 6-digit OTP sent to {phoneNumber}
+                        Enter the 6-digit OTP sent to {maskPhoneNumber(phoneNumber)}
                       </p>
                     </div>
 
