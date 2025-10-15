@@ -24,6 +24,9 @@ const Login = () => {
     email: "",
     password: ""
   });
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+  const [showPasswordOtpVerification, setShowPasswordOtpVerification] = useState(false);
+  const [userPhoneNumber, setUserPhoneNumber] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn } = useAuth();
@@ -52,26 +55,51 @@ const Login = () => {
     }
 
     if (data.user) {
-      toast({
-        title: "Login Successful!",
-        description: "Welcome back to RDTH"
-      });
-      
+      // Get user's phone number from profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (profileError || !profile?.phone) {
+        toast({
+          title: "Phone Number Required",
+          description: "Please update your profile with a phone number to enable two-factor authentication.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Sign out temporarily before OTP verification
+      await supabase.auth.signOut();
+
+      // Send OTP to user's phone
       try {
-        const { data: freezeRecord } = await supabase
-          .from('user_freeze_status')
-          .select('is_frozen')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
+        const { data: otpData, error: otpError } = await supabase.functions.invoke('phone-login', {
+          body: { phone: profile.phone, type: 'send' }
+        });
+
+        if (otpError) throw otpError;
+        if (otpData?.error) throw new Error(otpData.error);
+
+        // Store user ID and phone, show OTP verification UI
+        setPendingUserId(data.user.id);
+        setUserPhoneNumber(profile.phone);
+        setShowPasswordOtpVerification(true);
+        setCountdown(60);
         
-        if (freezeRecord?.is_frozen) {
-          navigate("/dashboard/report");
-        } else {
-          navigate("/dashboard");
-        }
-      } catch (err) {
-        console.error('Error checking freeze status during login:', err);
-        navigate("/dashboard");
+        toast({
+          title: "OTP Sent",
+          description: "Please verify your phone number to complete login",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Failed to Send OTP",
+          description: error.message || "Unable to send OTP. Please try again.",
+          variant: "destructive",
+        });
       }
     }
     
@@ -228,6 +256,79 @@ const Login = () => {
       });
     }
   };
+
+  const handleVerifyPasswordOTP = async () => {
+    if (otp.length !== 6) {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter a 6-digit code",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsVerifying(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('phone-login', {
+        body: { phone: userPhoneNumber, otp, type: 'verify' }
+      });
+
+      if (error || data.error) {
+        throw new Error(data?.error || error?.message || "Failed to verify OTP");
+      }
+
+      if (data.session) {
+        await supabase.auth.setSession(data.session);
+        
+        toast({
+          title: "Login Successful!",
+          description: "Welcome back to RDTH"
+        });
+
+        try {
+          const { data: freezeRecord } = await supabase
+            .from('user_freeze_status')
+            .select('is_frozen')
+            .eq('user_id', pendingUserId)
+            .maybeSingle();
+          
+          if (freezeRecord?.is_frozen) {
+            navigate("/dashboard/report");
+          } else {
+            navigate("/dashboard");
+          }
+        } catch (err) {
+          console.error('Error checking freeze status:', err);
+          navigate("/dashboard");
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Verification Failed",
+        description: error.message || "Invalid OTP. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendPasswordOTP = () => {
+    if (userPhoneNumber) {
+      supabase.functions.invoke('phone-login', {
+        body: { phone: userPhoneNumber, type: 'send' }
+      }).then(({ data, error }) => {
+        if (!error && !data?.error) {
+          setCountdown(60);
+          toast({
+            title: "OTP Resent",
+            description: "Verification code sent to your phone via SMS",
+          });
+        }
+      });
+    }
+  };
   return <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -258,46 +359,109 @@ const Login = () => {
               </TabsList>
 
               <TabsContent value="email">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      value={formData.email} 
-                      onChange={e => setFormData({ ...formData, email: e.target.value })} 
-                      placeholder="Enter your email" 
-                      required 
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
+                {!showPasswordOtpVerification ? (
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
                       <Input 
-                        id="password" 
-                        type={showPassword ? "text" : "password"} 
-                        value={formData.password} 
-                        onChange={e => setFormData({ ...formData, password: e.target.value })} 
-                        placeholder="Enter your password" 
+                        id="email" 
+                        type="email" 
+                        value={formData.email} 
+                        onChange={e => setFormData({ ...formData, email: e.target.value })} 
+                        placeholder="Enter your email" 
                         required 
                       />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <div className="relative">
+                        <Input 
+                          id="password" 
+                          type={showPassword ? "text" : "password"} 
+                          value={formData.password} 
+                          onChange={e => setFormData({ ...formData, password: e.target.value })} 
+                          placeholder="Enter your password" 
+                          required 
+                        />
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" 
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Button type="submit" variant="gaming" className="w-full font-normal" disabled={isLoading}>
+                      {isLoading ? <LoadingSpinner /> : "Login to Dashboard"}
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-muted-foreground">
+                        For security, please verify your identity with the OTP sent to {userPhoneNumber}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-center">
+                        <InputOTP
+                          maxLength={6}
+                          value={otp}
+                          onChange={(value) => setOtp(value)}
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={handleVerifyPasswordOTP}
+                      variant="gaming" 
+                      className="w-full"
+                      disabled={isVerifying || otp.length !== 6}
+                    >
+                      {isVerifying ? <LoadingSpinner /> : "Verify & Complete Login"}
+                    </Button>
+
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleResendPasswordOTP}
+                        className="flex-1"
+                        disabled={countdown > 0}
+                      >
+                        {countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
+                      </Button>
                       <Button 
                         type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" 
-                        onClick={() => setShowPassword(!showPassword)}
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => {
+                          setShowPasswordOtpVerification(false);
+                          setOtp("");
+                          setPendingUserId(null);
+                        }}
+                        disabled={isVerifying}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        Back to Login
                       </Button>
                     </div>
                   </div>
-
-                  <Button type="submit" variant="gaming" className="w-full font-normal" disabled={isLoading}>
-                    {isLoading ? <LoadingSpinner /> : "Login to Dashboard"}
-                  </Button>
-                </form>
+                )}
               </TabsContent>
 
               <TabsContent value="phone">
