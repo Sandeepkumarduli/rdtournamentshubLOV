@@ -28,22 +28,25 @@ const VerifyEmail = () => {
       // Check if we have hash params (Supabase adds tokens in URL hash after verification)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
       
-      if (accessToken) {
+      if (accessToken && refreshToken) {
         console.log('🔑 Found access token in URL, exchanging for session...');
         try {
           // Set the session from the URL tokens
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
-            refresh_token: hashParams.get('refresh_token') || '',
+            refresh_token: refreshToken,
           });
           
-          if (data.session) {
+          console.log('🔐 setSession result:', data?.session?.user?.email, data?.session?.user?.last_sign_in_at, error);
+          
+          if (data?.session?.user?.last_sign_in_at) {
             console.log('✅ Session established from email verification');
             setEmailVerified(true);
             setIsLoading(false);
             // Clean up URL
-            window.history.replaceState({}, document.title, window.location.pathname);
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
             return true;
           }
           
@@ -77,9 +80,15 @@ const VerifyEmail = () => {
 
       // Check for email confirmation from redirect
       const checkEmailConfirmation = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('📧 Initial session check:', session?.user?.email, session?.user?.last_sign_in_at);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('📧 Initial session check:', session?.user?.email, session?.user?.last_sign_in_at, 'Error:', error);
+        
+        if (!session) {
+          console.log('⚠️ No session found, user might need to sign in again');
+        }
+        
         if (session?.user?.last_sign_in_at) {
+          console.log('✅ Email is verified!');
           setEmailVerified(true);
         }
         setIsLoading(false);
@@ -89,9 +98,15 @@ const VerifyEmail = () => {
 
       // Poll for email verification every 2 seconds by checking last_sign_in_at
       const interval = setInterval(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('🔄 Polling session:', session?.user?.email, session?.user?.last_sign_in_at);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('🔄 Polling session:', session?.user?.email, session?.user?.last_sign_in_at, 'Has session:', !!session);
+        
+        if (error) {
+          console.error('Polling error:', error);
+        }
+        
         if (session?.user?.last_sign_in_at) {
+          console.log('✅ Verified via polling!');
           setEmailVerified(true);
           clearInterval(interval);
         }
@@ -107,11 +122,21 @@ const VerifyEmail = () => {
   const handleManualRefresh = async () => {
     setIsChecking(true);
     try {
-      // Refresh the session first
-      const { data, error } = await supabase.auth.refreshSession();
-      console.log('🔄 Manual refresh result:', data.session?.user?.email, data.session?.user?.last_sign_in_at, error);
+      // Force refresh the session
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      console.log('🔄 Manual refresh result:', refreshData?.session?.user?.email, refreshData?.session?.user?.last_sign_in_at);
       
-      const { data: { session } } = await supabase.auth.getSession();
+      if (refreshError) {
+        console.error('Refresh error:', refreshError);
+      }
+      
+      // Get the updated session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('📱 Session after refresh:', session?.user?.email, session?.user?.last_sign_in_at);
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+      }
       
       if (session?.user?.last_sign_in_at) {
         setEmailVerified(true);
@@ -123,10 +148,16 @@ const VerifyEmail = () => {
         toast({
           title: "Not Verified Yet",
           description: "Please check your email and click the confirmation link.",
+          variant: "destructive",
         });
       }
     } catch (error) {
       console.error('Error checking email verification:', error);
+      toast({
+        title: "Error",
+        description: "Failed to check verification status. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsChecking(false);
     }
