@@ -100,23 +100,36 @@ const VerifyEmail = () => {
     });
   }, [email, phone, password, username, bgmiId, navigate, toast]);
 
-  // Listen for auth state changes to detect email verification
+  // Poll for email verification every 3 seconds (like the original main code)
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email_confirmed_at);
-      
-      if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-        console.log('Email verification detected via auth state change');
-        setEmailVerified(true);
-        toast({
-          title: "Email Verified!",
-          description: "Your email has been confirmed successfully.",
-        });
-      }
-    });
+    if (emailVerified) return; // Stop polling if already verified
 
-    return () => subscription.unsubscribe();
-  }, [toast]);
+    const pollForVerification = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email_confirmed_at) {
+          console.log('Email verification detected via polling');
+          setEmailVerified(true);
+          toast({
+            title: "Email Verified!",
+            description: "Your email has been confirmed successfully.",
+          });
+        }
+      } catch (error) {
+        console.error('Error polling for verification:', error);
+      }
+    };
+
+    // Check immediately
+    pollForVerification();
+
+    // Then poll every 3 seconds
+    const interval = setInterval(pollForVerification, 3000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [emailVerified, toast]);
 
   const handleManualRefresh = async () => {
     console.log('Refresh button clicked'); // Debug log
