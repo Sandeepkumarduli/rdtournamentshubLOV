@@ -39,20 +39,20 @@ const VerifyEmail = () => {
             refresh_token: refreshToken,
           });
           
-          console.log('🔐 setSession result:', data?.session?.user?.email, 'confirmed_at:', data?.session?.user?.confirmed_at, error);
+          console.log('🔐 setSession result:', data?.session?.user?.email, 'last_sign_in_at:', data?.session?.user?.last_sign_in_at, error);
           
-          // Check if email is actually confirmed
-          const isConfirmed = !!data?.session?.user?.confirmed_at;
+          // Check if last_sign_in_at has a value (means they clicked verification link)
+          const isVerified = !!data?.session?.user?.last_sign_in_at;
           
-          if (isConfirmed) {
-            console.log('✅ Email confirmed from verification link!');
+          if (isVerified) {
+            console.log('✅ Email verified from verification link!');
             setEmailVerified(true);
             setIsLoading(false);
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
             return true;
           } else {
-            console.log('⚠️ Session established but email not confirmed yet - confirmed_at is null');
+            console.log('⚠️ Session established but email not verified yet - last_sign_in_at is null');
             setIsLoading(false);
           }
           
@@ -77,11 +77,11 @@ const VerifyEmail = () => {
     function setupVerificationCheck() {
       // Listen for auth state changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('🔐 Auth state changed:', event, 'confirmed_at:', session?.user?.confirmed_at);
+        console.log('🔐 Auth state changed:', event, 'last_sign_in_at:', session?.user?.last_sign_in_at);
         
-        const isConfirmed = !!session?.user?.confirmed_at;
+        const isVerified = !!session?.user?.last_sign_in_at;
         
-        if (isConfirmed) {
+        if (isVerified) {
           console.log('✅ Email verified via auth state change!');
           setEmailVerified(true);
           setIsLoading(false);
@@ -94,10 +94,8 @@ const VerifyEmail = () => {
         
         console.log('📧 Initial session check:', {
           email: session?.user?.email,
-          confirmed_at: session?.user?.confirmed_at,
-          email_confirmed_at: session?.user?.email_confirmed_at,
           last_sign_in_at: session?.user?.last_sign_in_at,
-          created_at: session?.user?.created_at
+          confirmed_at: session?.user?.confirmed_at
         });
         
         if (!session) {
@@ -106,16 +104,16 @@ const VerifyEmail = () => {
           return;
         }
         
-        // ONLY check confirmed_at - this is the definitive field
-        const isConfirmed = !!session?.user?.confirmed_at;
+        // ONLY check last_sign_in_at - this is null until they click verification link
+        const isVerified = !!session?.user?.last_sign_in_at;
         
-        console.log('🔍 Is email confirmed?', isConfirmed);
+        console.log('🔍 Is email verified (has last_sign_in_at)?', isVerified);
         
-        if (isConfirmed) {
+        if (isVerified) {
           console.log('✅ Email is verified!');
           setEmailVerified(true);
         } else {
-          console.log('⏳ Email not confirmed yet - confirmed_at is null');
+          console.log('⏳ Email not verified yet - last_sign_in_at is null');
         }
         setIsLoading(false);
       };
@@ -126,15 +124,15 @@ const VerifyEmail = () => {
       const interval = setInterval(async () => {
         const { data: { session } } = await supabase.auth.getSession();
         
-        const isConfirmed = !!session?.user?.confirmed_at;
+        const isVerified = !!session?.user?.last_sign_in_at;
         
         console.log('🔄 Polling:', {
           email: session?.user?.email,
-          confirmed_at: session?.user?.confirmed_at,
-          isConfirmed
+          last_sign_in_at: session?.user?.last_sign_in_at,
+          isVerified
         });
         
-        if (isConfirmed) {
+        if (isVerified) {
           console.log('✅ Verified via polling!');
           setEmailVerified(true);
           clearInterval(interval);
@@ -159,16 +157,16 @@ const VerifyEmail = () => {
       
       console.log('🔄 Manual check:', {
         email: session?.user?.email,
-        confirmed_at: session?.user?.confirmed_at
+        last_sign_in_at: session?.user?.last_sign_in_at
       });
       
       if (error) {
         console.error('Session error:', error);
       }
       
-      const isConfirmed = !!session?.user?.confirmed_at;
+      const isVerified = !!session?.user?.last_sign_in_at;
       
-      if (isConfirmed) {
+      if (isVerified) {
         setEmailVerified(true);
         toast({
           title: "Email Verified!",
