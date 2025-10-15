@@ -57,7 +57,7 @@ const DashboardLayout = () => {
       
       {/* Sidebar */}
       <div className={cn(
-        "fixed md:relative z-50 transition-transform duration-300",
+        "fixed z-50 transition-transform duration-300",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <UserSidebar isOpen={true} />
