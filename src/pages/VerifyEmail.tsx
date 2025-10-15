@@ -91,21 +91,42 @@ const VerifyEmail = () => {
 
         if (error) {
           console.error('Email verification error:', error);
-          toast({
-            title: "Email Verification Failed",
-            description: error.message,
-            variant: "destructive",
-          });
+          
+          // Handle specific error cases
+          if (error.message.includes('User already registered')) {
+            toast({
+              title: "Email Already Exists",
+              description: "This email is already registered. Please try logging in instead.",
+              variant: "destructive",
+            });
+            setTimeout(() => navigate('/login'), 2000);
+          } else {
+            toast({
+              title: "Email Verification Failed",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
           setIsLoading(false);
           return;
         }
 
         if (data.user) {
-          console.log('Email verification sent to:', email);
-          toast({
-            title: "Verification Email Sent",
-            description: `Please check your email at ${email} and click the verification link.`,
-          });
+          // Check if user is already verified
+          if (data.user.email_confirmed_at) {
+            console.log('User already verified:', email);
+            setEmailVerified(true);
+            toast({
+              title: "Email Already Verified",
+              description: "This email is already verified. You can proceed to phone verification.",
+            });
+          } else {
+            console.log('Email verification sent to:', email);
+            toast({
+              title: "Verification Email Sent",
+              description: `Please check your email at ${email} and click the verification link.`,
+            });
+          }
         }
       } catch (error) {
         console.error('Error sending email verification:', error);
