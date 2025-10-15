@@ -105,15 +105,14 @@ const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneV
               value={formData.phone}
               onChange={(e) => onInputChange('phone', e.target.value)}
               disabled={!isEditing}
-              placeholder="Enter your phone number"
+              placeholder="+91 9876543210"
               className="flex-1"
             />
-            {!phoneVerified && formData.phone && (
+            {!phoneVerified && formData.phone && !isEditing && (
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={onVerifyPhone}
-                disabled={isEditing}
               >
                 Verify
               </Button>
@@ -121,7 +120,12 @@ const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneV
           </div>
           {!phoneVerified && (
             <p className="text-xs text-muted-foreground mt-1">
-              Please verify your phone number to use all features.
+              Phone number can be changed. Please verify after updating.
+            </p>
+          )}
+          {phoneVerified && (
+            <p className="text-xs text-success mt-1">
+              Phone number is verified and active.
             </p>
           )}
         </div>

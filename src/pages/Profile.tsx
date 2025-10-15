@@ -65,6 +65,47 @@ const Profile = () => {
       return;
     }
 
+    // Validate phone number if provided
+    if (formData.phone) {
+      const phoneRegex = /^(\+91|91)?[6-9]\d{9}$/;
+      if (!phoneRegex.test(formData.phone.replace(/\s+/g, ''))) {
+        toast({
+          title: "Invalid Phone Number",
+          description: "Please enter a valid Indian phone number",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check for duplicate phone number if it was changed
+      if (formData.phone !== profile?.phone) {
+        let formattedPhone = formData.phone.trim();
+        if (!formattedPhone.startsWith('+')) {
+          formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
+        }
+
+        const { data: existingProfile, error: checkError } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('phone', formattedPhone)
+          .neq('user_id', user?.id)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error('Error checking phone number:', checkError);
+        }
+
+        if (existingProfile) {
+          toast({
+            title: "Phone Number Already Taken",
+            description: "This phone number is already registered to another account. Please use a different one.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+    }
+
     // Check for duplicate BGMI ID if it was changed
     if (formData.bgmiId && formData.bgmiId !== profile?.bgmi_id) {
       const { data: existingProfile, error: checkError } = await supabase
@@ -88,11 +129,17 @@ const Profile = () => {
       }
     }
 
+    // Format phone number before saving
+    let phoneToSave = formData.phone;
+    if (phoneToSave && !phoneToSave.startsWith('+')) {
+      phoneToSave = '+91' + phoneToSave.replace(/^0/, '');
+    }
+
     const { error } = await updateProfile({
       display_name: formData.username,
       email: formData.email,
       bgmi_id: formData.bgmiId,
-      phone: formData.phone
+      phone: phoneToSave
     });
 
     if (error) {
@@ -107,7 +154,7 @@ const Profile = () => {
     setIsEditing(false);
     toast({
       title: "Profile Updated",
-      description: "Your profile has been updated successfully",
+      description: "Your profile has been updated successfully. If you changed your phone number, please verify it.",
     });
   };
 
