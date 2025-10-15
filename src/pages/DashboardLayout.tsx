@@ -57,14 +57,17 @@ const DashboardLayout = () => {
       
       {/* Sidebar */}
       <div className={cn(
-        "fixed md:relative z-50 transition-all duration-300 ease-in-out",
+        "fixed z-50 transition-all duration-300 ease-in-out",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <UserSidebar isOpen={true} />
       </div>
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col w-full min-w-0">
+      <div className={cn(
+        "flex-1 flex flex-col w-full min-w-0 transition-all duration-300 ease-in-out",
+        sidebarOpen && "md:ml-64"
+      )}>
         {/* Header */}
         <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
           <div className="px-3 md:px-6 py-3 md:py-4">
