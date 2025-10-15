@@ -17,6 +17,8 @@ import { useProfile } from '@/hooks/useProfile';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import TournamentJoinDialog from '@/components/TournamentJoinDialog';
 import FrozenAccountBanner from '@/components/FrozenAccountBanner';
+import { Link } from 'react-router-dom';
+import { BookOpen, FileText } from 'lucide-react';
 const DashboardHome = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
@@ -143,10 +145,24 @@ const DashboardHome = () => {
           <h1 className="text-4xl font-bold">Dashboard</h1>
           <p className="text-lg text-muted-foreground">Welcome back! Ready for some action?</p>
         </div>
-        <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" asChild>
+            <Link to="/tournament-guide">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Tournament Guide
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/rules">
+              <FileText className="h-4 w-4 mr-2" />
+              Rules
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

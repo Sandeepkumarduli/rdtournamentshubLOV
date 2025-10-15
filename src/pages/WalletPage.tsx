@@ -11,6 +11,8 @@ import { useWallet } from '@/hooks/useWallet';
 import { useProfile } from '@/hooks/useProfile';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import FrozenAccountBanner from '@/components/FrozenAccountBanner';
+import { Link } from 'react-router-dom';
+import { Info } from 'lucide-react';
 const WalletPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -129,10 +131,18 @@ const WalletPage = () => {
           <h1 className="text-4xl font-bold">Wallet</h1>
           <p className="text-lg text-muted-foreground">Manage your funds and transactions</p>
         </div>
-        <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" asChild>
+            <Link to="/wallet-system">
+              <Info className="h-4 w-4 mr-2" />
+              Wallet System Info
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Wallet Balance Card */}

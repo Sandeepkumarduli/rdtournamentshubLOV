@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useReportSubmission } from '@/hooks/useReportSubmission';
 import { useUserReports } from '@/hooks/useUserReports';
 import { useOrgNames } from '@/hooks/useOrgNames';
+import { Link } from 'react-router-dom';
 
 const Report = () => {
   const [reportData, setReportData] = useState({
@@ -270,6 +271,15 @@ const Report = () => {
                 <p>• High priority: Within 24 hours</p>
                 <p>• Medium/Low priority: Within 48 hours</p>
               </div>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Button variant="outline" className="w-full" asChild>
+                <Link to="/contact">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  View Full Contact Info
+                </Link>
+              </Button>
             </div>
           </CardContent>
         </Card>

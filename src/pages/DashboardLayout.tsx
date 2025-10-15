@@ -4,7 +4,6 @@ import { Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UserSidebar from "@/components/UserSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import TopBar from "@/components/TopBar";
 import PageTransition from "@/components/PageTransition";
 import AccountBlockedPage from "@/components/AccountBlockedPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,9 +59,6 @@ const DashboardLayout = () => {
                   <p className="text-muted-foreground">Ready for some action?</p>
                 </div>
               </div>
-              
-              {/* Page Links in Center */}
-              <TopBar userType="user" />
               
               <div className="flex items-center gap-3">
                 <div className="rdcoin-badge">

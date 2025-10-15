@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   GamepadIcon, 
   MapPin, 
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 const Contact = () => {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen">
       {/* Navigation */}
@@ -25,12 +27,20 @@ const Contact = () => {
               <span className="text-xl font-bold">RDTH - RD Tournaments Hub</span>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" asChild>
-                <Link to="/login">Login</Link>
-              </Button>
-              <Button variant="default" asChild>
-                <Link to="/signup">Sign Up</Link>
-              </Button>
+              {user ? (
+                <Button variant="default" asChild>
+                  <Link to="/dashboard">Go to Dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" asChild>
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button variant="default" asChild>
+                    <Link to="/signup">Sign Up</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -191,12 +201,21 @@ const Contact = () => {
               Join thousands of players in the most competitive BGMI platform
             </p>
             <div className="flex gap-4 justify-center">
-              <Button asChild>
-                <Link to="/signup">
-                  <Trophy className="h-4 w-4 mr-2" />
-                  Create Account
-                </Link>
-              </Button>
+              {user ? (
+                <Button asChild>
+                  <Link to="/dashboard">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    Go to Dashboard
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild>
+                  <Link to="/signup">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    Create Account
+                  </Link>
+                </Button>
+              )}
               <Button variant="outline" asChild>
                 <Link to="/">← Back to Home</Link>
               </Button>
