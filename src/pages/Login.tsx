@@ -114,14 +114,16 @@ const Login = () => {
       // Sign out temporarily before OTP verification
       await supabase.auth.signOut();
 
-      // Send OTP to user's phone
+      // Send OTP to user's phone using direct Supabase auth
       try {
-        const { data: otpData, error: otpError } = await supabase.functions.invoke('phone-login', {
-          body: { phone: profile.phone, type: 'send' }
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          phone: profile.phone,
+          options: {
+            shouldCreateUser: true,
+          }
         });
 
         if (otpError) throw otpError;
-        if (otpData?.error) throw new Error(otpData.error);
 
         // Store user ID and phone, show OTP verification UI
         setPendingUserId(data.user.id);
@@ -188,12 +190,14 @@ const Login = () => {
     }
 
     try {
-      const { data, error: otpError } = await supabase.functions.invoke('phone-login', {
-        body: { phone: formattedPhone, type: 'send' }
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        phone: formattedPhone,
+        options: {
+          shouldCreateUser: true,
+        }
       });
 
       if (otpError) throw otpError;
-      if (data?.error) throw new Error(data.error);
 
       setCountdown(60);
       setOtpSent(true);
@@ -229,12 +233,18 @@ const Login = () => {
         formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
       }
 
-      const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone: formattedPhone, otp, type: 'verify' }
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: formattedPhone,
+        token: otp,
+        type: 'sms'
       });
 
-      if (error || data.error) {
-        throw new Error(data?.error || error?.message || "Failed to verify OTP");
+      if (error) {
+        throw new Error(error.message || "Failed to verify OTP");
+      }
+
+      if (!data.session) {
+        throw new Error("Failed to create session");
       }
 
       if (data.session) {
@@ -282,14 +292,23 @@ const Login = () => {
         formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
       }
 
-      supabase.functions.invoke('phone-login', {
-        body: { phone: formattedPhone, type: 'send' }
-      }).then(({ data, error }) => {
-        if (!error && !data?.error) {
+      supabase.auth.signInWithOtp({
+        phone: formattedPhone,
+        options: {
+          shouldCreateUser: true,
+        }
+      }).then(({ error }) => {
+        if (!error) {
           setCountdown(60);
           toast({
             title: "OTP Resent",
             description: "Verification code sent to your phone via SMS",
+          });
+        } else {
+          toast({
+            title: "Failed to Send OTP",
+            description: error.message || "Unable to send OTP. Please try again.",
+            variant: "destructive",
           });
         }
       });
@@ -309,12 +328,18 @@ const Login = () => {
     setIsVerifying(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone: userPhoneNumber, otp, type: 'verify' }
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: userPhoneNumber,
+        token: otp,
+        type: 'sms'
       });
 
-      if (error || data.error) {
-        throw new Error(data?.error || error?.message || "Failed to verify OTP");
+      if (error) {
+        throw new Error(error.message || "Failed to verify OTP");
+      }
+
+      if (!data.session) {
+        throw new Error("Failed to create session");
       }
 
       if (data.session) {
@@ -355,14 +380,23 @@ const Login = () => {
 
   const handleResendPasswordOTP = () => {
     if (userPhoneNumber) {
-      supabase.functions.invoke('phone-login', {
-        body: { phone: userPhoneNumber, type: 'send' }
-      }).then(({ data, error }) => {
-        if (!error && !data?.error) {
+      supabase.auth.signInWithOtp({
+        phone: userPhoneNumber,
+        options: {
+          shouldCreateUser: true,
+        }
+      }).then(({ error }) => {
+        if (!error) {
           setCountdown(60);
           toast({
             title: "OTP Resent",
             description: "Verification code sent to your phone via SMS",
+          });
+        } else {
+          toast({
+            title: "Failed to Resend OTP",
+            description: error.message || "Unable to resend OTP. Please try again.",
+            variant: "destructive",
           });
         }
       });

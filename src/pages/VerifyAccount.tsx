@@ -118,14 +118,15 @@ const VerifyAccount = () => {
   const sendPhoneOTP = async () => {
     setIsSendingOTP(true);
     try {
-      // Use edge function to send OTP for verification (not for auth)
-      const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone: phone, type: 'send', userId: userId }
+      // Use direct Supabase auth to send OTP for verification
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: phone,
+        options: {
+          shouldCreateUser: true,
+        }
       });
 
       if (error) throw error;
-      
-      if (data?.error) throw new Error(data.error);
 
       setCountdown(60);
       
@@ -157,14 +158,18 @@ const VerifyAccount = () => {
 
     setIsVerifying(true);
     try {
-      // Verify OTP via edge function
-      const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone: phone, otp: otp, type: 'verify', userId: userId }
+      // Verify OTP via direct Supabase auth
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: phone,
+        token: otp,
+        type: 'sms'
       });
 
       if (error) throw error;
       
-      if (data?.error) throw new Error(data.error);
+      if (!data.session) {
+        throw new Error("Failed to create session");
+      }
 
       // Update profile to mark phone as verified
       if (userId) {
