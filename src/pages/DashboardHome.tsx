@@ -28,7 +28,7 @@ const DashboardHome = () => {
   const { tournaments, loading: tournamentsLoading, refetch: refetchTournaments } = useTournaments();
   console.log('🏠 DashboardHome - tournaments loaded:', tournaments.length, 'loading:', tournamentsLoading);
   const { teams, userTeams, teamMembersMap, loading: teamsLoading } = useTeams();
-  const { user, isFrozen } = useAuth();
+  const { user, isFrozen, isFullyVerified } = useAuth();
   console.log('🏠 DashboardHome - user from useAuth:', user?.id);
   const { profile } = useProfile();
   const { balance, loading: walletLoading } = useWallet();
@@ -95,6 +95,15 @@ const DashboardHome = () => {
       toast({
         title: "Account Frozen",
         description: "Your account is frozen. You cannot join tournaments. Contact support to resolve.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!isFullyVerified) {
+      toast({
+        title: "Verification Required",
+        description: "You must verify both your email and phone number before joining tournaments. Please complete verification in your profile.",
         variant: "destructive"
       });
       return;
@@ -335,9 +344,9 @@ const DashboardHome = () => {
                       variant="default" 
                       className="w-full"
                       onClick={() => handleJoinTournament(tournament)}
-                      disabled={isFrozen}
+                      disabled={isFrozen || !isFullyVerified}
                     >
-                      {isFrozen ? 'Account Frozen' : 'Join Now'}
+                      {isFrozen ? 'Account Frozen' : !isFullyVerified ? 'Verify Account' : 'Join Now'}
                     </Button>
                   )}
                 </CardContent>

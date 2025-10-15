@@ -2,11 +2,46 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
+interface VerificationStatus {
+  emailVerified: boolean;
+  phoneVerified: boolean;
+}
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFrozen, setIsFrozen] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({
+    emailVerified: false,
+    phoneVerified: false,
+  });
+
+  const checkVerificationStatus = async (userId: string) => {
+    try {
+      const { data: { user: authUser }, error } = await supabase.auth.getUser();
+      
+      if (error || !authUser) {
+        console.error('Error fetching user for verification:', error);
+        return;
+      }
+
+      // Check email verification from auth metadata
+      const emailVerified = !!authUser.email_confirmed_at;
+      
+      // Check phone verification from auth metadata
+      const phoneVerified = !!authUser.phone_confirmed_at;
+
+      setVerificationStatus({
+        emailVerified,
+        phoneVerified,
+      });
+
+      console.log('✅ Verification status:', { emailVerified, phoneVerified });
+    } catch (error) {
+      console.error('❌ Exception checking verification status:', error);
+    }
+  };
 
   const checkFreezeStatus = async (userId: string) => {
     try {
@@ -57,6 +92,7 @@ export const useAuth = () => {
       
       if (session?.user) {
         await checkFreezeStatus(session.user.id);
+        await checkVerificationStatus(session.user.id);
       }
       
       setLoading(false);
@@ -73,9 +109,11 @@ export const useAuth = () => {
         if (session?.user) {
           setTimeout(() => {
             checkFreezeStatus(session.user.id);
+            checkVerificationStatus(session.user.id);
           }, 0);
         } else {
           setIsFrozen(false);
+          setVerificationStatus({ emailVerified: false, phoneVerified: false });
         }
         
         setLoading(false);
@@ -151,7 +189,11 @@ export const useAuth = () => {
     session,
     loading,
     isFrozen,
+    emailVerified: verificationStatus.emailVerified,
+    phoneVerified: verificationStatus.phoneVerified,
+    isFullyVerified: verificationStatus.emailVerified && verificationStatus.phoneVerified,
     refreshFreezeStatus: () => user ? checkFreezeStatus(user.id) : Promise.resolve(),
+    refreshVerificationStatus: () => user ? checkVerificationStatus(user.id) : Promise.resolve(),
     signIn,
     signUp,
     signOut,

@@ -12,9 +12,10 @@ import { useWallet } from '@/hooks/useWallet';
 import { useProfileStats } from '@/hooks/useProfileStats';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Key, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, emailVerified, phoneVerified, refreshVerificationStatus } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const { balance, refetch: refetchBalance } = useWallet();
   const { stats, loading: statsLoading, refetch: refetchStats } = useProfileStats();
@@ -62,6 +63,29 @@ const Profile = () => {
         variant: "destructive"
       });
       return;
+    }
+
+    // Check for duplicate BGMI ID if it was changed
+    if (formData.bgmiId && formData.bgmiId !== profile?.bgmi_id) {
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('bgmi_id', formData.bgmiId)
+        .neq('user_id', user?.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking BGMI ID:', checkError);
+      }
+
+      if (existingProfile) {
+        toast({
+          title: "BGMI ID Already Taken",
+          description: "This BGMI ID is already registered to another account. Please use a different one.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     const { error } = await updateProfile({
@@ -124,7 +148,8 @@ const Profile = () => {
     try {
       await Promise.all([
         refetchBalance(),
-        refetchStats()
+        refetchStats(),
+        refreshVerificationStatus()
       ]);
       toast({
         title: "Success",
@@ -139,6 +164,14 @@ const Profile = () => {
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  const handleVerifyEmail = () => {
+    navigate('/verify-email');
+  };
+
+  const handleVerifyPhone = () => {
+    navigate('/verify-phone');
   };
 
   const formatMemberSince = (dateString: string) => {
@@ -197,6 +230,10 @@ const Profile = () => {
           formData={formData}
           isEditing={isEditing}
           onInputChange={handleInputChange}
+          emailVerified={emailVerified}
+          phoneVerified={phoneVerified}
+          onVerifyEmail={handleVerifyEmail}
+          onVerifyPhone={handleVerifyPhone}
         />
 
         <AccountStats 

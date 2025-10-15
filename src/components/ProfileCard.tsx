@@ -2,7 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { User, CheckCircle, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface ProfileData {
   username: string;
@@ -15,9 +17,13 @@ interface ProfileCardProps {
   formData: ProfileData;
   isEditing: boolean;
   onInputChange: (field: string, value: string) => void;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  onVerifyEmail: () => void;
+  onVerifyPhone: () => void;
 }
 
-const ProfileCard = ({ formData, isEditing, onInputChange }: ProfileCardProps) => {
+const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneVerified, onVerifyEmail, onVerifyPhone }: ProfileCardProps) => {
   return (
     <Card className="gaming-card">
       <CardHeader>
@@ -39,29 +45,85 @@ const ProfileCard = ({ formData, isEditing, onInputChange }: ProfileCardProps) =
         </div>
         
         <div>
-          <Label htmlFor="email">Email Address</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            disabled={true}
-            className="opacity-60 mt-2"
-            placeholder="Enter your email"
-          />
-          <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+          <Label htmlFor="email" className="flex items-center gap-2">
+            Email Address
+            {emailVerified ? (
+              <Badge variant="default" className="bg-success text-success-foreground gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Verified
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Not Verified
+              </Badge>
+            )}
+          </Label>
+          <div className="flex gap-2 mt-2">
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              disabled={true}
+              className="opacity-60 flex-1"
+              placeholder="Enter your email"
+            />
+            {!emailVerified && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={onVerifyEmail}
+              >
+                Verify
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {emailVerified ? 'Email is verified' : 'Email cannot be changed. Please verify your email to use all features.'}
+          </p>
         </div>
         
         <div>
-          <Label htmlFor="phone">Phone Number</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => onInputChange('phone', e.target.value)}
-            disabled={!isEditing}
-            placeholder="Enter your phone number"
-            className="mt-2"
-          />
+          <Label htmlFor="phone" className="flex items-center gap-2">
+            Phone Number
+            {phoneVerified ? (
+              <Badge variant="default" className="bg-success text-success-foreground gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Verified
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Not Verified
+              </Badge>
+            )}
+          </Label>
+          <div className="flex gap-2 mt-2">
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => onInputChange('phone', e.target.value)}
+              disabled={!isEditing}
+              placeholder="Enter your phone number"
+              className="flex-1"
+            />
+            {!phoneVerified && formData.phone && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={onVerifyPhone}
+                disabled={isEditing}
+              >
+                Verify
+              </Button>
+            )}
+          </div>
+          {!phoneVerified && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Please verify your phone number to use all features.
+            </p>
+          )}
         </div>
         
         <div>
@@ -74,6 +136,9 @@ const ProfileCard = ({ formData, isEditing, onInputChange }: ProfileCardProps) =
             placeholder="Enter your BGMI player ID"
             className="mt-2"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            BGMI ID can be updated. Make sure it's unique and accurate.
+          </p>
         </div>
       </CardContent>
     </Card>
