@@ -85,6 +85,17 @@ const VerifyAccount = () => {
     }
   }, [countdown]);
 
+  // Automatically send OTP when page loads after signup
+  useEffect(() => {
+    if (phone && userId) {
+      // Wait a bit for session to be ready, then send OTP
+      const timer = setTimeout(() => {
+        sendPhoneOTP();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [phone, userId]);
+
   const checkEmailVerification = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
