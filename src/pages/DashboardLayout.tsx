@@ -57,8 +57,9 @@ const DashboardLayout = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
+                  className="bg-muted hover:bg-muted/80"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                 >
                   {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
