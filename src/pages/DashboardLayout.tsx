@@ -66,6 +66,7 @@ const DashboardLayout = () => {
       {/* Main Content */}
       <div className={cn(
         "flex-1 flex flex-col w-full min-w-0 transition-all duration-300 ease-in-out",
+        "md:ml-0",
         sidebarOpen && "md:ml-64"
       )}>
         {/* Header */}
