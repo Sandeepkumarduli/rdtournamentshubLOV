@@ -4,14 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, GamepadIcon, Mail, User, Lock } from "lucide-react";
+import { Eye, EyeOff, GamepadIcon, Mail, User, Lock, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useSupabaseOTP } from "@/hooks/useSupabaseOTP";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -23,6 +27,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signUp } = useAuth();
+  const { sendOTP, verifyOTP, isLoading: otpLoading } = useSupabaseOTP();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,35 +52,62 @@ const Signup = () => {
       return;
     }
 
-    // Create account directly without OTP verification for now
-    const { data, error } = await signUp(formData.email, formData.password, formData.username);
+    // Send OTP instead of creating account directly
+    const success = await sendOTP(formData.phone);
+    if (success) {
+      setOtpSent(true);
+    }
+  };
 
-    if (error) {
+  const handleVerifyAndCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (otpCode.length !== 6) {
       toast({
-        title: "Signup Failed",
-        description: error.message,
+        title: "Invalid OTP",
+        description: "Please enter a valid 6-digit OTP",
         variant: "destructive",
       });
-    } else if (data.user) {
-      // Update profile with additional info
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          bgmi_id: formData.bgmiId,
-          display_name: formData.username,
-          phone: formData.phone,
-        })
-        .eq('user_id', data.user.id);
+      return;
+    }
 
-      if (profileError) {
-        console.error('Error updating profile:', profileError);
+    // Verify OTP first
+    const verified = await verifyOTP(formData.phone, otpCode);
+    
+    if (verified) {
+      // Now create the account with email/password
+      const { data, error } = await signUp(formData.email, formData.password, formData.username);
+
+      if (error) {
+        toast({
+          title: "Signup Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
       }
 
-      toast({
-        title: "Account Created!",
-        description: "Welcome to RDTH! You can now login with your credentials.",
-      });
-      navigate("/login");
+      if (data.user) {
+        // Update profile with additional info
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            bgmi_id: formData.bgmiId,
+            display_name: formData.username,
+            phone: formData.phone,
+          })
+          .eq('user_id', data.user.id);
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+        }
+
+        toast({
+          title: "Account Created!",
+          description: "Welcome to RDTH! You can now login with your credentials.",
+        });
+        navigate("/login");
+      }
     }
   };
 
@@ -97,7 +129,8 @@ const Signup = () => {
             <CardTitle className="text-center text-xl">Create Account</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignup} className="space-y-4">
+            {!otpSent ? (
+              <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <div className="relative">
@@ -169,14 +202,21 @@ const Signup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone || ''}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+91 9876543210"
-                  required
-                />
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone || ''}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+91 9876543210"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  You'll receive a 6-digit OTP to verify your phone
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -219,10 +259,57 @@ const Signup = () => {
                 </Label>
               </div>
 
-              <Button type="submit" variant="gaming" className="w-full">
-                Create Account
+              <Button type="submit" variant="gaming" className="w-full" disabled={otpLoading}>
+                {otpLoading ? <LoadingSpinner /> : "Send OTP"}
               </Button>
             </form>
+            ) : (
+              <form onSubmit={handleVerifyAndCreateAccount} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="otp">Enter 6-Digit OTP</Label>
+                  <Input 
+                    id="otp" 
+                    type="text" 
+                    value={otpCode} 
+                    onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} 
+                    placeholder="000000" 
+                    maxLength={6}
+                    className="text-center text-2xl tracking-widest"
+                    required 
+                  />
+                  <p className="text-xs text-muted-foreground text-center">
+                    OTP sent to {formData.phone}
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setOtpCode("");
+                    }}
+                  >
+                    Change Details
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => sendOTP(formData.phone)}
+                    disabled={otpLoading}
+                  >
+                    Resend OTP
+                  </Button>
+                </div>
+
+                <Button type="submit" variant="gaming" className="w-full" disabled={otpLoading}>
+                  {otpLoading ? <LoadingSpinner /> : "Verify & Create Account"}
+                </Button>
+              </form>
+            )}
 
             <div className="mt-6 space-y-3 text-center text-sm text-muted-foreground">
               <div>
