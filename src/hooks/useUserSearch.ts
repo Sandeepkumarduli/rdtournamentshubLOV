@@ -6,6 +6,7 @@ export interface UserSearchResult {
   display_name: string;
   email: string;
   bgmi_id: string | null;
+  role?: string | null;
 }
 
 export const useUserSearch = () => {
@@ -22,8 +23,9 @@ export const useUserSearch = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, display_name, email, bgmi_id')
+        .select('user_id, display_name, email, bgmi_id, role')
         .or(`display_name.ilike.%${query}%,email.ilike.%${query}%`)
+        .not('role', 'in', '("admin","systemadmin")')
         .limit(10);
 
       if (error) {

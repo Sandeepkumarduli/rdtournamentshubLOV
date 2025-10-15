@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X, Trash2, Settings, UserMinus, Bell } from 'lucide-react';
+import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X, Trash2, Settings, UserMinus, Bell, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTeams } from '@/hooks/useTeams';
 import { useTeamRequests } from '@/hooks/useTeamRequests';
@@ -563,24 +563,31 @@ const Teams = () => {
                                       <div className="border rounded-lg p-2 max-h-40 overflow-y-auto mt-2">
                                         <p className="text-sm font-medium mb-2">Search Results:</p>
                                         <div className="space-y-1">
-                                          {searchResults.map((user) => (
-                                            <div 
-                                              key={user.user_id} 
-                                              className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
-                                               onClick={() => handleSendTeamRequest(user.user_id, team.id)}
-                                            >
-                                              <div>
-                                                <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
-                                                <p className="text-xs text-muted-foreground">{user.email}</p>
-                                                {user.bgmi_id && (
-                                                  <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
-                                                )}
+                                          {searchResults.map((user) => {
+                                            const isEmailMatch = user.email.toLowerCase().includes(newMemberEmail.toLowerCase());
+                                            return (
+                                              <div 
+                                                key={user.user_id} 
+                                                className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
+                                                onClick={() => handleSendTeamRequest(user.user_id, team.id)}
+                                              >
+                                                <div className="flex-1">
+                                                  <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
+                                                  {user.bgmi_id && (
+                                                    <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
+                                                  )}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                  {isEmailMatch && (
+                                                    <Check className="h-4 w-4 text-success" />
+                                                  )}
+                                                  <Button size="sm" variant="outline">
+                                                    Add
+                                                  </Button>
+                                                </div>
                                               </div>
-                                              <Button size="sm" variant="outline">
-                                                Add
-                                              </Button>
-                                            </div>
-                                          ))}
+                                            );
+                                          })}
                                         </div>
                                       </div>
                                     )}
@@ -668,32 +675,39 @@ const Teams = () => {
                                  </p>
                                </div>
                                
-                               {/* Search Results */}
-                               {searchResults.length > 0 && (
-                                 <div className="border rounded-lg p-2 max-h-40 overflow-y-auto">
-                                   <p className="text-sm font-medium mb-2">Search Results:</p>
-                                   <div className="space-y-1">
-                                     {searchResults.map((user) => (
-                                       <div 
-                                         key={user.user_id} 
-                                         className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
-                                         onClick={() => handleSendTeamRequest(user.user_id, team.id)}
-                                       >
-                                         <div>
-                                           <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
-                                           <p className="text-xs text-muted-foreground">{user.email}</p>
-                                           {user.bgmi_id && (
-                                             <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
-                                           )}
-                                         </div>
-                                         <Button size="sm" variant="outline">
-                                           Add
-                                         </Button>
-                                       </div>
-                                     ))}
-                                   </div>
-                                 </div>
-                               )}
+                                {/* Search Results */}
+                                {searchResults.length > 0 && (
+                                  <div className="border rounded-lg p-2 max-h-40 overflow-y-auto">
+                                    <p className="text-sm font-medium mb-2">Search Results:</p>
+                                    <div className="space-y-1">
+                                      {searchResults.map((user) => {
+                                        const isEmailMatch = user.email.toLowerCase().includes(newMemberEmail.toLowerCase());
+                                        return (
+                                          <div 
+                                            key={user.user_id} 
+                                            className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
+                                            onClick={() => handleSendTeamRequest(user.user_id, team.id)}
+                                          >
+                                            <div className="flex-1">
+                                              <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
+                                              {user.bgmi_id && (
+                                                <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
+                                              )}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                              {isEmailMatch && (
+                                                <Check className="h-4 w-4 text-success" />
+                                              )}
+                                              <Button size="sm" variant="outline">
+                                                Add
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
                                
                                {searchLoading && (
                                  <p className="text-sm text-muted-foreground">Searching...</p>
