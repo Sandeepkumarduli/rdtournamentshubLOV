@@ -23,6 +23,27 @@ const VerifyEmail = () => {
       return;
     }
 
+    // Check if this is a redirect from email verification
+    const checkEmailVerificationRedirect = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user?.email_confirmed_at) {
+          console.log('Email verification detected from redirect');
+          setEmailVerified(true);
+          toast({
+            title: "Email Verified!",
+            description: "Your email has been confirmed successfully.",
+          });
+          setIsLoading(false);
+          return true; // Email is verified
+        }
+      } catch (error) {
+        console.error('Error checking email verification redirect:', error);
+      }
+      return false; // Email not verified
+    };
+
     // Send email verification
     const sendEmailVerification = async () => {
       try {
@@ -70,8 +91,32 @@ const VerifyEmail = () => {
       }
     };
 
-    sendEmailVerification();
+    // First check if this is a redirect from email verification
+    checkEmailVerificationRedirect().then((isVerified) => {
+      if (!isVerified) {
+        // If not verified, send the verification email
+        sendEmailVerification();
+      }
+    });
   }, [email, phone, password, username, bgmiId, navigate, toast]);
+
+  // Listen for auth state changes to detect email verification
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email_confirmed_at);
+      
+      if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+        console.log('Email verification detected via auth state change');
+        setEmailVerified(true);
+        toast({
+          title: "Email Verified!",
+          description: "Your email has been confirmed successfully.",
+        });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [toast]);
 
   const handleManualRefresh = async () => {
     console.log('Refresh button clicked'); // Debug log
