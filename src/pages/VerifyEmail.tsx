@@ -134,7 +134,32 @@ const VerifyEmail = () => {
 
     const pollForVerification = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        let session = null;
+        
+        // First try to get existing session
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        session = existingSession;
+        
+        // If no session exists, try to sign in to check verification status
+        if (!session && email && password) {
+          console.log('No session found, attempting sign-in to check verification...');
+          
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+          });
+          
+          if (!signInError && signInData.session) {
+            session = signInData.session;
+            console.log('Sign-in successful, checking verification status...');
+            
+            // Sign out immediately after checking (we only needed to verify)
+            setTimeout(() => {
+              supabase.auth.signOut();
+            }, 1000);
+          }
+        }
+        
         console.log('Polling check - session:', session?.user?.email_confirmed_at);
         
         if (session?.user?.email_confirmed_at) {
