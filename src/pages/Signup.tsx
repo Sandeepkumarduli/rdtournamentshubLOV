@@ -190,6 +190,37 @@ const Signup = () => {
                   />
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone || ''}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+91 9876543210"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  You'll receive a 6-digit OTP to verify your phone
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bgmiId">BGMI ID</Label>
+                <Input
+                  id="bgmiId"
+                  type="text"
+                  value={formData.bgmiId || ''}
+                  onChange={(e) => setFormData({ ...formData, bgmiId: e.target.value })}
+                  placeholder="Enter your BGMI ID"
+                  required
+                />
+              </div>
               
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -214,37 +245,6 @@ const Signup = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bgmiId">BGMI ID</Label>
-                <Input
-                  id="bgmiId"
-                  type="text"
-                  value={formData.bgmiId || ''}
-                  onChange={(e) => setFormData({ ...formData, bgmiId: e.target.value })}
-                  placeholder="Enter your BGMI ID"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone || ''}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+91 9876543210"
-                    className="pl-10"
-                    required
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  You'll receive a 6-digit OTP to verify your phone
-                </p>
               </div>
 
               <div className="space-y-2">
