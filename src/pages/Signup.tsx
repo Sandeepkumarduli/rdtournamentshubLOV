@@ -8,14 +8,15 @@ import { Eye, EyeOff, GamepadIcon, Mail, User, Lock, Phone } from "lucide-react"
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useSupabaseOTP } from "@/hooks/useSupabaseOTP";
+import { useFirebaseOTP } from "@/hooks/useFirebaseOTP";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import OTPInput from "@/components/OTPInput";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -27,7 +28,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signUp } = useAuth();
-  const { sendOTP, verifyOTP, isLoading: otpLoading } = useSupabaseOTP();
+  const { sendOTP, verifyOTP, isLoading: otpLoading, verificationId } = useFirebaseOTP();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,63 +53,74 @@ const Signup = () => {
       return;
     }
 
-    // Send OTP instead of creating account directly
+    // Send OTP for phone verification
     const success = await sendOTP(formData.phone);
     if (success) {
       setOtpSent(true);
+      toast({
+        title: "OTP Sent",
+        description: "Please verify your phone number to continue",
+      });
     }
   };
 
-  const handleVerifyAndCreateAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerifyOTPAndCreateAccount = async (verificationId: string, code: string) => {
+    if (!verificationId || !code) return;
     
-    if (otpCode.length !== 6) {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter a valid 6-digit OTP",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Verify OTP first
-    const verified = await verifyOTP(formData.phone, otpCode);
+    setIsCreatingAccount(true);
     
-    if (verified) {
-      // Now create the account with email/password
-      const { data, error } = await signUp(formData.email, formData.password, formData.username);
+    try {
+      // Verify OTP first
+      const verified = await verifyOTP(verificationId, code);
+      
+      if (verified) {
+        // Now create the account with email/password
+        const { data, error } = await signUp(formData.email, formData.password, formData.username);
 
-      if (error) {
-        toast({
-          title: "Signup Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data.user) {
-        // Update profile with additional info
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            bgmi_id: formData.bgmiId,
-            display_name: formData.username,
-            phone: formData.phone,
-          })
-          .eq('user_id', data.user.id);
-
-        if (profileError) {
-          console.error('Error updating profile:', profileError);
+        if (error) {
+          toast({
+            title: "Signup Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
         }
 
-        toast({
-          title: "Account Created!",
-          description: "Welcome to RDTH! You can now login with your credentials.",
-        });
-        navigate("/login");
+        if (data.user) {
+          // Update profile with additional info including verified phone
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              bgmi_id: formData.bgmiId,
+              display_name: formData.username,
+              phone: formData.phone,
+            })
+            .eq('user_id', data.user.id);
+
+          if (profileError) {
+            console.error('Error updating profile:', profileError);
+          }
+
+          toast({
+            title: "Account Created!",
+            description: "Please check your email to verify your account before logging in.",
+          });
+          navigate("/login");
+        }
       }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingAccount(false);
     }
+  };
+
+  const handleResendOTP = () => {
+    sendOTP(formData.phone);
   };
 
   return (
@@ -131,6 +143,9 @@ const Signup = () => {
           <CardContent>
             {!otpSent ? (
               <form onSubmit={handleSignup} className="space-y-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Both email and phone number verification are required to create an account.
+              </p>
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <div className="relative">
@@ -260,55 +275,37 @@ const Signup = () => {
               </div>
 
               <Button type="submit" variant="gaming" className="w-full" disabled={otpLoading}>
-                {otpLoading ? <LoadingSpinner /> : "Send OTP"}
+                {otpLoading ? <LoadingSpinner /> : "Verify Phone Number"}
               </Button>
             </form>
             ) : (
-              <form onSubmit={handleVerifyAndCreateAccount} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="otp">Enter 6-Digit OTP</Label>
-                  <Input 
-                    id="otp" 
-                    type="text" 
-                    value={otpCode} 
-                    onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} 
-                    placeholder="000000" 
-                    maxLength={6}
-                    className="text-center text-2xl tracking-widest"
-                    required 
-                  />
-                  <p className="text-xs text-muted-foreground text-center">
-                    OTP sent to {formData.phone}
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    Enter the 6-digit OTP sent to {formData.phone}
                   </p>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => {
-                      setOtpSent(false);
-                      setOtpCode("");
-                    }}
-                  >
-                    Change Details
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => sendOTP(formData.phone)}
-                    disabled={otpLoading}
-                  >
-                    Resend OTP
-                  </Button>
-                </div>
+                <OTPInput
+                  phoneNumber={formData.phone}
+                  onVerificationSuccess={handleVerifyOTPAndCreateAccount}
+                  onResend={handleResendOTP}
+                  isLoading={otpLoading || isCreatingAccount}
+                  verificationId={verificationId}
+                />
 
-                <Button type="submit" variant="gaming" className="w-full" disabled={otpLoading}>
-                  {otpLoading ? <LoadingSpinner /> : "Verify & Create Account"}
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    setOtpSent(false);
+                  }}
+                  disabled={isCreatingAccount}
+                >
+                  Change Details
                 </Button>
-              </form>
+              </div>
             )}
 
             <div className="mt-6 space-y-3 text-center text-sm text-muted-foreground">
@@ -329,6 +326,9 @@ const Signup = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Hidden recaptcha container for Firebase */}
+        <div id="recaptcha-container"></div>
       </div>
     </div>
   );

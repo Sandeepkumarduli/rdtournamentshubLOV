@@ -10,14 +10,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { useSupabaseOTP } from "@/hooks/useSupabaseOTP";
+import { useFirebaseOTP } from "@/hooks/useFirebaseOTP";
+import OTPInput from "@/components/OTPInput";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -25,7 +26,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn } = useAuth();
-  const { sendOTP, verifyOTP, isLoading: otpLoading } = useSupabaseOTP();
+  const { sendOTP, verifyOTP, isLoading: otpLoading, verificationId } = useFirebaseOTP();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,53 +83,127 @@ const Login = () => {
       return;
     }
 
+    // Validate phone format
+    const phoneRegex = /^(\+91|91)?[6-9]\d{9}$/;
+    if (!phoneRegex.test(phoneNumber.replace(/\s+/g, ''))) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid Indian phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Format phone number
+    let formattedPhone = phoneNumber.trim();
+    if (!formattedPhone.startsWith('+')) {
+      formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
+    }
+
+    // Check if account exists with this phone
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('phone', formattedPhone)
+      .single();
+
+    if (error || !profile) {
+      toast({
+        title: "Account Not Found",
+        description: "No account exists with this phone number. Please sign up first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Send OTP
     const success = await sendOTP(phoneNumber);
     if (success) {
       setOtpSent(true);
     }
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerifyOTP = async (verificationId: string, code: string) => {
+    if (!verificationId || !code) return;
     
-    if (otpCode.length !== 6) {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter a valid 6-digit OTP",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const verified = await verifyOTP(phoneNumber, otpCode);
+    setIsVerifying(true);
     
-    if (verified) {
-      const { data: { user } } = await supabase.auth.getUser();
+    try {
+      // Verify OTP
+      const verified = await verifyOTP(verificationId, code);
       
-      if (user) {
-        toast({
-          title: "Login Successful!",
-          description: "Welcome back to RDTH"
+      if (verified) {
+        // Format phone number
+        let formattedPhone = phoneNumber.trim();
+        if (!formattedPhone.startsWith('+')) {
+          formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
+        }
+
+        // Call edge function to get magic link
+        const { data, error } = await supabase.functions.invoke('phone-login', {
+          body: { phone: formattedPhone }
         });
 
-        try {
-          const { data: freezeRecord } = await supabase
-            .from('user_freeze_status')
-            .select('is_frozen')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (freezeRecord?.is_frozen) {
-            navigate("/dashboard/report");
-          } else {
-            navigate("/dashboard");
+        if (error || data.error) {
+          throw new Error(data?.error || error?.message || "Failed to login");
+        }
+
+        // Use the magic link to sign in
+        if (data.magic_link) {
+          // Extract the token from the magic link
+          const url = new URL(data.magic_link);
+          const token = url.searchParams.get('token');
+          const type = url.searchParams.get('type');
+
+          if (token && type) {
+            const { error: verifyError } = await supabase.auth.verifyOtp({
+              token_hash: token,
+              type: type as any,
+            });
+
+            if (verifyError) throw verifyError;
+
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (user) {
+              toast({
+                title: "Login Successful!",
+                description: "Welcome back to RDTH"
+              });
+
+              try {
+                const { data: freezeRecord } = await supabase
+                  .from('user_freeze_status')
+                  .select('is_frozen')
+                  .eq('user_id', user.id)
+                  .maybeSingle();
+                
+                if (freezeRecord?.is_frozen) {
+                  navigate("/dashboard/report");
+                } else {
+                  navigate("/dashboard");
+                }
+              } catch (err) {
+                console.error('Error checking freeze status:', err);
+                navigate("/dashboard");
+              }
+            }
           }
-        } catch (err) {
-          console.error('Error checking freeze status:', err);
-          navigate("/dashboard");
         }
       }
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "Failed to login with phone number",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
     }
+  };
+
+  const handleResendOTP = () => {
+    sendOTP(phoneNumber);
   };
   return <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -216,7 +291,7 @@ const Login = () => {
                         required 
                       />
                       <p className="text-xs text-muted-foreground">
-                        Enter your registered phone number
+                        Login with the phone number linked to your account
                       </p>
                     </div>
 
@@ -225,51 +300,33 @@ const Login = () => {
                     </Button>
                   </form>
                 ) : (
-                  <form onSubmit={handleVerifyOTP} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="otp">Enter 6-Digit OTP</Label>
-                      <Input 
-                        id="otp" 
-                        type="text" 
-                        value={otpCode} 
-                        onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} 
-                        placeholder="000000" 
-                        maxLength={6}
-                        className="text-center text-2xl tracking-widest"
-                        required 
-                      />
-                      <p className="text-xs text-muted-foreground text-center">
-                        OTP sent to {phoneNumber}
+                  <div className="space-y-4">
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-muted-foreground">
+                        Enter the 6-digit OTP sent to {phoneNumber}
                       </p>
                     </div>
 
-                    <div className="flex gap-2">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={() => {
-                          setOtpSent(false);
-                          setOtpCode("");
-                        }}
-                      >
-                        Change Number
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={handleSendOTP}
-                        disabled={otpLoading}
-                      >
-                        Resend OTP
-                      </Button>
-                    </div>
+                    <OTPInput
+                      phoneNumber={phoneNumber}
+                      onVerificationSuccess={handleVerifyOTP}
+                      onResend={handleResendOTP}
+                      isLoading={otpLoading || isVerifying}
+                      verificationId={verificationId}
+                    />
 
-                    <Button type="submit" variant="gaming" className="w-full" disabled={otpLoading}>
-                      {otpLoading ? <LoadingSpinner /> : "Verify & Login"}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        setOtpSent(false);
+                      }}
+                      disabled={isVerifying}
+                    >
+                      Change Number
                     </Button>
-                  </form>
+                  </div>
                 )}
               </TabsContent>
             </Tabs>
@@ -299,6 +356,9 @@ const Login = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Hidden recaptcha container for Firebase */}
+        <div id="recaptcha-container"></div>
       </div>
     </div>;
 };
