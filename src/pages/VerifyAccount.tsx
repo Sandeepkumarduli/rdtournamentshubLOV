@@ -118,8 +118,22 @@ const VerifyAccount = () => {
   const sendPhoneOTP = async () => {
     setIsSendingOTP(true);
     try {
-      // First, get the current session to ensure we're updating the right user
-      const { data: { session } } = await supabase.auth.getSession();
+      // First, ensure we have a valid session
+      let { data: { session } } = await supabase.auth.getSession();
+      
+      // If no session, try to sign in with the provided credentials
+      if (!session && email && password) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+        
+        if (signInError) {
+          throw new Error("Please verify your email first before adding phone number");
+        }
+        
+        session = signInData.session;
+      }
       
       if (!session) {
         throw new Error("No active session. Please sign up again.");
