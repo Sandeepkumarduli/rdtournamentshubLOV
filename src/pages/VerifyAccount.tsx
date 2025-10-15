@@ -118,34 +118,14 @@ const VerifyAccount = () => {
   const sendPhoneOTP = async () => {
     setIsSendingOTP(true);
     try {
-      // First, ensure we have a valid session
-      let { data: { session } } = await supabase.auth.getSession();
-      
-      // If no session, try to sign in with the provided credentials
-      if (!session && email && password) {
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password,
-        });
-        
-        if (signInError) {
-          throw new Error("Please verify your email first before adding phone number");
-        }
-        
-        session = signInData.session;
-      }
-      
-      if (!session) {
-        throw new Error("No active session. Please sign up again.");
-      }
-
-      // Link the phone number to the existing user account
-      // This will send OTP automatically
-      const { error: updateError } = await supabase.auth.updateUser({
-        phone: phone
+      // Use edge function to send OTP for verification (not for auth)
+      const { data, error } = await supabase.functions.invoke('phone-login', {
+        body: { phone: phone, type: 'send', userId: userId }
       });
 
-      if (updateError) throw updateError;
+      if (error) throw error;
+      
+      if (data?.error) throw new Error(data.error);
 
       setCountdown(60);
       
@@ -177,14 +157,22 @@ const VerifyAccount = () => {
 
     setIsVerifying(true);
     try {
-      // Verify the phone OTP using Supabase Auth directly
-      const { error } = await supabase.auth.verifyOtp({
-        phone: phone,
-        token: otp,
-        type: 'sms'
+      // Verify OTP via edge function
+      const { data, error } = await supabase.functions.invoke('phone-login', {
+        body: { phone: phone, otp: otp, type: 'verify', userId: userId }
       });
 
       if (error) throw error;
+      
+      if (data?.error) throw new Error(data.error);
+
+      // Update profile to mark phone as verified
+      if (userId) {
+        await supabase
+          .from('profiles')
+          .update({ phone: phone })
+          .eq('user_id', userId);
+      }
 
       setPhoneVerified(true);
       toast({

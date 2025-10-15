@@ -11,6 +11,7 @@ interface PhoneLoginRequest {
   phone: string;
   otp?: string;
   type?: 'send' | 'verify';
+  userId?: string;
 }
 
 serve(async (req) => {
@@ -19,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    const { phone, otp, type }: PhoneLoginRequest = await req.json();
+    const { phone, otp, type, userId }: PhoneLoginRequest = await req.json();
 
     if (!phone) {
       throw new Error("Phone number is required");
@@ -37,14 +38,15 @@ serve(async (req) => {
       formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
     }
 
-    console.log(`Processing request - Type: ${type}, Phone: ${formattedPhone}`);
+    console.log(`Processing request - Type: ${type}, Phone: ${formattedPhone}, UserId: ${userId || 'none'}`);
 
     // Send OTP using Supabase Auth
     if (type === 'send') {
+      // For verification during signup, we still use signInWithOtp but allow user creation
       const { data, error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
         options: {
-          shouldCreateUser: true, // Allow creating user or updating existing user with phone
+          shouldCreateUser: true,
         }
       });
 
