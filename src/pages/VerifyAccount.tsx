@@ -92,23 +92,32 @@ const VerifyAccount = () => {
   const sendPhoneOTP = async () => {
     setIsSendingOTP(true);
     try {
-      // Call edge function to send OTP via SMS provider
       const { data, error } = await supabase.functions.invoke('phone-login', {
         body: { phone: phone, type: 'signup' }
       });
 
       if (error) throw error;
+      
+      if (data?.error) throw new Error(data.error);
 
       setCountdown(60);
+      
+      // Show OTP in development mode
+      const otpMessage = data?.otp 
+        ? `OTP: ${data.otp} (Development mode)`
+        : "Check console for OTP";
+      
+      console.log('📱 OTP sent:', data?.otp);
+      
       toast({
         title: "OTP Sent",
-        description: `Verification code sent to ${phone}`,
+        description: otpMessage,
       });
     } catch (error: any) {
       console.error('OTP Error:', error);
       toast({
         title: "Failed to Send OTP",
-        description: "Unable to send verification code. Please try again later.",
+        description: error.message || "Unable to send verification code. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -218,7 +227,7 @@ const VerifyAccount = () => {
                     onClick={handleManualRefresh}
                     className="w-full"
                   >
-                    Check Email Status
+                    Refresh Email Status
                   </Button>
                 </>
               )}
