@@ -105,7 +105,10 @@ const VerifyPhone = () => {
       if (userId) {
         await supabase
           .from('profiles')
-          .update({ phone: phone })
+          .update({ 
+            phone: phone,
+            phone_verified: true 
+          })
           .eq('user_id', userId);
       }
 

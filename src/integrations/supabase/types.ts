@@ -265,10 +265,12 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string | null
+          email_verified: boolean | null
           experience: string | null
           id: string
           organization: string | null
           phone: string | null
+          phone_verified: boolean | null
           role: string | null
           updated_at: string
           user_id: string
@@ -280,10 +282,12 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          email_verified?: boolean | null
           experience?: string | null
           id?: string
           organization?: string | null
           phone?: string | null
+          phone_verified?: boolean | null
           role?: string | null
           updated_at?: string
           user_id: string
@@ -295,10 +299,12 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          email_verified?: boolean | null
           experience?: string | null
           id?: string
           organization?: string | null
           phone?: string | null
+          phone_verified?: boolean | null
           role?: string | null
           updated_at?: string
           user_id?: string

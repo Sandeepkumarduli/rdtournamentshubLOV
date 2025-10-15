@@ -157,6 +157,14 @@ const VerifyEmail = () => {
             setEmailVerified(true);
             clearInterval(interval);
             
+            // Update profile to mark email as verified
+            if (userId) {
+              await supabase
+                .from('profiles')
+                .update({ email_verified: true })
+                .eq('user_id', userId);
+            }
+            
             // Establish session after verification
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
@@ -201,6 +209,14 @@ const VerifyEmail = () => {
           title: "Email Verified!",
           description: "Your email has been confirmed successfully.",
         });
+        
+        // Update profile to mark email as verified
+        if (userId) {
+          await supabase
+            .from('profiles')
+            .update({ email_verified: true })
+            .eq('user_id', userId);
+        }
         
         // Try to establish session
         await supabase.auth.refreshSession();

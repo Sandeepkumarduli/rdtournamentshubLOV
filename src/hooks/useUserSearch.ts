@@ -26,6 +26,8 @@ export const useUserSearch = () => {
         .select('user_id, display_name, email, bgmi_id, role')
         .or(`display_name.ilike.%${query}%,email.ilike.%${query}%`)
         .not('role', 'in', '("admin","systemadmin")')
+        .eq('email_verified', true)
+        .eq('phone_verified', true)
         .limit(10);
 
       if (error) {
