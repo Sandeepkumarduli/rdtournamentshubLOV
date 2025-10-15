@@ -233,11 +233,11 @@ const Profile = () => {
     <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Profile</h1>
-          <p className="text-sm md:text-base lg:text-lg text-muted-foreground">Manage your account information</p>
+        <div className="text-center md:text-left w-full md:w-auto">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold">Profile</h1>
+          <p className="text-xs md:text-base lg:text-lg text-muted-foreground">Manage your account information</p>
         </div>
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center justify-center md:justify-start w-full md:w-auto">
           <Button 
             variant="outline" 
             size="sm"

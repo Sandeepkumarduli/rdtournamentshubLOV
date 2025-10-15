@@ -58,7 +58,7 @@ const DashboardLayout = () => {
       {/* Sidebar */}
       <div className={cn(
         "fixed md:relative z-50 transition-transform duration-300",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <UserSidebar isOpen={true} />
       </div>
@@ -68,8 +68,8 @@ const DashboardLayout = () => {
         {/* Header */}
         <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
           <div className="px-3 md:px-6 py-3 md:py-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 md:gap-4 min-w-0">
+            <div className="flex items-center justify-between md:justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-4 min-w-0 md:flex-1">
                 <Button
                   variant="outline"
                   size="icon"
@@ -78,7 +78,7 @@ const DashboardLayout = () => {
                 >
                   {sidebarOpen ? <X className="h-4 w-4 md:h-5 md:w-5" /> : <Menu className="h-4 w-4 md:h-5 md:w-5" />}
                 </Button>
-                <div className="min-w-0">
+                <div className="min-w-0 text-center md:text-left flex-1 md:flex-none">
                   <h1 className="text-sm md:text-xl font-bold truncate">Welcome, {profile?.display_name || 'User'}!</h1>
                   <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Ready for some action?</p>
                 </div>

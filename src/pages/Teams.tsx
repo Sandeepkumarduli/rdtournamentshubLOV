@@ -304,11 +304,11 @@ const Teams = () => {
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">My Teams</h1>
-          <p className="text-sm md:text-base lg:text-lg text-muted-foreground">Create and manage your gaming teams (Max 2 teams)</p>
+        <div className="text-center md:text-left w-full md:w-auto">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold">My Teams</h1>
+          <p className="text-xs md:text-base lg:text-lg text-muted-foreground">Create and manage your gaming teams (Max 2 teams)</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 justify-center md:justify-start w-full md:w-auto">
           {/* Requests Button */}
           <Dialog open={isRequestsDialogOpen} onOpenChange={setIsRequestsDialogOpen}>
             <DialogTrigger asChild>

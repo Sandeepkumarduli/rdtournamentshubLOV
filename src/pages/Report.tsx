@@ -118,12 +118,12 @@ const Report = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold">Report an Issue</h1>
-          <p className="text-lg text-muted-foreground">Submit a report or contact our support team</p>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="text-center md:text-left w-full md:w-auto">
+          <h1 className="text-2xl md:text-4xl font-bold">Report an Issue</h1>
+          <p className="text-sm md:text-lg text-muted-foreground">Submit a report or contact our support team</p>
         </div>
-        <Button variant="outline" onClick={handleRefresh}>
+        <Button variant="outline" onClick={handleRefresh} className="w-full md:w-auto">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>

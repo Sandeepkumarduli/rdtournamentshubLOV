@@ -60,9 +60,9 @@ const Tournaments = () => {
     <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">My Tournaments</h1>
-          <p className="text-sm md:text-base lg:text-lg text-muted-foreground">View and manage your tournament registrations</p>
+        <div className="text-center md:text-left w-full md:w-auto">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold">My Tournaments</h1>
+          <p className="text-xs md:text-base lg:text-lg text-muted-foreground">View and manage your tournament registrations</p>
         </div>
         <Button variant="outline" size="sm" className="text-xs md:text-sm w-full sm:w-auto" onClick={handleRefresh} disabled={isRefreshing}>
           <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -73,7 +73,7 @@ const Tournaments = () => {
       {/* Registered Tournaments */}
       <div className="space-y-4 md:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-lg md:text-xl font-semibold">My Registered Tournaments</h2>
+          <h2 className="text-base md:text-xl font-semibold text-center md:text-left w-full md:w-auto">My Registered Tournaments</h2>
           
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2">
