@@ -120,9 +120,7 @@ const VerifyAccount = () => {
     try {
       // Use edge function to send OTP for verification (not for auth)
       const { data, error } = await supabase.functions.invoke('phone-login', {
-        phone: phone, 
-        type: 'send', 
-        userId: userId
+        body: { phone: phone, type: 'send', userId: userId }
       });
 
       if (error) throw error;
@@ -161,10 +159,7 @@ const VerifyAccount = () => {
     try {
       // Verify OTP via edge function
       const { data, error } = await supabase.functions.invoke('phone-login', {
-        phone: phone, 
-        otp: otp, 
-        type: 'verify', 
-        userId: userId
+        body: { phone: phone, otp: otp, type: 'verify', userId: userId }
       });
 
       if (error) throw error;
