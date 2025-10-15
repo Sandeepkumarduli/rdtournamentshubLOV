@@ -230,34 +230,36 @@ const Profile = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-4xl font-bold">Profile</h1>
-          <p className="text-lg text-muted-foreground">Manage your account information</p>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Profile</h1>
+          <p className="text-sm md:text-base lg:text-lg text-muted-foreground">Manage your account information</p>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           <Button 
             variant="outline" 
             size="sm"
             onClick={handleRefresh}
             disabled={isRefreshing}
+            className="text-xs md:text-sm"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           
           <ChangePasswordDialog>
-            <Button variant="outline" size="sm">
-              <Key className="h-4 w-4 mr-2" />
-              Change Password
+            <Button variant="outline" size="sm" className="text-xs md:text-sm">
+              <Key className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Change Password</span>
+              <span className="sm:hidden">Password</span>
             </Button>
           </ChangePasswordDialog>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <ProfileCard 
           formData={formData}
           isEditing={isEditing}

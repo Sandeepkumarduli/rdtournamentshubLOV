@@ -144,99 +144,100 @@ const DashboardHome = () => {
 
   const registeredCount = registrations.length;
   
-  return <div className="space-y-6">
+  return <div className="space-y-4 md:space-y-6">
       {/* Frozen Account Banner */}
       <FrozenAccountBanner />
       
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-4xl font-bold">Dashboard</h1>
-          <p className="text-lg text-muted-foreground">Welcome back! Ready for some action?</p>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Dashboard</h1>
+          <p className="text-sm md:text-base lg:text-lg text-muted-foreground">Welcome back! Ready for some action?</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" asChild>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" className="text-xs md:text-sm" asChild>
             <Link to="/tournament-guide">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Tournament Guide
+              <BookOpen className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Tournament Guide</span>
+              <span className="sm:hidden">Guide</span>
             </Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" size="sm" className="text-xs md:text-sm" asChild>
             <Link to="/rules">
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Rules
             </Link>
           </Button>
-          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
+          <Button variant="outline" size="sm" className="text-xs md:text-sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline ml-1 md:ml-2">Refresh</span>
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         <Card className="gaming-card">
-          <CardContent className="p-6">
+          <CardContent className="p-3 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Active Tournaments</p>
-                <p className="text-2xl font-bold text-slate-50">{tournaments.filter(t => t.status === 'active').length}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Active</p>
+                <p className="text-lg md:text-2xl font-bold text-slate-50">{tournaments.filter(t => t.status === 'active').length}</p>
               </div>
-              <Trophy className="h-8 w-8 text-primary" />
+              <Trophy className="h-6 w-6 md:h-8 md:w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
         
         <Card className="gaming-card">
-          <CardContent className="p-6">
+          <CardContent className="p-3 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">My Teams</p>
-                <p className="text-2xl font-bold text-slate-50">{userTeams.length}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">My Teams</p>
+                <p className="text-lg md:text-2xl font-bold text-slate-50">{userTeams.length}</p>
               </div>
-              <Users className="h-8 w-8 text-accent" />
+              <Users className="h-6 w-6 md:h-8 md:w-8 text-accent" />
             </div>
           </CardContent>
         </Card>
         
         <Card className="gaming-card">
-          <CardContent className="p-6">
+          <CardContent className="p-3 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Registered</p>
-                <p className="text-2xl font-bold text-success">{registeredCount}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Registered</p>
+                <p className="text-lg md:text-2xl font-bold text-success">{registeredCount}</p>
               </div>
-              <Calendar className="h-8 w-8 text-success" />
+              <Calendar className="h-6 w-6 md:h-8 md:w-8 text-success" />
             </div>
           </CardContent>
         </Card>
         
         <Card className="gaming-card">
-          <CardContent className="p-6">
+          <CardContent className="p-3 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Win Rate</p>
-                <p className="text-2xl font-bold text-warning">{userTeams.length > 0 ? (userTeams[0].wins || 0) : 0}%</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Win Rate</p>
+                <p className="text-lg md:text-2xl font-bold text-warning">{userTeams.length > 0 ? (userTeams[0].wins || 0) : 0}%</p>
               </div>
-              <Target className="h-8 w-8 text-warning" />
+              <Target className="h-6 w-6 md:h-8 md:w-8 text-warning" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Available Tournaments */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Available Tournaments</h2>
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h2 className="text-xl md:text-2xl font-bold">Available Tournaments</h2>
           
           {/* Filters */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-24 md:w-32 text-xs md:text-sm h-8 md:h-10">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card z-50">
                 <SelectItem value="All">All</SelectItem>
                 <SelectItem value="Live">Live</SelectItem>
                 <SelectItem value="Upcoming">Upcoming</SelectItem>
@@ -247,13 +248,14 @@ const DashboardHome = () => {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-64 justify-start text-left font-normal"
+                  size="sm"
+                  className="text-xs md:text-sm justify-start text-left font-normal w-auto max-w-[200px]"
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {dateTimeFilter ? format(dateTimeFilter, "PPP 'at' p") : "Select date & time"}
+                  <Calendar className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                  <span className="truncate">{dateTimeFilter ? format(dateTimeFilter, "PPP") : "Date"}</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-card border" align="start">
+              <PopoverContent className="w-auto p-0 bg-card border z-50" align="start">
                 <CalendarComponent
                   mode="single"
                   selected={dateTimeFilter}
@@ -264,9 +266,9 @@ const DashboardHome = () => {
               </PopoverContent>
             </Popover>
             
-            <Button variant="outline" onClick={clearFilters} size="sm">
-              <X className="h-4 w-4 mr-2" />
-              Clear All
+            <Button variant="outline" onClick={clearFilters} size="sm" className="text-xs md:text-sm">
+              <X className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+              <span className="hidden sm:inline">Clear</span>
             </Button>
           </div>
         </div>

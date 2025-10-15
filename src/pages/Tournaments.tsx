@@ -57,31 +57,31 @@ const Tournaments = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-4xl font-bold">My Tournaments</h1>
-          <p className="text-lg text-muted-foreground">View and manage your tournament registrations</p>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">My Tournaments</h1>
+          <p className="text-sm md:text-base lg:text-lg text-muted-foreground">View and manage your tournament registrations</p>
         </div>
-        <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
+        <Button variant="outline" size="sm" className="text-xs md:text-sm w-full sm:w-auto" onClick={handleRefresh} disabled={isRefreshing}>
+          <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="ml-1">Refresh</span>
         </Button>
       </div>
 
       {/* Registered Tournaments */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">My Registered Tournaments</h2>
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h2 className="text-lg md:text-xl font-semibold">My Registered Tournaments</h2>
           
           {/* Filters */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-24 md:w-32 text-xs md:text-sm h-8 md:h-10">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card z-50">
                 <SelectItem value="All">All</SelectItem>
                 <SelectItem value="Active">Active</SelectItem>
                 <SelectItem value="Upcoming">Upcoming</SelectItem>
@@ -92,7 +92,7 @@ const Tournaments = () => {
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="w-40"
+              className="w-32 md:w-40 text-xs md:text-sm h-8 md:h-10"
               placeholder="Date Filter"
             />
             
@@ -100,13 +100,13 @@ const Tournaments = () => {
               type="time"
               value={timeFilter}
               onChange={(e) => setTimeFilter(e.target.value)}
-              className="w-32"
+              className="w-28 md:w-32 text-xs md:text-sm h-8 md:h-10"
               placeholder="Time Filter"
             />
             
-            <Button variant="outline" onClick={clearFilters} size="sm">
-              <X className="h-4 w-4 mr-2" />
-              Clear All
+            <Button variant="outline" onClick={clearFilters} size="sm" className="text-xs md:text-sm">
+              <X className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+              <span className="hidden sm:inline">Clear</span>
             </Button>
           </div>
         </div>

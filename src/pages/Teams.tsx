@@ -298,45 +298,45 @@ const Teams = () => {
   const isFrozen = profile?.role === 'frozen';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Frozen Account Banner */}
       <FrozenAccountBanner />
       
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-4xl font-bold">My Teams</h1>
-          <p className="text-lg text-muted-foreground">Create and manage your gaming teams (Max 2 teams)</p>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">My Teams</h1>
+          <p className="text-sm md:text-base lg:text-lg text-muted-foreground">Create and manage your gaming teams (Max 2 teams)</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Requests Button */}
           <Dialog open={isRequestsDialogOpen} onOpenChange={setIsRequestsDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="relative">
-                <Bell className="h-4 w-4" />
-                Requests
+              <Button variant="outline" size="sm" className="relative text-xs md:text-sm">
+                <Bell className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                <span className="hidden sm:inline">Requests</span>
                 {incomingRequests.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center">
                     {incomingRequests.length}
                   </span>
                 )}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-[95vw] sm:max-w-md mx-4">
               <DialogHeader>
-                <DialogTitle>Team Join Requests</DialogTitle>
+                <DialogTitle className="text-base md:text-lg">Team Join Requests</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 {incomingRequests.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">
+                  <p className="text-muted-foreground text-center py-4 text-sm">
                     No pending requests
                   </p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-3 max-h-[60vh] overflow-y-auto">
                     {incomingRequests.map((request) => (
                       <div key={request.id} className="border rounded-lg p-3 space-y-2">
                         <div>
-                          <p className="font-medium text-sm">
+                          <p className="font-medium text-xs md:text-sm">
                             Team: {request.teams?.name || 'Unknown Team'}
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -347,7 +347,7 @@ const Teams = () => {
                           <Button 
                             size="sm" 
                             onClick={() => handleAcceptRequest(request.id)}
-                            className="flex-1"
+                            className="flex-1 text-xs"
                           >
                             Accept
                           </Button>
@@ -355,7 +355,7 @@ const Teams = () => {
                             size="sm" 
                             variant="outline"
                             onClick={() => handleDeclineRequest(request.id)}
-                            className="flex-1"
+                            className="flex-1 text-xs"
                           >
                             Decline
                           </Button>
@@ -368,15 +368,15 @@ const Teams = () => {
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
+          <Button variant="outline" size="sm" className="text-xs md:text-sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline ml-1">Refresh</span>
           </Button>
         </div>
       </div>
 
       {/* Create Team Section */}
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-2 md:gap-4">
         {canCreateTeam && !isFrozen && (
           <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
             <DialogTrigger asChild>

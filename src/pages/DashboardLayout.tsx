@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useWallet } from "@/hooks/useWallet";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const DashboardLayout = () => {
   const location = useLocation();
@@ -46,34 +47,48 @@ const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen flex w-full bg-background">
+      {/* Overlay for mobile sidebar */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
-      <UserSidebar isOpen={sidebarOpen} />
+      <div className={cn(
+        "fixed md:relative z-50 transition-transform duration-300",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}>
+        <UserSidebar isOpen={true} />
+      </div>
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col w-full min-w-0">
         {/* Header */}
-        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
+          <div className="px-3 md:px-6 py-3 md:py-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-4 min-w-0">
                 <Button
                   variant="outline"
                   size="icon"
-                  className="bg-muted hover:bg-muted/80"
+                  className="bg-muted hover:bg-muted/80 flex-shrink-0"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                 >
-                  {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                  {sidebarOpen ? <X className="h-4 w-4 md:h-5 md:w-5" /> : <Menu className="h-4 w-4 md:h-5 md:w-5" />}
                 </Button>
-                <div>
-                  <h1 className="text-xl font-bold">Welcome back, {profile?.display_name || 'User'}!</h1>
-                  <p className="text-muted-foreground">Ready for some action?</p>
+                <div className="min-w-0">
+                  <h1 className="text-sm md:text-xl font-bold truncate">Welcome, {profile?.display_name || 'User'}!</h1>
+                  <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Ready for some action?</p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
-                <div className="rdcoin-badge">
-                  <Wallet className="h-4 w-4" />
-                  {balance?.balance || 0} rdCoins
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="rdcoin-badge text-xs md:text-sm px-2 md:px-3">
+                  <Wallet className="h-3 w-3 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">{balance?.balance || 0} rdCoins</span>
+                  <span className="sm:hidden">{balance?.balance || 0}</span>
                 </div>
               </div>
             </div>
@@ -81,7 +96,7 @@ const DashboardLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-3 md:p-6 overflow-x-hidden">
           <PageTransition trigger={location.pathname}>
             <Outlet />
           </PageTransition>
