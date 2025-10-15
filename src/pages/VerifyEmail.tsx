@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GamepadIcon, Mail, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const VerifyEmail = () => {
   const [emailVerified, setEmailVerified] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -23,17 +25,21 @@ const VerifyEmail = () => {
 
     // Listen for auth state changes (when user clicks verification link)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔐 Auth state changed:', event, session?.user?.last_sign_in_at);
       if (event === 'SIGNED_IN' && session?.user?.last_sign_in_at) {
         setEmailVerified(true);
+        setIsLoading(false);
       }
     });
 
     // Check for email confirmation from redirect
     const checkEmailConfirmation = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('📧 Initial session check:', session?.user?.email, session?.user?.last_sign_in_at);
       if (session?.user?.last_sign_in_at) {
         setEmailVerified(true);
       }
+      setIsLoading(false);
     };
 
     checkEmailConfirmation();
@@ -41,6 +47,7 @@ const VerifyEmail = () => {
     // Poll for email verification every 2 seconds by checking last_sign_in_at
     const interval = setInterval(async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔄 Polling session:', session?.user?.email, session?.user?.last_sign_in_at);
       if (session?.user?.last_sign_in_at) {
         setEmailVerified(true);
         clearInterval(interval);
@@ -57,7 +64,9 @@ const VerifyEmail = () => {
     setIsChecking(true);
     try {
       // Refresh the session first
-      await supabase.auth.refreshSession();
+      const { data, error } = await supabase.auth.refreshSession();
+      console.log('🔄 Manual refresh result:', data.session?.user?.email, data.session?.user?.last_sign_in_at, error);
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user?.last_sign_in_at) {
@@ -92,7 +101,10 @@ const VerifyEmail = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
+      {isLoading ? (
+        <LoadingSpinner fullScreen size="lg" />
+      ) : (
+        <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <GamepadIcon className="h-8 w-8 text-primary" />
@@ -181,6 +193,7 @@ const VerifyEmail = () => {
           </Link>
         </div>
       </div>
+      )}
     </div>
   );
 };
