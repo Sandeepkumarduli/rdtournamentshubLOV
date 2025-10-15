@@ -1,19 +1,8 @@
--- Create or update a system admin user
--- First, let's update one of the existing users to be system admin
-UPDATE profiles 
-SET role = 'systemadmin' 
-WHERE email = 'sandeepkumarduli.ai@gmail.com';
+-- SECURITY NOTE: Demo system admin credentials have been removed for security reasons.
+-- Create system admin accounts through proper signup process with secure passwords.
 
--- If we want to create the demo user that the login page expects, we need to:
--- 1. First create the auth user (this would normally be done through Supabase Auth)
--- 2. Then create the profile
--- Since we can't directly insert into auth.users, let's update the login page to use an existing user
+-- This migration now only contains necessary database structure changes.
+-- System admin users should be created through the proper authentication flow.
 
--- Alternatively, let's update another user to be systemadmin
-INSERT INTO profiles (user_id, email, display_name, role) 
-VALUES (
-  gen_random_uuid(), 
-  'systemadmin@example.com', 
-  'System Administrator', 
-  'systemadmin'
-) ON CONFLICT (user_id) DO NOTHING;
+-- Note: If you need to update an existing user to system admin role, do it manually:
+-- UPDATE profiles SET role = 'systemadmin' WHERE email = 'your-secure-admin-email@domain.com';

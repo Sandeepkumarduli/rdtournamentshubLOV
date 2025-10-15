@@ -104,6 +104,15 @@ const Login = () => {
     }
     
     setIsLoading(false);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   const handleSendOTP = async (e: React.FormEvent) => {
