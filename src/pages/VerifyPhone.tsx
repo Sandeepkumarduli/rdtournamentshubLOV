@@ -136,7 +136,7 @@ const VerifyPhone = () => {
           <div className="flex items-center justify-center gap-2 mb-4">
             <GamepadIcon className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold text-primary">
-              RDTH - RD Tournaments Hub
+              RDTH
             </h1>
           </div>
           <p className="text-muted-foreground">Step 2: Verify your phone number</p>

@@ -56,7 +56,7 @@ const Index = () => {
             <div className="flex items-center gap-2">
               <GamepadIcon className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">
-                RDTH - RD Tournaments Hub
+                RDTH
               </span>
             </div>
             <div className="hidden md:flex items-center gap-6">
@@ -216,7 +216,7 @@ const Index = () => {
             </div>
           </div>
           <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 RDTH - RD Tournaments Hub. All rights reserved.</p>
+            <p>&copy; 2024 RDTH. All rights reserved.</p>
           </div>
         </div>
       </footer>

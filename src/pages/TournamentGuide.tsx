@@ -56,7 +56,7 @@ const TournamentGuide = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <GamepadIcon className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">RDTH - RD Tournaments Hub</span>
+              <span className="text-xl font-bold">RDTH</span>
             </div>
             <div className="flex items-center gap-3">
               {user ? (

@@ -24,7 +24,7 @@ const Contact = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <GamepadIcon className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">RDTH - RD Tournaments Hub</span>
+              <span className="text-xl font-bold">RDTH</span>
             </div>
             <div className="flex items-center gap-3">
               {user ? (
@@ -68,7 +68,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold mb-1">Address</h3>
                       <p className="text-muted-foreground">
-                        RD Tournaments Hub Pvt. Ltd.<br />
+                        RDTH Pvt. Ltd.<br />
                         Building No. 42, Cyber City<br />
                         Sector 24, Gurugram<br />
                         Haryana 122016, India
@@ -111,7 +111,7 @@ const Contact = () => {
               <CardContent className="p-6">
                 <h2 className="text-2xl font-bold mb-6">About RDTH Platform</h2>
                 <p className="text-muted-foreground mb-6">
-                  RDTH (RD Tournaments Hub) is India's premier BGMI tournament platform, 
+                  RDTH is India&apos;s premier BGMI tournament platform,
                   connecting thousands of gamers and providing a competitive environment 
                   for esports enthusiasts.
                 </p>
