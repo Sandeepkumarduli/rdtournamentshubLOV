@@ -12,8 +12,8 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "admin@example.com",
-    password: "password123",
+    email: "",
+    password: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -105,8 +105,7 @@ const AdminLogin = () => {
 
               <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
                 <p className="font-medium mb-1">Demo Credentials:</p>
-                <p>Email: admin@example.com</p>
-                <p>Password: password123</p>
+                <p>Please use your admin credentials to login</p>
               </div>
 
               <Button type="submit" variant="gaming" className="w-full" disabled={isLoading}>

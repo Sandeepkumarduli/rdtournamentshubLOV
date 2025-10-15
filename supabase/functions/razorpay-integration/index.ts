@@ -1,11 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/v135/@supabase/supabase-js@2.50.3'
 import { createHmac } from 'https://deno.land/std@0.168.0/node/crypto.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/cors.ts'
 
 interface CreateOrderRequest {
   amount: number
@@ -30,14 +26,17 @@ interface WebhookPayload {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin')
+  const corsHeaders = getCorsHeaders(origin)
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   const supabase = createClient(
-    'https://rwhxtiiyfsjdqftwpsis.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aHh0aWl5ZnNqZHFmdHdwc2lzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTUzMDA1MCwiZXhwIjoyMDY3MTA2MDUwfQ.A1AUzfhKVGWsQ5JtMaOPdD6LqwRJJEL0SWOLlJdUmfE'
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   )
 
   try {

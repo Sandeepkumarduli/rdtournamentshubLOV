@@ -9,19 +9,8 @@ ALTER TABLE public.reports DROP CONSTRAINT IF EXISTS reports_priority_check;
 ALTER TABLE public.reports ADD CONSTRAINT reports_priority_check 
 CHECK (priority IN ('low', 'medium', 'high', 'urgent'));
 
--- Create System Admin credentials
--- Insert the system admin user with specific credentials
-INSERT INTO public.profiles (user_id, display_name, email, role, organization) 
-VALUES (
-  'system-admin-1234',
-  'System Administrator', 
-  'systemadmin@example.com',
-  'systemadmin',
-  'System'
-) ON CONFLICT (user_id) DO UPDATE SET
-  role = 'systemadmin',
-  display_name = 'System Administrator',
-  email = 'systemadmin@example.com';
+-- Security Note: Demo credentials have been removed for security reasons.
+-- System admin accounts should be created through the proper signup process
+-- or using environment variables for development purposes only.
 
--- We need to also create the auth user, but we'll handle that through the signup process
--- For now, let's ensure the constraint is fixed
+-- The constraint fix below is kept as it's necessary for the application to function
