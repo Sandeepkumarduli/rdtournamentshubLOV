@@ -128,8 +128,8 @@ const WalletPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="text-center md:text-left w-full md:w-auto">
-          <h1 className="text-xl md:text-4xl font-bold">Wallet</h1>
-          <p className="text-xs md:text-lg text-muted-foreground">Manage your funds and transactions</p>
+          <h1 className="text-2xl md:text-4xl font-bold">Wallet</h1>
+          <p className="text-sm md:text-lg text-muted-foreground">Manage your funds and transactions</p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-3 justify-center md:justify-start">
           <Button variant="outline" asChild className="w-full md:w-auto">
