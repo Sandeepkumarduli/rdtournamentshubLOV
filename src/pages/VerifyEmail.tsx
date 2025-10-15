@@ -39,10 +39,12 @@ const VerifyEmail = () => {
             refresh_token: refreshToken,
           });
           
-          console.log('🔐 setSession result:', data?.session?.user?.email, 'email_confirmed_at:', data?.session?.user?.email_confirmed_at, error);
+          console.log('🔐 setSession result:', data?.session?.user?.email, 'confirmed_at:', data?.session?.user?.confirmed_at, error);
           
           // Check if email is actually confirmed
-          if (data?.session?.user?.email_confirmed_at) {
+          const isConfirmed = !!data?.session?.user?.confirmed_at;
+          
+          if (isConfirmed) {
             console.log('✅ Email confirmed from verification link!');
             setEmailVerified(true);
             setIsLoading(false);
@@ -50,7 +52,7 @@ const VerifyEmail = () => {
             window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
             return true;
           } else {
-            console.log('⚠️ Session established but email not confirmed yet');
+            console.log('⚠️ Session established but email not confirmed yet - confirmed_at is null');
             setIsLoading(false);
           }
           
@@ -73,15 +75,13 @@ const VerifyEmail = () => {
     });
 
     function setupVerificationCheck() {
-      // Listen for auth state changes (when user clicks verification link)
+      // Listen for auth state changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('🔐 Auth state changed:', event);
+        console.log('🔐 Auth state changed:', event, 'confirmed_at:', session?.user?.confirmed_at);
         
-        const isConfirmed = session?.user?.confirmed_at || session?.user?.email_confirmed_at;
-        const hasSignedInAfterConfirmation = session?.user?.last_sign_in_at && 
-                                              new Date(session.user.last_sign_in_at) > new Date(session.user.created_at || 0);
+        const isConfirmed = !!session?.user?.confirmed_at;
         
-        if (isConfirmed && hasSignedInAfterConfirmation) {
+        if (isConfirmed) {
           console.log('✅ Email verified via auth state change!');
           setEmailVerified(true);
           setIsLoading(false);
@@ -92,62 +92,49 @@ const VerifyEmail = () => {
       const checkEmailConfirmation = async () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        // Log the full user object to debug
-        console.log('📧 Initial session check - Full user object:', JSON.stringify(session?.user, null, 2));
-        console.log('📧 Email:', session?.user?.email);
-        console.log('📧 email_confirmed_at:', session?.user?.email_confirmed_at);
-        console.log('📧 confirmed_at:', session?.user?.confirmed_at);
-        console.log('📧 last_sign_in_at:', session?.user?.last_sign_in_at);
-        console.log('📧 Error:', error);
+        console.log('📧 Initial session check:', {
+          email: session?.user?.email,
+          confirmed_at: session?.user?.confirmed_at,
+          email_confirmed_at: session?.user?.email_confirmed_at,
+          last_sign_in_at: session?.user?.last_sign_in_at,
+          created_at: session?.user?.created_at
+        });
         
         if (!session) {
-          console.log('⚠️ No session found, waiting for email verification');
+          console.log('⚠️ No session found');
           setIsLoading(false);
           return;
         }
         
-        // Check both email_confirmed_at and confirmed_at
-        // Only verified if BOTH conditions are true:
-        // 1. confirmed_at exists (email is confirmed in DB)
-        // 2. last_sign_in_at exists (user has signed in after confirmation)
-        const isConfirmed = session?.user?.confirmed_at || session?.user?.email_confirmed_at;
-        const hasSignedInAfterConfirmation = session?.user?.last_sign_in_at && 
-                                              new Date(session.user.last_sign_in_at) > new Date(session.user.created_at || 0);
+        // ONLY check confirmed_at - this is the definitive field
+        const isConfirmed = !!session?.user?.confirmed_at;
         
-        console.log('🔍 isConfirmed:', isConfirmed);
-        console.log('🔍 hasSignedInAfterConfirmation:', hasSignedInAfterConfirmation);
-        console.log('🔍 created_at:', session?.user?.created_at);
+        console.log('🔍 Is email confirmed?', isConfirmed);
         
-        if (isConfirmed && hasSignedInAfterConfirmation) {
+        if (isConfirmed) {
           console.log('✅ Email is verified!');
           setEmailVerified(true);
         } else {
-          console.log('⏳ Email not confirmed yet, waiting...');
+          console.log('⏳ Email not confirmed yet - confirmed_at is null');
         }
         setIsLoading(false);
       };
 
       checkEmailConfirmation();
 
-      // Poll for email verification every 3 seconds by checking session
+      // Poll for email verification every 3 seconds
       const interval = setInterval(async () => {
         const { data: { session } } = await supabase.auth.getSession();
         
-        const isConfirmed = session?.user?.confirmed_at || session?.user?.email_confirmed_at;
-        const hasSignedInAfterConfirmation = session?.user?.last_sign_in_at && 
-                                              new Date(session.user.last_sign_in_at) > new Date(session.user.created_at || 0);
+        const isConfirmed = !!session?.user?.confirmed_at;
         
         console.log('🔄 Polling:', {
           email: session?.user?.email,
           confirmed_at: session?.user?.confirmed_at,
-          email_confirmed_at: session?.user?.email_confirmed_at,
-          last_sign_in_at: session?.user?.last_sign_in_at,
-          created_at: session?.user?.created_at,
-          isConfirmed,
-          hasSignedInAfterConfirmation
+          isConfirmed
         });
         
-        if (isConfirmed && hasSignedInAfterConfirmation) {
+        if (isConfirmed) {
           console.log('✅ Verified via polling!');
           setEmailVerified(true);
           clearInterval(interval);
@@ -167,26 +154,21 @@ const VerifyEmail = () => {
       // Refresh the session to get latest data
       await supabase.auth.refreshSession();
       
-      // Get the current session to check email confirmation
+      // Get the current session
       const { data: { session }, error } = await supabase.auth.getSession();
       
       console.log('🔄 Manual check:', {
         email: session?.user?.email,
-        confirmed_at: session?.user?.confirmed_at,
-        email_confirmed_at: session?.user?.email_confirmed_at,
-        last_sign_in_at: session?.user?.last_sign_in_at,
-        created_at: session?.user?.created_at
+        confirmed_at: session?.user?.confirmed_at
       });
       
       if (error) {
         console.error('Session error:', error);
       }
       
-      const isConfirmed = session?.user?.confirmed_at || session?.user?.email_confirmed_at;
-      const hasSignedInAfterConfirmation = session?.user?.last_sign_in_at && 
-                                            new Date(session.user.last_sign_in_at) > new Date(session.user.created_at || 0);
+      const isConfirmed = !!session?.user?.confirmed_at;
       
-      if (isConfirmed && hasSignedInAfterConfirmation) {
+      if (isConfirmed) {
         setEmailVerified(true);
         toast({
           title: "Email Verified!",
