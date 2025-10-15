@@ -1,1 +1,10 @@
 project_id = "rwhxtiiyfsjdqftwpsis"
+
+[functions.phone-login]
+verify_jwt = false
+
+[functions.check-email-verification]
+verify_jwt = false
+
+[functions.razorpay-integration]
+verify_jwt = false
