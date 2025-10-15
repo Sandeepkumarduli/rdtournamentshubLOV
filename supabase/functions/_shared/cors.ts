@@ -18,10 +18,11 @@ export const corsHeaders = {
 }
 
 export const getCorsHeaders = (origin?: string) => {
-  const isAllowedOrigin = !origin || allowedOrigins.includes(origin)
+  // Allow all origins for now to debug the issue, then restrict later
+  const isAllowedOrigin = true // Temporarily allow all origins
   
   return {
     ...corsHeaders,
-    'Access-Control-Allow-Origin': isAllowedOrigin ? origin : allowedOrigins[0],
+    'Access-Control-Allow-Origin': origin || '*',
   }
 }

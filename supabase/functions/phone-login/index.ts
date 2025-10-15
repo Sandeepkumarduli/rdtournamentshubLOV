@@ -18,17 +18,38 @@ serve(async (req) => {
   }
 
   try {
+    // Check environment variables first
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing environment variables:', { 
+        supabaseUrl: !!supabaseUrl, 
+        supabaseAnonKey: !!supabaseAnonKey 
+      });
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
     const { phone, otp, type, userId }: PhoneLoginRequest = await req.json();
 
     if (!phone) {
-      throw new Error("Phone number is required");
+      return new Response(
+        JSON.stringify({ error: "Phone number is required" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
     }
 
     // Create Supabase client
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     // Format phone number to E.164 format
     let formattedPhone = phone.trim();
@@ -40,6 +61,8 @@ serve(async (req) => {
 
     // Send OTP using Supabase Auth
     if (type === 'send') {
+      console.log(`Attempting to send OTP to: ${formattedPhone}`);
+      
       // For verification during signup, we still use signInWithOtp but allow user creation
       const { data, error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
@@ -50,9 +73,19 @@ serve(async (req) => {
 
       if (error) {
         console.error('Error sending OTP:', error);
-        throw error;
+        return new Response(
+          JSON.stringify({ 
+            error: error.message || "Failed to send OTP",
+            details: error
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
       }
 
+      console.log('OTP sent successfully');
       return new Response(
         JSON.stringify({ 
           success: true,

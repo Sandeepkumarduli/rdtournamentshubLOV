@@ -117,7 +117,8 @@ const Login = () => {
       // Send OTP to user's phone
       try {
         const { data: otpData, error: otpError } = await supabase.functions.invoke('phone-login', {
-          body: { phone: profile.phone, type: 'send' }
+          phone: profile.phone, 
+          type: 'send'
         });
 
         if (otpError) throw otpError;
@@ -189,7 +190,8 @@ const Login = () => {
 
     try {
       const { data, error: otpError } = await supabase.functions.invoke('phone-login', {
-        body: { phone: formattedPhone, type: 'send' }
+        phone: formattedPhone, 
+        type: 'send'
       });
 
       if (otpError) throw otpError;
@@ -230,7 +232,9 @@ const Login = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone: formattedPhone, otp, type: 'verify' }
+        phone: formattedPhone, 
+        otp, 
+        type: 'verify'
       });
 
       if (error || data.error) {
@@ -283,7 +287,8 @@ const Login = () => {
       }
 
       supabase.functions.invoke('phone-login', {
-        body: { phone: formattedPhone, type: 'send' }
+        phone: formattedPhone, 
+        type: 'send'
       }).then(({ data, error }) => {
         if (!error && !data?.error) {
           setCountdown(60);
@@ -310,7 +315,9 @@ const Login = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone: userPhoneNumber, otp, type: 'verify' }
+        phone: userPhoneNumber, 
+        otp, 
+        type: 'verify'
       });
 
       if (error || data.error) {
@@ -356,7 +363,8 @@ const Login = () => {
   const handleResendPasswordOTP = () => {
     if (userPhoneNumber) {
       supabase.functions.invoke('phone-login', {
-        body: { phone: userPhoneNumber, type: 'send' }
+        phone: userPhoneNumber, 
+        type: 'send'
       }).then(({ data, error }) => {
         if (!error && !data?.error) {
           setCountdown(60);
