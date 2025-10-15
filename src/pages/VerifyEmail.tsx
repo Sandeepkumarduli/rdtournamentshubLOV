@@ -23,41 +23,85 @@ const VerifyEmail = () => {
       return;
     }
 
-    // Listen for auth state changes (when user clicks verification link)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔐 Auth state changed:', event, session?.user?.last_sign_in_at);
-      if (event === 'SIGNED_IN' && session?.user?.last_sign_in_at) {
-        setEmailVerified(true);
-        setIsLoading(false);
+    // Handle session exchange from email verification redirect
+    const handleEmailVerificationRedirect = async () => {
+      // Check if we have hash params (Supabase adds tokens in URL hash after verification)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      
+      if (accessToken) {
+        console.log('🔑 Found access token in URL, exchanging for session...');
+        try {
+          // Set the session from the URL tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || '',
+          });
+          
+          if (data.session) {
+            console.log('✅ Session established from email verification');
+            setEmailVerified(true);
+            setIsLoading(false);
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return true;
+          }
+          
+          if (error) {
+            console.error('❌ Session exchange error:', error);
+          }
+        } catch (err) {
+          console.error('❌ Session exchange failed:', err);
+        }
       }
+      return false;
+    };
+
+    // Try to exchange session from URL first
+    handleEmailVerificationRedirect().then((wasRedirect) => {
+      if (wasRedirect) return; // Session was set from redirect, no need to poll
+      
+      // If not from redirect, set up polling and listeners
+      setupVerificationCheck();
     });
 
-    // Check for email confirmation from redirect
-    const checkEmailConfirmation = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('📧 Initial session check:', session?.user?.email, session?.user?.last_sign_in_at);
-      if (session?.user?.last_sign_in_at) {
-        setEmailVerified(true);
-      }
-      setIsLoading(false);
-    };
+    function setupVerificationCheck() {
+      // Listen for auth state changes (when user clicks verification link)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('🔐 Auth state changed:', event, session?.user?.last_sign_in_at);
+        if (event === 'SIGNED_IN' && session?.user?.last_sign_in_at) {
+          setEmailVerified(true);
+          setIsLoading(false);
+        }
+      });
 
-    checkEmailConfirmation();
+      // Check for email confirmation from redirect
+      const checkEmailConfirmation = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('📧 Initial session check:', session?.user?.email, session?.user?.last_sign_in_at);
+        if (session?.user?.last_sign_in_at) {
+          setEmailVerified(true);
+        }
+        setIsLoading(false);
+      };
 
-    // Poll for email verification every 2 seconds by checking last_sign_in_at
-    const interval = setInterval(async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('🔄 Polling session:', session?.user?.email, session?.user?.last_sign_in_at);
-      if (session?.user?.last_sign_in_at) {
-        setEmailVerified(true);
+      checkEmailConfirmation();
+
+      // Poll for email verification every 2 seconds by checking last_sign_in_at
+      const interval = setInterval(async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔄 Polling session:', session?.user?.email, session?.user?.last_sign_in_at);
+        if (session?.user?.last_sign_in_at) {
+          setEmailVerified(true);
+          clearInterval(interval);
+        }
+      }, 2000);
+      
+      return () => {
         clearInterval(interval);
-      }
-    }, 2000);
-    
-    return () => {
-      clearInterval(interval);
-      subscription.unsubscribe();
-    };
+        subscription.unsubscribe();
+      };
+    }
   }, [email, phone, userId, navigate]);
 
   const handleManualRefresh = async () => {
