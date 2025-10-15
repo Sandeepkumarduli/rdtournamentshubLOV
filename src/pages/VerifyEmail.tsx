@@ -86,12 +86,21 @@ const VerifyEmail = () => {
       // Check for email confirmation from redirect
       const checkEmailConfirmation = async () => {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('📧 Initial session check:', session?.user?.email, 'email_confirmed_at:', session?.user?.email_confirmed_at, 'Error:', error);
+        
+        // Log the full user object to debug
+        console.log('📧 Initial session check - Full user object:', JSON.stringify(session?.user, null, 2));
+        console.log('📧 Email:', session?.user?.email);
+        console.log('📧 email_confirmed_at:', session?.user?.email_confirmed_at);
+        console.log('📧 confirmed_at:', session?.user?.confirmed_at);
+        console.log('📧 Error:', error);
         
         if (!session) {
           console.log('⚠️ No session found, waiting for email verification');
+          setIsLoading(false);
+          return;
         }
         
+        // Only set as verified if email_confirmed_at is present
         if (session?.user?.email_confirmed_at) {
           console.log('✅ Email is verified!');
           setEmailVerified(true);
