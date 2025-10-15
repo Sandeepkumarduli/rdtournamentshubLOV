@@ -134,22 +134,38 @@ const VerifyEmail = () => {
 
       checkEmailConfirmation();
 
-      // Poll for email verification every 3 seconds
+      // Poll for email verification every 3 seconds using edge function
       const interval = setInterval(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        const isVerified = !!session?.user?.last_sign_in_at;
-        
-        console.log('🔄 Polling:', {
-          email: session?.user?.email,
-          last_sign_in_at: session?.user?.last_sign_in_at,
-          isVerified
-        });
-        
-        if (isVerified) {
-          console.log('✅ Verified via polling!');
-          setEmailVerified(true);
-          clearInterval(interval);
+        try {
+          const { data, error } = await supabase.functions.invoke('check-email-verification', {
+            body: { userId }
+          });
+
+          if (error) {
+            console.error('Error checking verification:', error);
+            return;
+          }
+
+          console.log('🔄 Polling (from DB):', {
+            email: data.email,
+            last_sign_in_at: data.last_sign_in_at,
+            isVerified: data.isVerified
+          });
+
+          if (data.isVerified) {
+            console.log('✅ Verified via database check!');
+            setEmailVerified(true);
+            clearInterval(interval);
+            
+            // Establish session after verification
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+              // Try to refresh/create session
+              await supabase.auth.refreshSession();
+            }
+          }
+        } catch (err) {
+          console.error('Polling error:', err);
         }
       }, 3000);
       
@@ -163,29 +179,31 @@ const VerifyEmail = () => {
   const handleManualRefresh = async () => {
     setIsChecking(true);
     try {
-      // Refresh the session to get latest data
-      await supabase.auth.refreshSession();
+      // Check verification status from database
+      const { data, error } = await supabase.functions.invoke('check-email-verification', {
+        body: { userId }
+      });
       
-      // Get the current session
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      console.log('🔄 Manual check:', {
-        email: session?.user?.email,
-        last_sign_in_at: session?.user?.last_sign_in_at
+      console.log('🔄 Manual check (from DB):', {
+        email: data?.email,
+        last_sign_in_at: data?.last_sign_in_at,
+        isVerified: data?.isVerified
       });
       
       if (error) {
-        console.error('Session error:', error);
+        console.error('Verification check error:', error);
+        throw error;
       }
       
-      const isVerified = !!session?.user?.last_sign_in_at;
-      
-      if (isVerified) {
+      if (data.isVerified) {
         setEmailVerified(true);
         toast({
           title: "Email Verified!",
           description: "Your email has been confirmed successfully.",
         });
+        
+        // Try to establish session
+        await supabase.auth.refreshSession();
       } else {
         toast({
           title: "Not Verified Yet",
