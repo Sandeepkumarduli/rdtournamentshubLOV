@@ -21,8 +21,40 @@ const WalletPage = () => {
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const { toast } = useToast();
   const { profile } = useProfile();
-  const { balance, transactions, loading, addTransaction, refetch } = useWallet();
+  const { balance, transactions, loading, addTransaction, verifyStripePayment, refetch } = useWallet();
 
+  // Handle Stripe payment verification on return
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      handleStripeReturn(sessionId);
+    }
+  }, [searchParams]);
+
+  const handleStripeReturn = async (sessionId: string) => {
+    try {
+      const { data, error } = await verifyStripePayment(sessionId);
+      
+      if (error) {
+        throw new Error(error);
+      }
+
+      toast({
+        title: "Payment Successful",
+        description: `$${data.amount} (${data.amount} rdCoins) added to your wallet`,
+      });
+
+      // Clear the session_id from URL
+      navigate('/dashboard/wallet', { replace: true });
+    } catch (error) {
+      console.error('Payment verification failed:', error);
+      toast({
+        title: "Payment Verification Failed",
+        description: error.message || "Please contact support if amount was debited",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner fullScreen />;

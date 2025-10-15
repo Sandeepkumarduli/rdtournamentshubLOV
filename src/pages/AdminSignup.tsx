@@ -93,7 +93,7 @@ const AdminSignup = () => {
             <CardTitle className="text-center text-xl">Admin Registration</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignup} className="space-y-4" autoComplete="off">
+            <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="displayName">Full Name</Label>
                 <Input
@@ -102,7 +102,6 @@ const AdminSignup = () => {
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                   placeholder="Enter your full name"
-                  autoComplete="off"
                   required
                 />
               </div>
@@ -115,7 +114,6 @@ const AdminSignup = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="Enter your email"
-                  autoComplete="off"
                   required
                 />
               </div>
@@ -129,7 +127,6 @@ const AdminSignup = () => {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Enter your password"
-                    autoComplete="off"
                     required
                   />
                   <Button
@@ -152,7 +149,6 @@ const AdminSignup = () => {
                   value={formData.organization}
                   onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
                   placeholder="Enter organization name"
-                  autoComplete="off"
                   required
                 />
               </div>

@@ -90,43 +90,42 @@ const Signup = () => {
         return;
       }
 
-      // Don't create account yet - just validate and proceed to verification
-      // Account will be created after email and phone verification
-      
-      // Validate phone number format
-      const phoneRegex = /^(\+91|91)?[6-9]\d{9}$/;
-      if (!phoneRegex.test(formData.phone.replace(/\s+/g, ''))) {
+      // Create account with email, password, and phone in metadata
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            display_name: formData.username,
+            bgmi_id: formData.bgmiId,
+            phone: formattedPhone,
+          },
+          emailRedirectTo: `${window.location.origin}/verify-email`,
+        }
+      });
+
+      if (error) {
         toast({
-          title: "Invalid Phone Number",
-          description: "Please enter a valid Indian phone number",
+          title: "Signup Failed",
+          description: error.message,
           variant: "destructive",
         });
         return;
       }
 
-      // Format phone number (reuse existing formattedPhone variable)
-      formattedPhone = formattedPhone.replace(/\s+/g, '');
-      if (!formattedPhone.startsWith('+91')) {
-        if (formattedPhone.startsWith('91')) {
-          formattedPhone = '+' + formattedPhone;
-        } else if (formattedPhone.startsWith('0')) {
-          formattedPhone = '+91' + formattedPhone.substring(1);
-        } else {
-          formattedPhone = '+91' + formattedPhone;
-        }
+      if (data.user) {
+        // Session is automatically created by Supabase even if email is not confirmed
+        // Profile is automatically created by database trigger
+        // Redirect to email verification page first
+        navigate('/verify-email', { 
+          state: { 
+            email: formData.email, 
+            phone: formattedPhone,
+            userId: data.user.id,
+            password: formData.password
+          } 
+        });
       }
-
-      // Store signup data and proceed to email verification
-      // Account will be created after both email and phone verification
-      navigate('/verify-email', { 
-        state: { 
-          email: formData.email, 
-          phone: formattedPhone,
-          password: formData.password,
-          username: formData.username,
-          bgmiId: formData.bgmiId
-        } 
-      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -171,7 +170,6 @@ const Signup = () => {
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     placeholder="Choose a username"
                     className="pl-10"
-                    autoComplete="off"
                     required
                   />
                 </div>
@@ -188,7 +186,6 @@ const Signup = () => {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="your.email@example.com"
                     className="pl-10"
-                    autoComplete="off"
                     required
                   />
                 </div>
@@ -205,7 +202,6 @@ const Signup = () => {
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Create a password"
                     className="pl-10 pr-10"
-                    autoComplete="off"
                     required
                   />
                   <Button
@@ -228,7 +224,6 @@ const Signup = () => {
                   value={formData.bgmiId || ''}
                   onChange={(e) => setFormData({ ...formData, bgmiId: e.target.value })}
                   placeholder="Enter your BGMI ID"
-                  autoComplete="off"
                   required
                 />
               </div>
@@ -263,7 +258,6 @@ const Signup = () => {
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     placeholder="Confirm your password"
                     className="pl-10 pr-10"
-                    autoComplete="off"
                     required
                   />
                   <Button

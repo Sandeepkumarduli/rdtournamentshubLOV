@@ -13,7 +13,7 @@ export const useSupabaseOTP = () => {
     }
 
     try {
-      console.log('📞 Attempting to send OTP...');
+      console.log('📞 Attempting to send OTP to:', phoneNumber);
       setIsLoading(true);
       
       // Format phone number to international format
@@ -22,6 +22,7 @@ export const useSupabaseOTP = () => {
         // Assuming Indian numbers, add +91
         formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
       }
+      console.log('📞 Formatted phone number:', formattedPhone);
       
       const { error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
@@ -33,7 +34,7 @@ export const useSupabaseOTP = () => {
       
       toast({
         title: "OTP Sent",
-        description: `Verification code sent to your phone`,
+        description: `Verification code sent to ${formattedPhone}`,
       });
       
       return true;

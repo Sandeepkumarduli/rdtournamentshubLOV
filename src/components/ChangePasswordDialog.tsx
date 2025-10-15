@@ -131,7 +131,6 @@ const ChangePasswordDialog = ({ children }: ChangePasswordDialogProps) => {
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Enter current password"
-              autoComplete="off"
             />
           </div>
           <div>
@@ -142,7 +141,6 @@ const ChangePasswordDialog = ({ children }: ChangePasswordDialogProps) => {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Enter new password"
-              autoComplete="off"
             />
           </div>
           <div>
@@ -153,7 +151,6 @@ const ChangePasswordDialog = ({ children }: ChangePasswordDialogProps) => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm new password"
-              autoComplete="off"
             />
           </div>
           <div className="flex gap-2">

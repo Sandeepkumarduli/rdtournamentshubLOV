@@ -68,7 +68,7 @@ const ForgotPassword = () => {
           </CardHeader>
           <CardContent>
             {!emailSent ? (
-              <form onSubmit={handleResetPassword} className="space-y-4" autoComplete="off">
+              <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
                   <Input
@@ -77,7 +77,6 @@ const ForgotPassword = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your registered email"
-                    autoComplete="off"
                     required
                   />
                 </div>
