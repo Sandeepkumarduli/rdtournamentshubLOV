@@ -22,40 +22,46 @@ const VerifyAccount = () => {
 
   useEffect(() => {
     if (!email || !phone || !userId) {
-      navigate('/signup');
+      // Check if user came from email confirmation link
+      const checkSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // User confirmed email, redirect to login
+          toast({
+            title: "Email Verified!",
+            description: "Your email has been confirmed. Please login to continue.",
+          });
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          navigate('/signup');
+        }
+      };
+      checkSession();
       return;
     }
 
-    // Send initial OTP
-    sendPhoneOTP();
+    // Check for email confirmation from redirect
+    const checkEmailConfirmation = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email_confirmed_at) {
+        setEmailVerified(true);
+      }
+    };
 
-    // Set up real-time email verification listener
-    const channel = supabase
-      .channel('email-verification')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'auth',
-          table: 'users',
-          filter: `id=eq.${userId}`
-        },
-        (payload) => {
-          if (payload.new.email_confirmed_at) {
-            setEmailVerified(true);
-          }
-        }
-      )
-      .subscribe();
+    checkEmailConfirmation();
 
-    // Also poll for email verification
-    const interval = setInterval(checkEmailVerification, 3000);
+    // Poll for email verification every 3 seconds
+    const interval = setInterval(async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email_confirmed_at) {
+        setEmailVerified(true);
+      }
+    }, 3000);
     
     return () => {
-      supabase.removeChannel(channel);
       clearInterval(interval);
     };
-  }, [email, phone, userId]);
+  }, [email, phone, userId, navigate, toast]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -66,8 +72,8 @@ const VerifyAccount = () => {
 
   const checkEmailVerification = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email_confirmed_at) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email_confirmed_at) {
         setEmailVerified(true);
       }
     } catch (error) {
@@ -75,15 +81,23 @@ const VerifyAccount = () => {
     }
   };
 
+  const handleManualRefresh = () => {
+    toast({
+      title: "Checking Status",
+      description: "Refreshing email verification status...",
+    });
+    checkEmailVerification();
+  };
+
   const sendPhoneOTP = async () => {
     setIsSendingOTP(true);
     try {
-      // Update the user's phone number first
-      const { error: updateError } = await supabase.auth.updateUser({
-        phone: phone
+      // Call edge function to send OTP via SMS provider
+      const { data, error } = await supabase.functions.invoke('phone-login', {
+        body: { phone: phone, type: 'signup' }
       });
 
-      if (updateError) throw updateError;
+      if (error) throw error;
 
       setCountdown(60);
       toast({
@@ -91,9 +105,10 @@ const VerifyAccount = () => {
         description: `Verification code sent to ${phone}`,
       });
     } catch (error: any) {
+      console.error('OTP Error:', error);
       toast({
-        title: "Failed to Send OTP",
-        description: error.message || "Please try again later.",
+        title: "Phone Verification Unavailable",
+        description: "Please verify your email first. Phone verification will be enabled after email confirmation.",
         variant: "destructive",
       });
     } finally {
@@ -113,10 +128,9 @@ const VerifyAccount = () => {
 
     setIsVerifying(true);
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        phone: phone,
-        token: otp,
-        type: 'phone_change',
+      // Call edge function to verify OTP
+      const { data, error } = await supabase.functions.invoke('phone-login', {
+        body: { phone: phone, otp: otp, type: 'verify' }
       });
 
       if (error) throw error;
@@ -137,6 +151,22 @@ const VerifyAccount = () => {
     }
   };
 
+  const handleSkipPhoneVerification = () => {
+    if (!emailVerified) {
+      toast({
+        title: "Email Not Verified",
+        description: "Please verify your email first before skipping phone verification",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPhoneVerified(true);
+    toast({
+      title: "Phone Verification Skipped",
+      description: "You can verify your phone number later from your profile",
+    });
+  };
+
   useEffect(() => {
     if (emailVerified && phoneVerified) {
       toast({
@@ -145,7 +175,7 @@ const VerifyAccount = () => {
       });
       setTimeout(() => navigate('/login'), 2000);
     }
-  }, [emailVerified, phoneVerified]);
+  }, [emailVerified, phoneVerified, navigate, toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -186,9 +216,19 @@ const VerifyAccount = () => {
                 )}
               </div>
               {!emailVerified && (
-                <p className="text-xs text-muted-foreground">
-                  Please check your email and click the confirmation link
-                </p>
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    Please check your email and click the confirmation link
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleManualRefresh}
+                    className="w-full"
+                  >
+                    Check Email Status
+                  </Button>
+                </>
               )}
             </CardContent>
           </Card>
@@ -248,23 +288,32 @@ const VerifyAccount = () => {
                     )}
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    onClick={sendPhoneOTP}
-                    className="w-full"
-                    disabled={countdown > 0 || isSendingOTP}
-                  >
-                    {isSendingOTP ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sending...
-                      </>
-                    ) : countdown > 0 ? (
-                      `Resend OTP in ${countdown}s`
-                    ) : (
-                      "Resend OTP"
-                    )}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={sendPhoneOTP}
+                      className="flex-1"
+                      disabled={countdown > 0 || isSendingOTP}
+                    >
+                      {isSendingOTP ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : countdown > 0 ? (
+                        `Resend in ${countdown}s`
+                      ) : (
+                        "Resend OTP"
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={handleSkipPhoneVerification}
+                      className="flex-1"
+                    >
+                      Skip for Now
+                    </Button>
+                  </div>
                 </>
               )}
               

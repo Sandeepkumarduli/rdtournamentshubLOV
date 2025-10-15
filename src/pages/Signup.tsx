@@ -61,7 +61,7 @@ const Signup = () => {
         .from('profiles')
         .select('email')
         .eq('email', formData.email)
-        .single();
+        .maybeSingle();
 
       if (existingEmailProfile) {
         toast({
@@ -69,6 +69,7 @@ const Signup = () => {
           description: "This email is already registered. Please use a different email or login.",
           variant: "destructive",
         });
+        setIsCreatingAccount(false);
         return;
       }
 
@@ -77,7 +78,7 @@ const Signup = () => {
         .from('profiles')
         .select('phone')
         .eq('phone', formattedPhone)
-        .single();
+        .maybeSingle();
 
       if (existingPhoneProfile) {
         toast({
@@ -85,6 +86,7 @@ const Signup = () => {
           description: "This phone number is already registered. Please use a different number or login.",
           variant: "destructive",
         });
+        setIsCreatingAccount(false);
         return;
       }
 
