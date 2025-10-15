@@ -21,10 +21,17 @@ const VerifyEmail = () => {
       return;
     }
 
+    // Listen for auth state changes (when user clicks verification link)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+        setEmailVerified(true);
+      }
+    });
+
     // Check for email confirmation from redirect
     const checkEmailConfirmation = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email_confirmed_at) {
+      if (session?.user?.email_confirmed_at || session?.user?.last_sign_in_at) {
         setEmailVerified(true);
       }
     };
@@ -34,7 +41,7 @@ const VerifyEmail = () => {
     // Poll for email verification every 3 seconds
     const interval = setInterval(async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email_confirmed_at) {
+      if (session?.user?.email_confirmed_at || session?.user?.last_sign_in_at) {
         setEmailVerified(true);
         clearInterval(interval);
       }
@@ -42,14 +49,18 @@ const VerifyEmail = () => {
     
     return () => {
       clearInterval(interval);
+      subscription.unsubscribe();
     };
   }, [email, phone, userId, navigate]);
 
   const handleManualRefresh = async () => {
     setIsChecking(true);
     try {
+      // Refresh the session first
+      await supabase.auth.refreshSession();
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email_confirmed_at) {
+      
+      if (session?.user?.email_confirmed_at || session?.user?.last_sign_in_at) {
         setEmailVerified(true);
         toast({
           title: "Email Verified!",
