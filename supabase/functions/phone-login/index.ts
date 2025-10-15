@@ -7,13 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 };
 
-interface PhoneLoginRequest {
-  phone: string;
-  otp?: string;
-  type?: 'send' | 'verify';
-  userId?: string;
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -21,10 +14,16 @@ serve(async (req) => {
 
   try {
     const requestBody = await req.json();
-    const { phone, otp, type, userId }: PhoneLoginRequest = requestBody.body || requestBody;
+    const { phone, otp, type, userId } = requestBody.body || requestBody;
 
     if (!phone) {
-      throw new Error("Phone number is required");
+      return new Response(
+        JSON.stringify({ error: "Phone number is required" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
     }
 
     // Create Supabase client
@@ -39,11 +38,8 @@ serve(async (req) => {
       formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
     }
 
-    console.log(`Processing request - Type: ${type}, Phone: ${formattedPhone}, UserId: ${userId || 'none'}`);
-
     // Send OTP using Supabase Auth
     if (type === 'send') {
-      // For verification during signup, we still use signInWithOtp but allow user creation
       const { data, error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
         options: {
@@ -53,7 +49,13 @@ serve(async (req) => {
 
       if (error) {
         console.error('Error sending OTP:', error);
-        throw error;
+        return new Response(
+          JSON.stringify({ error: error.message || "Failed to send OTP" }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
       }
 
       return new Response(
