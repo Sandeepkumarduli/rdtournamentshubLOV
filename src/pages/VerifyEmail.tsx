@@ -92,11 +92,21 @@ const VerifyEmail = () => {
       const checkEmailConfirmation = async () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        console.log('📧 Initial session check:', {
-          email: session?.user?.email,
-          last_sign_in_at: session?.user?.last_sign_in_at,
-          confirmed_at: session?.user?.confirmed_at
-        });
+        // Log EVERYTHING to debug
+        console.log('==========================================');
+        console.log('📧 FULL SESSION OBJECT:', JSON.stringify(session, null, 2));
+        console.log('==========================================');
+        console.log('📧 Email:', session?.user?.email);
+        console.log('📧 User ID:', session?.user?.id);
+        console.log('📧 last_sign_in_at RAW:', session?.user?.last_sign_in_at);
+        console.log('📧 last_sign_in_at TYPE:', typeof session?.user?.last_sign_in_at);
+        console.log('📧 last_sign_in_at IS NULL?:', session?.user?.last_sign_in_at === null);
+        console.log('📧 last_sign_in_at IS UNDEFINED?:', session?.user?.last_sign_in_at === undefined);
+        console.log('📧 last_sign_in_at BOOLEAN:', !!session?.user?.last_sign_in_at);
+        console.log('📧 confirmed_at:', session?.user?.confirmed_at);
+        console.log('📧 created_at:', session?.user?.created_at);
+        console.log('📧 Error:', error);
+        console.log('==========================================');
         
         if (!session) {
           console.log('⚠️ No session found');
@@ -107,13 +117,13 @@ const VerifyEmail = () => {
         // ONLY check last_sign_in_at - this is null until they click verification link
         const isVerified = !!session?.user?.last_sign_in_at;
         
-        console.log('🔍 Is email verified (has last_sign_in_at)?', isVerified);
+        console.log('🔍 FINAL VERDICT - Is email verified?', isVerified);
         
         if (isVerified) {
           console.log('✅ Email is verified!');
           setEmailVerified(true);
         } else {
-          console.log('⏳ Email not verified yet - last_sign_in_at is null');
+          console.log('⏳ Email not verified yet - last_sign_in_at is null/undefined');
         }
         setIsLoading(false);
       };
