@@ -23,60 +23,56 @@ const VerifyEmail = () => {
       return;
     }
 
-    // Clear any existing session first to ensure fresh state
-    const clearExistingSession = async () => {
-      console.log('🧹 Clearing any existing session...');
-      await supabase.auth.signOut({ scope: 'local' });
+    // Handle session exchange from email verification redirect
+    const handleEmailVerificationRedirect = async () => {
+      // Check if we have hash params (Supabase adds tokens in URL hash after verification)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      
+      if (accessToken && refreshToken) {
+        console.log('🔑 Found access token in URL, exchanging for session...');
+        try {
+          // Set the session from the URL tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          console.log('🔐 setSession result:', data?.session?.user?.email, 'last_sign_in_at:', data?.session?.user?.last_sign_in_at, error);
+          
+          // Check if last_sign_in_at has a value (means they clicked verification link)
+          const isVerified = !!data?.session?.user?.last_sign_in_at;
+          
+          if (isVerified) {
+            console.log('✅ Email verified from verification link!');
+            setEmailVerified(true);
+            setIsLoading(false);
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+            return true;
+          } else {
+            console.log('⚠️ Session established but email not verified yet - last_sign_in_at is null');
+            setIsLoading(false);
+          }
+          
+          if (error) {
+            console.error('❌ Session exchange error:', error);
+          }
+        } catch (err) {
+          console.error('❌ Session exchange failed:', err);
+        }
+      }
+      return false;
     };
 
-    clearExistingSession().then(() => {
-      // Handle session exchange from email verification redirect
-      const handleEmailVerificationRedirect = async () => {
-        // Check if we have hash params (Supabase adds tokens in URL hash after verification)
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        
-        if (accessToken && refreshToken) {
-          console.log('🔑 Found access token in URL, exchanging for session...');
-          try {
-            // Set the session from the URL tokens
-            const { data, error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            
-            console.log('🔐 setSession result:', data?.session?.user?.email, 'last_sign_in_at:', data?.session?.user?.last_sign_in_at, error);
-            
-            // Check if last_sign_in_at has a value (means they clicked verification link)
-            const isVerified = !!data?.session?.user?.last_sign_in_at;
-            
-            if (isVerified) {
-              console.log('✅ Email verified from verification link!');
-              setEmailVerified(true);
-              setIsLoading(false);
-              // Clean up URL
-              window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-              return true;
-            } else {
-              console.log('⚠️ Session established but email not verified yet - last_sign_in_at is null');
-              setIsLoading(false);
-            }
-            
-            if (error) {
-              console.error('❌ Session exchange error:', error);
-            }
-          } catch (err) {
-            console.error('❌ Session exchange failed:', err);
-          }
-        }
-        return false;
-      };
-
-      // Try to exchange session from URL first
-      handleEmailVerificationRedirect().then((wasRedirect) => {
-        if (wasRedirect) return; // Session was set from redirect, no need to poll
-        
+    // Try to exchange session from URL first
+    handleEmailVerificationRedirect().then((wasRedirect) => {
+      if (wasRedirect) return; // Session was set from redirect, no need to poll
+      
+      // Only clear old session if NOT coming from verification redirect
+      console.log('🧹 Clearing any existing session...');
+      supabase.auth.signOut({ scope: 'local' }).then(() => {
         // If not from redirect, set up polling and listeners
         setupVerificationCheck();
       });
