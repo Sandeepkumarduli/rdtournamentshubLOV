@@ -21,7 +21,7 @@ const VerifyAccount = () => {
   const { email, phone, userId } = location.state || {};
 
   useEffect(() => {
-    if (!email || !phone) {
+    if (!email || !phone || !userId) {
       navigate('/signup');
       return;
     }
@@ -29,10 +29,33 @@ const VerifyAccount = () => {
     // Send initial OTP
     sendPhoneOTP();
 
-    // Check email verification status periodically
+    // Set up real-time email verification listener
+    const channel = supabase
+      .channel('email-verification')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'auth',
+          table: 'users',
+          filter: `id=eq.${userId}`
+        },
+        (payload) => {
+          if (payload.new.email_confirmed_at) {
+            setEmailVerified(true);
+          }
+        }
+      )
+      .subscribe();
+
+    // Also poll for email verification
     const interval = setInterval(checkEmailVerification, 3000);
-    return () => clearInterval(interval);
-  }, [email, phone]);
+    
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
+  }, [email, phone, userId]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -55,11 +78,12 @@ const VerifyAccount = () => {
   const sendPhoneOTP = async () => {
     setIsSendingOTP(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: phone,
+      // Update the user's phone number first
+      const { error: updateError } = await supabase.auth.updateUser({
+        phone: phone
       });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       setCountdown(60);
       toast({
@@ -92,7 +116,7 @@ const VerifyAccount = () => {
       const { error } = await supabase.auth.verifyOtp({
         phone: phone,
         token: otp,
-        type: 'sms',
+        type: 'phone_change',
       });
 
       if (error) throw error;

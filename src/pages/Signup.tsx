@@ -56,11 +56,42 @@ const Signup = () => {
         formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
       }
 
-      // Create account with Supabase Auth
+      // Check for duplicate email
+      const { data: existingEmailProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', formData.email)
+        .single();
+
+      if (existingEmailProfile) {
+        toast({
+          title: "Email Already Exists",
+          description: "This email is already registered. Please use a different email or login.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check for duplicate phone
+      const { data: existingPhoneProfile } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('phone', formattedPhone)
+        .single();
+
+      if (existingPhoneProfile) {
+        toast({
+          title: "Phone Number Already Exists",
+          description: "This phone number is already registered. Please use a different number or login.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create account with ONLY email and password (no phone in auth)
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        phone: formattedPhone,
         options: {
           data: {
             display_name: formData.username,
@@ -80,7 +111,7 @@ const Signup = () => {
       }
 
       if (data.user) {
-        // Create profile
+        // Create profile with phone stored separately
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -93,6 +124,12 @@ const Signup = () => {
 
         if (profileError) {
           console.error('Error creating profile:', profileError);
+          toast({
+            title: "Profile Creation Failed",
+            description: "Account created but profile failed. Please contact support.",
+            variant: "destructive",
+          });
+          return;
         }
 
         // Redirect to verification page
