@@ -53,11 +53,7 @@ const UserSidebar: React.FC<UserSidebarProps> = ({ isOpen }) => {
   };
 
   return (
-    <aside 
-      className={cn(
-        "h-screen bg-card border-r border-border flex flex-col transition-all duration-300",
-        isOpen ? "w-64" : "w-0 overflow-hidden"
-      )}
+    <aside className="h-screen w-64 bg-card border-r border-border flex flex-col"
     >
       {/* Logo/Brand */}
       <div className="p-6 border-b border-border">

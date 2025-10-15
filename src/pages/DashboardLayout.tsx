@@ -17,7 +17,7 @@ const DashboardLayout = () => {
   const { user, loading: authLoading, isFrozen } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { balance } = useWallet();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (authLoading || profileLoading) {
     return <LoadingSpinner fullScreen />;
