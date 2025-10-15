@@ -42,7 +42,33 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { data, error } = await signIn(formData.email, formData.password);
+    let emailToUse = formData.email;
+
+    // Check if input is an email or username
+    const isEmail = formData.email.includes('@');
+    
+    if (!isEmail) {
+      // If it's not an email, treat it as username and lookup email from profiles
+      const { data: profile, error: lookupError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('display_name', formData.email)
+        .single();
+
+      if (lookupError || !profile?.email) {
+        toast({
+          title: "Login Failed",
+          description: "Username not found. Please check your username or use email to login.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      emailToUse = profile.email;
+    }
+
+    const { data, error } = await signIn(emailToUse, formData.password);
 
     if (error) {
       toast({
@@ -350,7 +376,7 @@ const Login = () => {
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="email" className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
-                  Email
+                  Email/Username
                 </TabsTrigger>
                 <TabsTrigger value="phone" className="flex items-center gap-2">
                   <Phone className="h-4 w-4" />
@@ -362,13 +388,13 @@ const Login = () => {
                 {!showPasswordOtpVerification ? (
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">Email or Username</Label>
                       <Input 
                         id="email" 
-                        type="email" 
+                        type="text" 
                         value={formData.email} 
                         onChange={e => setFormData({ ...formData, email: e.target.value })} 
-                        placeholder="Enter your email" 
+                        placeholder="Enter your email or username" 
                         required 
                       />
                     </div>
