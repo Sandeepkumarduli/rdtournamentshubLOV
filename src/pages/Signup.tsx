@@ -114,13 +114,15 @@ const Signup = () => {
       }
 
       if (data.user) {
+        // Session is automatically created by Supabase even if email is not confirmed
         // Profile is automatically created by database trigger
         // Redirect to verification page
         navigate('/verify-account', { 
           state: { 
             email: formData.email, 
             phone: formattedPhone,
-            userId: data.user.id
+            userId: data.user.id,
+            password: formData.password // Pass password to allow re-authentication if needed
           } 
         });
       }

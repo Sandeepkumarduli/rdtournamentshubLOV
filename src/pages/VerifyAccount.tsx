@@ -18,7 +18,7 @@ const VerifyAccount = () => {
   const location = useLocation();
   const { toast } = useToast();
   
-  const { email, phone, userId } = location.state || {};
+  const { email, phone, userId, password } = location.state || {};
 
   useEffect(() => {
     if (!email || !phone || !userId) {
@@ -39,6 +39,21 @@ const VerifyAccount = () => {
       checkSession();
       return;
     }
+
+    // Ensure user is logged in after signup
+    const ensureSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // If no session exists, sign in the user
+      if (!session && password) {
+        await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+      }
+    };
+
+    ensureSession();
 
     // Check for email confirmation from redirect
     const checkEmailConfirmation = async () => {
@@ -61,7 +76,7 @@ const VerifyAccount = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [email, phone, userId, navigate, toast]);
+  }, [email, phone, userId, password, navigate, toast]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -92,13 +107,20 @@ const VerifyAccount = () => {
   const sendPhoneOTP = async () => {
     setIsSendingOTP(true);
     try {
-      const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone: phone, type: 'send' }
+      // First, get the current session to ensure we're updating the right user
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("No active session. Please sign up again.");
+      }
+
+      // Link the phone number to the existing user account
+      // This will send OTP automatically
+      const { error: updateError } = await supabase.auth.updateUser({
+        phone: phone
       });
 
-      if (error) throw error;
-      
-      if (data?.error) throw new Error(data.error);
+      if (updateError) throw updateError;
 
       setCountdown(60);
       
@@ -130,17 +152,14 @@ const VerifyAccount = () => {
 
     setIsVerifying(true);
     try {
-      const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone: phone, otp: otp, type: 'verify' }
+      // Verify the phone OTP using Supabase Auth directly
+      const { error } = await supabase.auth.verifyOtp({
+        phone: phone,
+        token: otp,
+        type: 'sms'
       });
 
       if (error) throw error;
-      
-      if (data?.error) throw new Error(data.error);
-
-      if (data.session) {
-        await supabase.auth.setSession(data.session);
-      }
 
       setPhoneVerified(true);
       toast({
