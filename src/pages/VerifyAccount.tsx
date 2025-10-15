@@ -107,8 +107,8 @@ const VerifyAccount = () => {
     } catch (error: any) {
       console.error('OTP Error:', error);
       toast({
-        title: "Phone Verification Unavailable",
-        description: "Please verify your email first. Phone verification will be enabled after email confirmation.",
+        title: "Failed to Send OTP",
+        description: "Unable to send verification code. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -152,14 +152,6 @@ const VerifyAccount = () => {
   };
 
   const handleSkipPhoneVerification = () => {
-    if (!emailVerified) {
-      toast({
-        title: "Email Not Verified",
-        description: "Please verify your email first before skipping phone verification",
-        variant: "destructive",
-      });
-      return;
-    }
     setPhoneVerified(true);
     toast({
       title: "Phone Verification Skipped",
@@ -168,7 +160,7 @@ const VerifyAccount = () => {
   };
 
   useEffect(() => {
-    if (emailVerified && phoneVerified) {
+    if (emailVerified || phoneVerified) {
       toast({
         title: "Account Verified!",
         description: "You can now login to your account",
