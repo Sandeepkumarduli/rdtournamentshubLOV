@@ -42,17 +42,17 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { data, error } = await signIn(formData.email, formData.password);
+    try {
+      const { data, error } = await signIn(formData.email, formData.password);
 
-    if (error) {
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
     if (data.user) {
       // Get user's phone number from profile
@@ -104,6 +104,15 @@ const Login = () => {
     }
     
     setIsLoading(false);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   const handleSendOTP = async (e: React.FormEvent) => {

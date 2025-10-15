@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,8 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send, User, Shield, Crown, MessageSquare, Users, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 interface Message {
-  id: number;
+  id: string;
   text: string;
   sender: string;
   senderType: 'user' | 'admin' | 'system';
@@ -16,7 +18,7 @@ interface Message {
   isMe: boolean;
 }
 interface ChatUser {
-  id: number;
+  id: string;
   name: string;
   type: 'user' | 'system';
   status: 'online' | 'offline';
@@ -25,98 +27,158 @@ interface ChatUser {
 }
 const AdminChat = () => {
   const [selectedUser, setSelectedUser] = useState<ChatUser | null>(null);
-  const [messages, setMessages] = useState<Record<number, Message[]>>({
-    1: [{
-      id: 1,
-      text: "Hi admin, I need help with tournament registration",
-      sender: 'PlayerOne',
-      senderType: 'user',
-      timestamp: new Date().toLocaleTimeString(),
-      isMe: false
-    }],
-    3: [{
-      id: 1,
-      text: "Please review the new tournament policies",
-      sender: 'System Admin',
-      senderType: 'system',
-      timestamp: new Date().toLocaleTimeString(),
-      isMe: false
-    }]
-  });
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const [chatUsers, setChatUsers] = useState<ChatUser[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const {
-    toast
-  } = useToast();
-  const chatUsers: ChatUser[] = [{
-    id: 1,
-    name: 'PlayerOne',
-    type: 'user',
-    status: 'online',
-    lastMessage: 'Hi admin, I need help...',
-    unreadCount: 1
-  }, {
-    id: 2,
-    name: 'GamerPro',
-    type: 'user',
-    status: 'online',
-    lastMessage: 'Tournament issue',
-    unreadCount: 0
-  }, {
-    id: 3,
-    name: 'System Admin',
-    type: 'system',
-    status: 'online',
-    lastMessage: 'Please review the new...',
-    unreadCount: 1
-  }, {
-    id: 4,
-    name: 'SquadLeader',
-    type: 'user',
-    status: 'offline',
-    lastMessage: 'Payment problem',
-    unreadCount: 0
-  }, {
-    id: 5,
-    name: 'ProPlayer',
-    type: 'user',
-    status: 'online',
-    lastMessage: 'Match results',
-    unreadCount: 2
-  }];
-  const onlineUsers = chatUsers.filter(user => user.status === 'online');
-  const handleSendMessage = () => {
-    if (newMessage.trim() && selectedUser) {
-      const message: Message = {
-        id: (messages[selectedUser.id]?.length || 0) + 1,
-        text: newMessage,
-        sender: 'ORG Admin',
-        senderType: 'admin',
-        timestamp: new Date().toLocaleTimeString(),
-        isMe: true
-      };
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  const fetchChatUsers = async () => {
+    try {
+      if (!user) return;
+
+      // Get admin's organization
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('organization')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!adminProfile?.organization) return;
+
+      // Get users from the same organization
+      const { data: users } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email, role')
+        .eq('organization', adminProfile.organization)
+        .neq('user_id', user.id);
+
+      // Get system admins
+      const { data: systemAdmins } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email, role')
+        .eq('role', 'systemadmin');
+
+      const formattedUsers: ChatUser[] = [
+        ...(users?.map(user => ({
+          id: user.user_id,
+          name: user.display_name || user.email || 'Unknown',
+          type: 'user' as const,
+          status: 'online' as const, // Mock status for now
+          lastMessage: '',
+          unreadCount: 0
+        })) || []),
+        ...(systemAdmins?.map(admin => ({
+          id: admin.user_id,
+          name: admin.display_name || admin.email || 'System Admin',
+          type: 'system' as const,
+          status: 'online' as const,
+          lastMessage: '',
+          unreadCount: 0
+        })) || [])
+      ];
+
+      setChatUsers(formattedUsers);
+    } catch (error) {
+      console.error('Error fetching chat users:', error);
+    }
+  };
+
+  const fetchMessages = async (userId: string) => {
+    try {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select(`
+          *,
+          sender:profiles!chat_messages_sender_id_fkey (display_name, email, role)
+        `)
+        .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .eq('message_type', 'direct')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedMessages = data?.map(msg => ({
+        id: msg.id,
+        text: msg.message,
+        sender: msg.sender?.display_name || msg.sender?.email || 'Unknown',
+        senderType: msg.sender?.role === 'admin' || msg.sender?.role === 'systemadmin' ? 'admin' as const : 'user' as const,
+        timestamp: new Date(msg.created_at).toLocaleTimeString(),
+        isMe: msg.sender_id === user.id,
+      })) || [];
+
       setMessages(prev => ({
         ...prev,
-        [selectedUser.id]: [...(prev[selectedUser.id] || []), message]
+        [userId]: formattedMessages
       }));
-      setNewMessage('');
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
 
-      // Simulate response
-      setTimeout(() => {
-        const responses = ["Thank you for the quick response!", "Got it, I'll follow up on that.", "That helps a lot, thanks!", "Perfect, issue resolved!"];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        const response: Message = {
-          id: (messages[selectedUser.id]?.length || 0) + 2,
-          text: randomResponse,
-          sender: selectedUser.name,
-          senderType: selectedUser.type,
-          timestamp: new Date().toLocaleTimeString(),
-          isMe: false
-        };
-        setMessages(prev => ({
-          ...prev,
-          [selectedUser.id]: [...(prev[selectedUser.id] || []), response]
-        }));
-      }, 1000 + Math.random() * 2000);
+  const handleUserSelect = async (user: ChatUser) => {
+    setSelectedUser(user);
+    await fetchMessages(user.id);
+  };
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Subscribe to real-time chat updates
+    const channel = supabase
+      .channel('admin-chat-updates')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'chat_messages' 
+      }, (payload) => {
+        // Refresh messages if we're viewing a conversation
+        if (selectedUser) {
+          fetchMessages(selectedUser.id);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, selectedUser]);
+
+  const onlineUsers = chatUsers.filter(user => user.status === 'online');
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && selectedUser && user) {
+      try {
+        const { error } = await supabase
+          .from('chat_messages')
+          .insert([{
+            sender_id: user.id,
+            recipient_id: selectedUser.id,
+            message: newMessage,
+            message_type: 'direct',
+          }]);
+
+        if (error) throw error;
+
+        // Refresh messages for this user
+        await fetchMessages(selectedUser.id);
+        setNewMessage('');
+
+        toast({
+          title: "Message Sent",
+          description: "Your message has been sent successfully",
+        });
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send message",
+          variant: "destructive"
+        });
+      }
     }
   };
   const getSenderIcon = (senderType: string) => {
@@ -139,6 +201,19 @@ const AdminChat = () => {
         return 'secondary';
     }
   };
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading chat...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -176,7 +251,7 @@ const AdminChat = () => {
               <TabsContent value="all" className="mt-0">
                 <ScrollArea className="h-[450px]">
                   <div className="space-y-2 p-4 pt-0">
-                    {chatUsers.map(user => <div key={user.id} onClick={() => setSelectedUser(user)} className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedUser?.id === user.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+                    {chatUsers.map(user => <div key={user.id} onClick={() => handleUserSelect(user)} className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedUser?.id === user.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {getSenderIcon(user.type)}
@@ -202,7 +277,7 @@ const AdminChat = () => {
               <TabsContent value="online" className="mt-0">
                 <ScrollArea className="h-[450px]">
                   <div className="space-y-2 p-4 pt-0">
-                    {onlineUsers.map(user => <div key={user.id} onClick={() => setSelectedUser(user)} className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedUser?.id === user.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+                    {onlineUsers.map(user => <div key={user.id} onClick={() => handleUserSelect(user)} className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedUser?.id === user.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {getSenderIcon(user.type)}

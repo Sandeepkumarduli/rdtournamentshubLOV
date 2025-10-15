@@ -16,10 +16,10 @@ const VerifyPhone = () => {
   const location = useLocation();
   const { toast } = useToast();
   
-  const { phone, userId, password, email } = location.state || {};
+  const { phone, email, password, username, bgmiId } = location.state || {};
 
   useEffect(() => {
-    if (!phone || !userId) {
+    if (!phone || !email || !password) {
       navigate('/signup');
       return;
     }
@@ -28,12 +28,44 @@ const VerifyPhone = () => {
     const ensureSessionAndSendOTP = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // If no session, sign in first
-      if (!session && email && password) {
-        await supabase.auth.signInWithPassword({
-          email: email,
-          password: password,
-        });
+      // If no session, try to sign in with provided credentials
+      if (!session) {
+        if (email && password) {
+          try {
+            const { error } = await supabase.auth.signInWithPassword({
+              email: email,
+              password: password,
+            });
+            
+            if (error) {
+              console.error('Auto sign-in failed:', error);
+              toast({
+                title: "Session Required",
+                description: "Please login to continue with phone verification.",
+                variant: "destructive",
+              });
+              navigate('/login');
+              return;
+            }
+          } catch (error) {
+            console.error('Auto sign-in failed:', error);
+            toast({
+              title: "Session Required",
+              description: "Please login to continue with phone verification.",
+              variant: "destructive",
+            });
+            navigate('/login');
+            return;
+          }
+        } else {
+          toast({
+            title: "Session Required",
+            description: "Please login to continue with phone verification.",
+            variant: "destructive",
+          });
+          navigate('/login');
+          return;
+        }
       }
       
       // Wait a moment for session to be ready, then send OTP
@@ -43,7 +75,7 @@ const VerifyPhone = () => {
     };
 
     ensureSessionAndSendOTP();
-  }, [phone, userId, email, password]);
+  }, [phone, email, password, navigate, toast]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -101,12 +133,19 @@ const VerifyPhone = () => {
 
       if (error) throw error;
 
-      // Update profile to mark phone as verified
-      if (userId) {
+      // Account is now fully verified (email + phone)
+      // Update profile with complete information
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
         await supabase
           .from('profiles')
-          .update({ phone: phone })
-          .eq('user_id', userId);
+          .update({ 
+            phone: phone,
+            display_name: username,
+            bgmi_id: bgmiId
+          })
+          .eq('user_id', user.id);
       }
 
       toast({

@@ -129,7 +129,7 @@ const UpdatePassword = () => {
             <CardTitle className="text-center text-xl">Set New Password</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <form onSubmit={handleUpdatePassword} className="space-y-4" autoComplete="off">
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>
                 <div className="relative">
@@ -139,6 +139,7 @@ const UpdatePassword = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter new password (min 6 characters)"
+                    autoComplete="off"
                     required
                     minLength={6}
                   />
@@ -167,6 +168,7 @@ const UpdatePassword = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm new password"
+                    autoComplete="off"
                     required
                     minLength={6}
                   />

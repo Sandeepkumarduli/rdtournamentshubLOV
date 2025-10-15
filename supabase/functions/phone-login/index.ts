@@ -1,11 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 interface PhoneLoginRequest {
   phone: string;
@@ -15,6 +10,9 @@ interface PhoneLoginRequest {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin')
+  const corsHeaders = getCorsHeaders(origin)
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -26,6 +24,16 @@ serve(async (req) => {
       throw new Error("Phone number is required");
     }
 
+    // Validate phone number format
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phone)) {
+      throw new Error("Invalid phone number format");
+    }
+
+    // Rate limiting check (basic implementation)
+    const rateLimitKey = `otp_${phone}`;
+    // Note: In production, implement proper rate limiting with Redis or similar
+    
     // Create Supabase client
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -69,6 +77,17 @@ serve(async (req) => {
 
     // Verify OTP using Supabase Auth
     if (type === 'verify' && otp) {
+      // Validate OTP format
+      if (!/^\d{6}$/.test(otp)) {
+        return new Response(
+          JSON.stringify({ error: "OTP must be exactly 6 digits" }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
+
       const { data, error } = await supabase.auth.verifyOtp({
         phone: formattedPhone,
         token: otp,
