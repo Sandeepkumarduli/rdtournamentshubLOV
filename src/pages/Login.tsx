@@ -122,7 +122,7 @@ const Login = () => {
 
     try {
       const { data, error: otpError } = await supabase.functions.invoke('phone-login', {
-        body: { phone: formattedPhone, type: 'login' }
+        body: { phone: formattedPhone, type: 'send' }
       });
 
       if (otpError) throw otpError;
@@ -131,16 +131,14 @@ const Login = () => {
       setCountdown(60);
       setOtpSent(true);
       
-      console.log('📱 OTP sent:', data?.otp);
-      
       toast({
         title: "OTP Sent",
-        description: data?.otp ? `OTP: ${data.otp} (Dev mode)` : "Check console for OTP",
+        description: "Verification code sent to your phone via SMS",
       });
     } catch (error: any) {
       toast({
         title: "Failed to Send OTP",
-        description: error.message || "Unable to send OTP",
+        description: error.message || "Unable to send OTP. Please configure phone provider in Supabase.",
         variant: "destructive",
       });
     }
@@ -172,44 +170,31 @@ const Login = () => {
         throw new Error(data?.error || error?.message || "Failed to verify OTP");
       }
 
-      if (data.magic_link) {
-        const url = new URL(data.magic_link);
-        const token = url.searchParams.get('token');
-        const type = url.searchParams.get('type');
+      if (data.session) {
+        await supabase.auth.setSession(data.session);
+        
+        const user = data.user;
+        
+        toast({
+          title: "Login Successful!",
+          description: "Welcome back to RDTH"
+        });
 
-        if (token && type) {
-          const { error: verifyError } = await supabase.auth.verifyOtp({
-            token_hash: token,
-            type: type as any,
-          });
-
-          if (verifyError) throw verifyError;
-
-          const { data: { user } } = await supabase.auth.getUser();
+        try {
+          const { data: freezeRecord } = await supabase
+            .from('user_freeze_status')
+            .select('is_frozen')
+            .eq('user_id', user.id)
+            .maybeSingle();
           
-          if (user) {
-            toast({
-              title: "Login Successful!",
-              description: "Welcome back to RDTH"
-            });
-
-            try {
-              const { data: freezeRecord } = await supabase
-                .from('user_freeze_status')
-                .select('is_frozen')
-                .eq('user_id', user.id)
-                .maybeSingle();
-              
-              if (freezeRecord?.is_frozen) {
-                navigate("/dashboard/report");
-              } else {
-                navigate("/dashboard");
-              }
-            } catch (err) {
-              console.error('Error checking freeze status:', err);
-              navigate("/dashboard");
-            }
+          if (freezeRecord?.is_frozen) {
+            navigate("/dashboard/report");
+          } else {
+            navigate("/dashboard");
           }
+        } catch (err) {
+          console.error('Error checking freeze status:', err);
+          navigate("/dashboard");
         }
       }
     } catch (error: any) {
@@ -231,14 +216,13 @@ const Login = () => {
       }
 
       supabase.functions.invoke('phone-login', {
-        body: { phone: formattedPhone, type: 'login' }
+        body: { phone: formattedPhone, type: 'send' }
       }).then(({ data, error }) => {
         if (!error && !data?.error) {
           setCountdown(60);
-          console.log('📱 OTP resent:', data?.otp);
           toast({
             title: "OTP Resent",
-            description: data?.otp ? `OTP: ${data.otp} (Dev mode)` : "Check console for OTP",
+            description: "Verification code sent to your phone via SMS",
           });
         }
       });

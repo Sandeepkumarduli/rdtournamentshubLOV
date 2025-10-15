@@ -93,7 +93,7 @@ const VerifyAccount = () => {
     setIsSendingOTP(true);
     try {
       const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone: phone, type: 'signup' }
+        body: { phone: phone, type: 'send' }
       });
 
       if (error) throw error;
@@ -102,22 +102,15 @@ const VerifyAccount = () => {
 
       setCountdown(60);
       
-      // Show OTP in development mode
-      const otpMessage = data?.otp 
-        ? `OTP: ${data.otp} (Development mode)`
-        : "Check console for OTP";
-      
-      console.log('📱 OTP sent:', data?.otp);
-      
       toast({
         title: "OTP Sent",
-        description: otpMessage,
+        description: "Verification code sent to your phone via SMS",
       });
     } catch (error: any) {
       console.error('OTP Error:', error);
       toast({
         title: "Failed to Send OTP",
-        description: error.message || "Unable to send verification code. Please try again later.",
+        description: error.message || "Unable to send verification code. Please configure phone provider in Supabase.",
         variant: "destructive",
       });
     } finally {
@@ -137,12 +130,17 @@ const VerifyAccount = () => {
 
     setIsVerifying(true);
     try {
-      // Call edge function to verify OTP
       const { data, error } = await supabase.functions.invoke('phone-login', {
         body: { phone: phone, otp: otp, type: 'verify' }
       });
 
       if (error) throw error;
+      
+      if (data?.error) throw new Error(data.error);
+
+      if (data.session) {
+        await supabase.auth.setSession(data.session);
+      }
 
       setPhoneVerified(true);
       toast({
