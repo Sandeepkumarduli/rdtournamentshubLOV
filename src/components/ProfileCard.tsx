@@ -21,9 +21,12 @@ interface ProfileCardProps {
   phoneVerified: boolean;
   onVerifyEmail: () => void;
   onVerifyPhone: () => void;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
 }
 
-const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneVerified, onVerifyEmail, onVerifyPhone }: ProfileCardProps) => {
+const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneVerified, onVerifyEmail, onVerifyPhone, onEdit, onSave, onCancel }: ProfileCardProps) => {
   return (
     <Card className="gaming-card">
       <CardHeader>
@@ -104,7 +107,7 @@ const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneV
               type="tel"
               value={formData.phone}
               onChange={(e) => onInputChange('phone', e.target.value)}
-              disabled={!isEditing}
+              disabled={!isEditing || phoneVerified}
               placeholder="+91 9876543210"
               className="flex-1"
             />
@@ -125,7 +128,7 @@ const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneV
           )}
           {phoneVerified && (
             <p className="text-xs text-success mt-1">
-              Phone number is verified and active.
+              Phone number is verified and cannot be changed.
             </p>
           )}
         </div>
@@ -143,6 +146,23 @@ const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneV
           <p className="text-xs text-muted-foreground mt-1">
             BGMI ID can be updated. Make sure it's unique and accurate.
           </p>
+        </div>
+
+        <div className="flex gap-2 pt-4">
+          {!isEditing ? (
+            <Button variant="outline" onClick={onEdit} className="w-full">
+              Edit Profile
+            </Button>
+          ) : (
+            <>
+              <Button variant="default" onClick={onSave} className="flex-1">
+                Save Changes
+              </Button>
+              <Button variant="outline" onClick={onCancel} className="flex-1">
+                Cancel
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

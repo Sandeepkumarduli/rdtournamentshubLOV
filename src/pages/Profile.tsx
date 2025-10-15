@@ -248,21 +248,6 @@ const Profile = () => {
             Refresh
           </Button>
           
-          {!isEditing ? (
-            <Button variant="outline" onClick={() => setIsEditing(true)}>
-              Edit Profile
-            </Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button variant="default" onClick={handleSave}>
-                Save Changes
-              </Button>
-              <Button variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-            </div>
-          )}
-          
           <ChangePasswordDialog>
             <Button variant="outline" size="sm">
               <Key className="h-4 w-4 mr-2" />
@@ -281,6 +266,9 @@ const Profile = () => {
           phoneVerified={phoneVerified}
           onVerifyEmail={handleVerifyEmail}
           onVerifyPhone={handleVerifyPhone}
+          onEdit={() => setIsEditing(true)}
+          onSave={handleSave}
+          onCancel={handleCancel}
         />
 
         <AccountStats 
