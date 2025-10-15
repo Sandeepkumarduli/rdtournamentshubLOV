@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getCorsHeaders } from '../_shared/cors.ts';
 
 interface PhoneLoginRequest {
   phone: string;
@@ -9,40 +8,58 @@ interface PhoneLoginRequest {
   userId?: string;
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+}
+
 serve(async (req) => {
-  const origin = req.headers.get('origin')
-  const corsHeaders = getCorsHeaders(origin)
+  console.log('🚀 Edge function called');
+  console.log('📡 Method:', req.method);
+  console.log('🌐 Origin:', req.headers.get('origin'));
   
   if (req.method === "OPTIONS") {
+    console.log('✅ Handling OPTIONS request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Check environment variables first
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    console.log('📝 Parsing request body...');
+    const body = await req.json();
+    console.log('📦 Request body:', body);
     
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Missing environment variables:', { 
-        supabaseUrl: !!supabaseUrl, 
-        supabaseAnonKey: !!supabaseAnonKey 
-      });
+    const { phone, otp, type, userId }: PhoneLoginRequest = body;
+
+    if (!phone) {
+      console.log('❌ No phone number provided');
       return new Response(
-        JSON.stringify({ error: "Server configuration error" }),
+        JSON.stringify({ error: "Phone number is required" }),
         { 
-          status: 500, 
+          status: 400, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );
     }
 
-    const { phone, otp, type, userId }: PhoneLoginRequest = await req.json();
+    console.log('📞 Processing phone:', phone, 'Type:', type);
 
-    if (!phone) {
+    // Check environment variables
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    console.log('🔑 Environment check:', { 
+      supabaseUrl: !!supabaseUrl, 
+      supabaseAnonKey: !!supabaseAnonKey 
+    });
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('❌ Missing environment variables');
       return new Response(
-        JSON.stringify({ error: "Phone number is required" }),
+        JSON.stringify({ error: "Server configuration error" }),
         { 
-          status: 400, 
+          status: 500, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );
@@ -57,13 +74,12 @@ serve(async (req) => {
       formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
     }
 
-    console.log(`Processing request - Type: ${type}, Phone: ${formattedPhone}, UserId: ${userId || 'none'}`);
+    console.log('📱 Formatted phone:', formattedPhone);
 
     // Send OTP using Supabase Auth
     if (type === 'send') {
-      console.log(`Attempting to send OTP to: ${formattedPhone}`);
+      console.log('📤 Sending OTP...');
       
-      // For verification during signup, we still use signInWithOtp but allow user creation
       const { data, error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
         options: {
@@ -72,7 +88,7 @@ serve(async (req) => {
       });
 
       if (error) {
-        console.error('Error sending OTP:', error);
+        console.error('❌ Error sending OTP:', error);
         return new Response(
           JSON.stringify({ 
             error: error.message || "Failed to send OTP",
@@ -85,7 +101,7 @@ serve(async (req) => {
         );
       }
 
-      console.log('OTP sent successfully');
+      console.log('✅ OTP sent successfully');
       return new Response(
         JSON.stringify({ 
           success: true,
@@ -100,6 +116,8 @@ serve(async (req) => {
 
     // Verify OTP using Supabase Auth
     if (type === 'verify' && otp) {
+      console.log('🔍 Verifying OTP...');
+      
       const { data, error } = await supabase.auth.verifyOtp({
         phone: formattedPhone,
         token: otp,
@@ -107,7 +125,7 @@ serve(async (req) => {
       });
 
       if (error) {
-        console.error('Error verifying OTP:', error);
+        console.error('❌ Error verifying OTP:', error);
         return new Response(
           JSON.stringify({ error: error.message || "Invalid OTP" }),
           { 
@@ -118,6 +136,7 @@ serve(async (req) => {
       }
 
       if (!data.session) {
+        console.log('❌ No session created');
         return new Response(
           JSON.stringify({ error: "Failed to create session" }),
           { 
@@ -127,6 +146,7 @@ serve(async (req) => {
         );
       }
 
+      console.log('✅ OTP verified successfully');
       return new Response(
         JSON.stringify({ 
           success: true,
@@ -140,6 +160,7 @@ serve(async (req) => {
       );
     }
 
+    console.log('❌ Invalid request type');
     return new Response(
       JSON.stringify({ error: "Invalid request type" }),
       { 
@@ -148,9 +169,12 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("Error in phone-login:", error);
+    console.error("❌ Unexpected error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || "Internal server error",
+        details: error.stack
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
