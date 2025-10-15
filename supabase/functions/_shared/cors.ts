@@ -3,6 +3,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173', 
   'http://localhost:8080',
+  'http://localhost:8081', // Added for your current dev server
   'https://rdtournamentshub.netlify.app',
   'https://rdth.netlify.app',
   // Add your production domains here

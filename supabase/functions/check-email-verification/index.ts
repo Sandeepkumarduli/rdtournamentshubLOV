@@ -52,13 +52,13 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if email is verified by checking last_sign_in_at
-    const isVerified = !!user.last_sign_in_at
+    // Check if email is verified by checking email_confirmed_at
+    const isVerified = !!user.email_confirmed_at
     
     console.log('User verification check:', {
       userId: user.id,
       email: user.email,
-      last_sign_in_at: user.last_sign_in_at,
+      email_confirmed_at: user.email_confirmed_at,
       isVerified
     })
 
@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
       JSON.stringify({
         isVerified,
         email: user.email,
-        last_sign_in_at: user.last_sign_in_at,
-        confirmed_at: user.confirmed_at
+        email_confirmed_at: user.email_confirmed_at,
+        last_sign_in_at: user.last_sign_in_at
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

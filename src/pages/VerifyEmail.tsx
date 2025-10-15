@@ -26,10 +26,38 @@ const VerifyEmail = () => {
     // Check if this is a redirect from email verification
     const checkEmailVerificationRedirect = async () => {
       try {
+        // Check URL parameters for email verification tokens
+        const urlParams = new URLSearchParams(window.location.search);
+        const accessToken = urlParams.get('access_token');
+        const refreshToken = urlParams.get('refresh_token');
+        
+        if (accessToken && refreshToken) {
+          console.log('Email verification tokens found in URL');
+          // Set the session with the tokens from URL
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (error) {
+            console.error('Error setting session:', error);
+          } else if (data.session?.user?.email_confirmed_at) {
+            console.log('Email verification detected from URL tokens');
+            setEmailVerified(true);
+            toast({
+              title: "Email Verified!",
+              description: "Your email has been confirmed successfully.",
+            });
+            setIsLoading(false);
+            return true;
+          }
+        }
+        
+        // Fallback: check existing session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user?.email_confirmed_at) {
-          console.log('Email verification detected from redirect');
+          console.log('Email verification detected from existing session');
           setEmailVerified(true);
           toast({
             title: "Email Verified!",
@@ -107,6 +135,8 @@ const VerifyEmail = () => {
     const pollForVerification = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Polling check - session:', session?.user?.email_confirmed_at);
+        
         if (session?.user?.email_confirmed_at) {
           console.log('Email verification detected via polling');
           setEmailVerified(true);
