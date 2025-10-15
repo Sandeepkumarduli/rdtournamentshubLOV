@@ -4,14 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, GamepadIcon, Mail, User, Lock } from "lucide-react";
+import { Eye, EyeOff, GamepadIcon, Mail, User, Lock, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -22,7 +23,6 @@ const Signup = () => {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp } = useAuth();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,35 +47,93 @@ const Signup = () => {
       return;
     }
 
-    // Create account directly without OTP verification for now
-    const { data, error } = await signUp(formData.email, formData.password, formData.username);
-
-    if (error) {
-      toast({
-        title: "Signup Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else if (data.user) {
-      // Update profile with additional info
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          bgmi_id: formData.bgmiId,
-          display_name: formData.username,
-          phone: formData.phone,
-        })
-        .eq('user_id', data.user.id);
-
-      if (profileError) {
-        console.error('Error updating profile:', profileError);
+    setIsCreatingAccount(true);
+    
+    try {
+      // Format phone number
+      let formattedPhone = formData.phone.trim();
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
       }
 
-      toast({
-        title: "Account Created!",
-        description: "Welcome to RDTH! You can now login with your credentials.",
+      // Check for duplicate email
+      const { data: existingEmailProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', formData.email)
+        .maybeSingle();
+
+      if (existingEmailProfile) {
+        toast({
+          title: "Email Already Exists",
+          description: "This email is already registered. Please use a different email or login.",
+          variant: "destructive",
+        });
+        setIsCreatingAccount(false);
+        return;
+      }
+
+      // Check for duplicate phone
+      const { data: existingPhoneProfile } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('phone', formattedPhone)
+        .maybeSingle();
+
+      if (existingPhoneProfile) {
+        toast({
+          title: "Phone Number Already Exists",
+          description: "This phone number is already registered. Please use a different number or login.",
+          variant: "destructive",
+        });
+        setIsCreatingAccount(false);
+        return;
+      }
+
+      // Create account with email, password, and phone in metadata
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            display_name: formData.username,
+            bgmi_id: formData.bgmiId,
+            phone: formattedPhone,
+          },
+          emailRedirectTo: `${window.location.origin}/verify-email`,
+        }
       });
-      navigate("/login");
+
+      if (error) {
+        toast({
+          title: "Signup Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data.user) {
+        // Session is automatically created by Supabase even if email is not confirmed
+        // Profile is automatically created by database trigger
+        // Redirect to email verification page first
+        navigate('/verify-email', { 
+          state: { 
+            email: formData.email, 
+            phone: formattedPhone,
+            userId: data.user.id,
+            password: formData.password
+          } 
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingAccount(false);
     }
   };
 
@@ -97,7 +155,10 @@ const Signup = () => {
             <CardTitle className="text-center text-xl">Create Account</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignup} className="space-y-4" autoComplete="off">
+            <form onSubmit={handleSignup} className="space-y-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Both email and phone number verification are required to create an account.
+              </p>
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <div className="relative">
@@ -173,15 +234,21 @@ const Signup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone || ''}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+91 9876543210"
-                  autoComplete="off"
-                  required
-                />
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone || ''}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+91 9876543210"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  You'll receive a 6-digit OTP to verify your phone
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -225,8 +292,8 @@ const Signup = () => {
                 </Label>
               </div>
 
-              <Button type="submit" variant="gaming" className="w-full">
-                Create Account
+              <Button type="submit" variant="gaming" className="w-full" disabled={isCreatingAccount}>
+                {isCreatingAccount ? <LoadingSpinner /> : "Create Account"}
               </Button>
             </form>
 

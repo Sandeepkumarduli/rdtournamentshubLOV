@@ -7,6 +7,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import VerifyAccount from "./pages/VerifyAccount";
+import VerifyEmail from "./pages/VerifyEmail";
+import VerifyPhone from "./pages/VerifyPhone";
 import AdminLogin from "./pages/AdminLogin";
 import AdminSignup from "./pages/AdminSignup";
 import SystemAdminLogin from "./pages/SystemAdminLogin";
@@ -31,6 +34,7 @@ import Contact from "./pages/Contact";
 import WalletSystem from "./pages/WalletSystem";
 import Report from "./pages/Report";
 import SystemChatPage from "./pages/SystemChatPage";
+import OTPVerificationLogin from "./pages/OTPVerificationLogin";
 import ForgotPassword from "./pages/ForgotPassword";
 import UpdatePassword from "./pages/UpdatePassword";
 
@@ -46,8 +50,12 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/verify-phone" element={<VerifyPhone />} />
+          <Route path="/verify-account" element={<VerifyAccount />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/update-password" element={<UpdatePassword />} />
+          <Route path="/otp-verification-login" element={<OTPVerificationLogin />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin-signup" element={<AdminSignup />} />
           <Route path="/system-admin-login" element={<SystemAdminLogin />} />
