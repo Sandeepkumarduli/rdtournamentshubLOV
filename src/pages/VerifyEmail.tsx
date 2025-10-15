@@ -39,15 +39,19 @@ const VerifyEmail = () => {
             refresh_token: refreshToken,
           });
           
-          console.log('🔐 setSession result:', data?.session?.user?.email, data?.session?.user?.last_sign_in_at, error);
+          console.log('🔐 setSession result:', data?.session?.user?.email, 'email_confirmed_at:', data?.session?.user?.email_confirmed_at, error);
           
-          if (data?.session?.user?.last_sign_in_at) {
-            console.log('✅ Session established from email verification');
+          // Check if email is actually confirmed
+          if (data?.session?.user?.email_confirmed_at) {
+            console.log('✅ Email confirmed from verification link!');
             setEmailVerified(true);
             setIsLoading(false);
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
             return true;
+          } else {
+            console.log('⚠️ Session established but email not confirmed yet');
+            setIsLoading(false);
           }
           
           if (error) {
@@ -71,8 +75,9 @@ const VerifyEmail = () => {
     function setupVerificationCheck() {
       // Listen for auth state changes (when user clicks verification link)
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('🔐 Auth state changed:', event, session?.user?.last_sign_in_at);
-        if (event === 'SIGNED_IN' && session?.user?.last_sign_in_at) {
+        console.log('🔐 Auth state changed:', event, 'email_confirmed_at:', session?.user?.email_confirmed_at);
+        if (session?.user?.email_confirmed_at) {
+          console.log('✅ Email verified via auth state change!');
           setEmailVerified(true);
           setIsLoading(false);
         }
@@ -81,37 +86,33 @@ const VerifyEmail = () => {
       // Check for email confirmation from redirect
       const checkEmailConfirmation = async () => {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('📧 Initial session check:', session?.user?.email, session?.user?.last_sign_in_at, 'Error:', error);
+        console.log('📧 Initial session check:', session?.user?.email, 'email_confirmed_at:', session?.user?.email_confirmed_at, 'Error:', error);
         
         if (!session) {
-          console.log('⚠️ No session found, user might need to sign in again');
+          console.log('⚠️ No session found, waiting for email verification');
         }
         
-        if (session?.user?.last_sign_in_at) {
+        if (session?.user?.email_confirmed_at) {
           console.log('✅ Email is verified!');
           setEmailVerified(true);
+        } else {
+          console.log('⏳ Email not confirmed yet, waiting...');
         }
         setIsLoading(false);
       };
 
       checkEmailConfirmation();
 
-      // Poll for email verification every 3 seconds by attempting silent sign-in
+      // Poll for email verification every 3 seconds by checking session
       const interval = setInterval(async () => {
-        // Try to sign in to check if email is verified
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password,
-        });
+        const { data: { session } } = await supabase.auth.getSession();
         
-        console.log('🔄 Polling sign-in attempt:', signInData?.user?.email, signInData?.user?.last_sign_in_at);
+        console.log('🔄 Polling for verification:', session?.user?.email, 'email_confirmed_at:', session?.user?.email_confirmed_at);
         
-        if (signInData?.user?.last_sign_in_at) {
+        if (session?.user?.email_confirmed_at) {
           console.log('✅ Verified via polling!');
           setEmailVerified(true);
           clearInterval(interval);
-        } else if (signInError) {
-          console.log('⏳ Email not verified yet:', signInError.message);
         }
       }, 3000);
       
@@ -125,26 +126,26 @@ const VerifyEmail = () => {
   const handleManualRefresh = async () => {
     setIsChecking(true);
     try {
-      // Try to sign in to check if email is now verified
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+      // Get the current session to check email confirmation
+      const { data: { session }, error } = await supabase.auth.getSession();
       
-      console.log('🔄 Sign in attempt result:', signInData?.user?.email, signInData?.user?.last_sign_in_at);
+      console.log('🔄 Manual check:', session?.user?.email, 'email_confirmed_at:', session?.user?.email_confirmed_at);
       
-      if (signInError) {
-        console.error('Sign in error:', signInError);
-        toast({
-          title: "Not Verified Yet",
-          description: "Please check your email and click the confirmation link first.",
-          variant: "destructive",
-        });
-      } else if (signInData?.user?.last_sign_in_at) {
+      if (error) {
+        console.error('Session error:', error);
+      }
+      
+      if (session?.user?.email_confirmed_at) {
         setEmailVerified(true);
         toast({
           title: "Email Verified!",
           description: "Your email has been confirmed successfully.",
+        });
+      } else {
+        toast({
+          title: "Not Verified Yet",
+          description: "Please check your email and click the confirmation link first.",
+          variant: "destructive",
         });
       }
     } catch (error) {
