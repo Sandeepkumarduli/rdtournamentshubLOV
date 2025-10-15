@@ -100,7 +100,7 @@ const Signup = () => {
             bgmi_id: formData.bgmiId,
             phone: formattedPhone,
           },
-          emailRedirectTo: `${window.location.origin}/verify-account`,
+          emailRedirectTo: `${window.location.origin}/verify-email`,
         }
       });
 
@@ -116,13 +116,13 @@ const Signup = () => {
       if (data.user) {
         // Session is automatically created by Supabase even if email is not confirmed
         // Profile is automatically created by database trigger
-        // Redirect to verification page
-        navigate('/verify-account', { 
+        // Redirect to email verification page first
+        navigate('/verify-email', { 
           state: { 
             email: formData.email, 
             phone: formattedPhone,
             userId: data.user.id,
-            password: formData.password // Pass password to allow re-authentication if needed
+            password: formData.password
           } 
         });
       }
