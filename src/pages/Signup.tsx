@@ -88,7 +88,7 @@ const Signup = () => {
         return;
       }
 
-      // Create account with ONLY email and password (no phone in auth)
+      // Create account with email, password, and phone in metadata
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -96,6 +96,7 @@ const Signup = () => {
           data: {
             display_name: formData.username,
             bgmi_id: formData.bgmiId,
+            phone: formattedPhone,
           },
           emailRedirectTo: `${window.location.origin}/verify-account`,
         }
@@ -111,27 +112,7 @@ const Signup = () => {
       }
 
       if (data.user) {
-        // Create profile with phone stored separately
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: data.user.id,
-            display_name: formData.username,
-            email: formData.email,
-            bgmi_id: formData.bgmiId,
-            phone: formattedPhone,
-          });
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          toast({
-            title: "Profile Creation Failed",
-            description: "Account created but profile failed. Please contact support.",
-            variant: "destructive",
-          });
-          return;
-        }
-
+        // Profile is automatically created by database trigger
         // Redirect to verification page
         navigate('/verify-account', { 
           state: { 
