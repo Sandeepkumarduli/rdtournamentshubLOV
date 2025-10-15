@@ -96,21 +96,24 @@ const VerifyEmail = () => {
 
       checkEmailConfirmation();
 
-      // Poll for email verification every 2 seconds by checking last_sign_in_at
+      // Poll for email verification every 3 seconds by attempting silent sign-in
       const interval = setInterval(async () => {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('🔄 Polling session:', session?.user?.email, session?.user?.last_sign_in_at, 'Has session:', !!session);
+        // Try to sign in to check if email is verified
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
         
-        if (error) {
-          console.error('Polling error:', error);
-        }
+        console.log('🔄 Polling sign-in attempt:', signInData?.user?.email, signInData?.user?.last_sign_in_at);
         
-        if (session?.user?.last_sign_in_at) {
+        if (signInData?.user?.last_sign_in_at) {
           console.log('✅ Verified via polling!');
           setEmailVerified(true);
           clearInterval(interval);
+        } else if (signInError) {
+          console.log('⏳ Email not verified yet:', signInError.message);
         }
-      }, 2000);
+      }, 3000);
       
       return () => {
         clearInterval(interval);
@@ -122,33 +125,26 @@ const VerifyEmail = () => {
   const handleManualRefresh = async () => {
     setIsChecking(true);
     try {
-      // Force refresh the session
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      console.log('🔄 Manual refresh result:', refreshData?.session?.user?.email, refreshData?.session?.user?.last_sign_in_at);
+      // Try to sign in to check if email is now verified
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
       
-      if (refreshError) {
-        console.error('Refresh error:', refreshError);
-      }
+      console.log('🔄 Sign in attempt result:', signInData?.user?.email, signInData?.user?.last_sign_in_at);
       
-      // Get the updated session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('📱 Session after refresh:', session?.user?.email, session?.user?.last_sign_in_at);
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-      }
-      
-      if (session?.user?.last_sign_in_at) {
+      if (signInError) {
+        console.error('Sign in error:', signInError);
+        toast({
+          title: "Not Verified Yet",
+          description: "Please check your email and click the confirmation link first.",
+          variant: "destructive",
+        });
+      } else if (signInData?.user?.last_sign_in_at) {
         setEmailVerified(true);
         toast({
           title: "Email Verified!",
           description: "Your email has been confirmed successfully.",
-        });
-      } else {
-        toast({
-          title: "Not Verified Yet",
-          description: "Please check your email and click the confirmation link.",
-          variant: "destructive",
         });
       }
     } catch (error) {
