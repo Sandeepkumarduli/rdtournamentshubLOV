@@ -6,16 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, GamepadIcon, Mail, User, Lock, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useFirebaseOTP } from "@/hooks/useFirebaseOTP";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import OTPInput from "@/components/OTPInput";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -27,8 +23,6 @@ const Signup = () => {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp } = useAuth();
-  const { sendOTP, verifyOTP, isLoading: otpLoading, verificationId } = useFirebaseOTP();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,60 +47,62 @@ const Signup = () => {
       return;
     }
 
-    // Send OTP for phone verification
-    const success = await sendOTP(formData.phone);
-    if (success) {
-      setOtpSent(true);
-      toast({
-        title: "OTP Sent",
-        description: "Please verify your phone number to continue",
-      });
-    }
-  };
-
-  const handleVerifyOTPAndCreateAccount = async (verificationId: string, code: string) => {
-    if (!verificationId || !code) return;
-    
     setIsCreatingAccount(true);
     
     try {
-      // Verify OTP first
-      const verified = await verifyOTP(verificationId, code);
-      
-      if (verified) {
-        // Now create the account with email/password
-        const { data, error } = await signUp(formData.email, formData.password, formData.username);
+      // Format phone number
+      let formattedPhone = formData.phone.trim();
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
+      }
 
-        if (error) {
-          toast({
-            title: "Signup Failed",
-            description: error.message,
-            variant: "destructive",
+      // Create account with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        phone: formattedPhone,
+        options: {
+          data: {
+            display_name: formData.username,
+            bgmi_id: formData.bgmiId,
+          },
+          emailRedirectTo: `${window.location.origin}/verify-account`,
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Signup Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data.user) {
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: data.user.id,
+            display_name: formData.username,
+            email: formData.email,
+            bgmi_id: formData.bgmiId,
+            phone: formattedPhone,
           });
-          return;
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
         }
 
-        if (data.user) {
-          // Update profile with additional info including verified phone
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({
-              bgmi_id: formData.bgmiId,
-              display_name: formData.username,
-              phone: formData.phone,
-            })
-            .eq('user_id', data.user.id);
-
-          if (profileError) {
-            console.error('Error updating profile:', profileError);
-          }
-
-          toast({
-            title: "Account Created!",
-            description: "Please check your email to verify your account before logging in.",
-          });
-          navigate("/login");
-        }
+        // Redirect to verification page
+        navigate('/verify-account', { 
+          state: { 
+            email: formData.email, 
+            phone: formattedPhone,
+            userId: data.user.id
+          } 
+        });
       }
     } catch (error: any) {
       toast({
@@ -117,10 +113,6 @@ const Signup = () => {
     } finally {
       setIsCreatingAccount(false);
     }
-  };
-
-  const handleResendOTP = () => {
-    sendOTP(formData.phone);
   };
 
   return (
@@ -141,8 +133,7 @@ const Signup = () => {
             <CardTitle className="text-center text-xl">Create Account</CardTitle>
           </CardHeader>
           <CardContent>
-            {!otpSent ? (
-              <form onSubmit={handleSignup} className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-4">
               <p className="text-sm text-muted-foreground mb-4">
                 Both email and phone number verification are required to create an account.
               </p>
@@ -274,39 +265,10 @@ const Signup = () => {
                 </Label>
               </div>
 
-              <Button type="submit" variant="gaming" className="w-full" disabled={otpLoading}>
-                {otpLoading ? <LoadingSpinner /> : "Verify Phone Number"}
+              <Button type="submit" variant="gaming" className="w-full" disabled={isCreatingAccount}>
+                {isCreatingAccount ? <LoadingSpinner /> : "Create Account"}
               </Button>
             </form>
-            ) : (
-              <div className="space-y-4">
-                <div className="text-center mb-4">
-                  <p className="text-sm text-muted-foreground">
-                    Enter the 6-digit OTP sent to {formData.phone}
-                  </p>
-                </div>
-
-                <OTPInput
-                  phoneNumber={formData.phone}
-                  onVerificationSuccess={handleVerifyOTPAndCreateAccount}
-                  onResend={handleResendOTP}
-                  isLoading={otpLoading || isCreatingAccount}
-                  verificationId={verificationId}
-                />
-
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => {
-                    setOtpSent(false);
-                  }}
-                  disabled={isCreatingAccount}
-                >
-                  Change Details
-                </Button>
-              </div>
-            )}
 
             <div className="mt-6 space-y-3 text-center text-sm text-muted-foreground">
               <div>
@@ -326,9 +288,6 @@ const Signup = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Hidden recaptcha container for Firebase */}
-        <div id="recaptcha-container"></div>
       </div>
     </div>
   );
