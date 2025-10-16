@@ -56,34 +56,73 @@ const Signup = () => {
         formattedPhone = '+91' + formattedPhone.replace(/^0/, '');
       }
 
-      // Check for duplicate email
+      // Check for existing email with verification status
       const { data: existingEmailProfile } = await supabase
         .from('profiles')
-        .select('email')
+        .select('email, email_verified, phone_verified, user_id, phone')
         .eq('email', formData.email)
         .maybeSingle();
 
       if (existingEmailProfile) {
-        toast({
-          title: "Email Already Exists",
-          description: "This email is already registered. Please use a different email or login.",
-          variant: "destructive",
-        });
-        setIsCreatingAccount(false);
-        return;
+        // If email is verified but phone is not, redirect to phone verification
+        if (existingEmailProfile.email_verified && !existingEmailProfile.phone_verified) {
+          toast({
+            title: "Email Already Verified",
+            description: "Your email is already verified. Please verify your phone number to complete registration.",
+          });
+          setIsCreatingAccount(false);
+          navigate('/verify-phone', {
+            state: {
+              phone: existingEmailProfile.phone || formattedPhone,
+              userId: existingEmailProfile.user_id,
+              email: formData.email,
+              password: formData.password
+            }
+          });
+          return;
+        }
+        
+        // If both are verified, ask them to login
+        if (existingEmailProfile.email_verified && existingEmailProfile.phone_verified) {
+          toast({
+            title: "Account Already Exists",
+            description: "Your account is fully verified. Please login instead.",
+            variant: "destructive",
+          });
+          setIsCreatingAccount(false);
+          return;
+        }
+        
+        // If email exists but not verified yet, redirect to email verification
+        if (!existingEmailProfile.email_verified) {
+          toast({
+            title: "Account Pending Verification",
+            description: "Please verify your email first.",
+          });
+          setIsCreatingAccount(false);
+          navigate('/verify-email', {
+            state: {
+              email: formData.email,
+              phone: existingEmailProfile.phone || formattedPhone,
+              userId: existingEmailProfile.user_id,
+              password: formData.password
+            }
+          });
+          return;
+        }
       }
 
-      // Check for duplicate phone
+      // Check for duplicate phone (only if no email match found)
       const { data: existingPhoneProfile } = await supabase
         .from('profiles')
-        .select('phone')
+        .select('phone, user_id, email')
         .eq('phone', formattedPhone)
         .maybeSingle();
 
-      if (existingPhoneProfile) {
+      if (existingPhoneProfile && existingPhoneProfile.email !== formData.email) {
         toast({
           title: "Phone Number Already Exists",
-          description: "This phone number is already registered. Please use a different number or login.",
+          description: "This phone number is already registered with another account.",
           variant: "destructive",
         });
         setIsCreatingAccount(false);
