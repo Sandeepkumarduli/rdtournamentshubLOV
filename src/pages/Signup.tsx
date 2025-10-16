@@ -113,7 +113,22 @@ const Signup = () => {
         return;
       }
 
+      // Check if this is an existing user (Supabase returns success even for duplicate emails)
+      if (data.user && data.session === null && data.user.identities?.length === 0) {
+        toast({
+          title: "Account Already Exists",
+          description: "This email is already registered. Please login instead or use a different email.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (data.user) {
+        toast({
+          title: "Account Created!",
+          description: "Please check your email to verify your account.",
+        });
+        
         // Session is automatically created by Supabase even if email is not confirmed
         // Profile is automatically created by database trigger
         // Redirect to email verification page first
