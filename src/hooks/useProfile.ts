@@ -14,6 +14,7 @@ export interface Profile {
   organization: string | null;
   experience: string | null;
   phone: string | null;
+  unique_code: string | null;
   created_at: string;
   updated_at: string;
 }

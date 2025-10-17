@@ -546,7 +546,7 @@ const Teams = () => {
                                   <div>
                                     <h4 className="font-medium mb-2">Add New Member</h4>
                                     <div>
-                                      <Label htmlFor="memberSearch">Search by Username or Email</Label>
+                                      <Label htmlFor="memberSearch">Enter User's 5-Digit Code</Label>
                                       <Input 
                                         id="memberSearch" 
                                         value={newMemberEmail} 
@@ -554,40 +554,37 @@ const Teams = () => {
                                           setNewMemberEmail(e.target.value);
                                           searchUsers(e.target.value);
                                         }}
-                                        placeholder="Enter username or email to search" 
+                                        placeholder="Enter 5-digit code (e.g., 12345)"
+                                        maxLength={5}
                                       />
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        Ask the user for their unique 5-digit code from their profile
+                                      </p>
                                     </div>
                                     
                                     {/* Search Results */}
                                     {searchResults.length > 0 && (
                                       <div className="border rounded-lg p-2 max-h-40 overflow-y-auto mt-2">
-                                        <p className="text-sm font-medium mb-2">Search Results:</p>
+                                        <p className="text-sm font-medium mb-2">User Found:</p>
                                         <div className="space-y-1">
-                                          {searchResults.map((user) => {
-                                            const isEmailMatch = user.email.toLowerCase().includes(newMemberEmail.toLowerCase());
-                                            return (
-                                              <div 
-                                                key={user.user_id} 
-                                                className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
-                                                onClick={() => handleSendTeamRequest(user.user_id, team.id)}
-                                              >
-                                                <div className="flex-1">
-                                                  <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
-                                                  {user.bgmi_id && (
-                                                    <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
-                                                  )}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                  {isEmailMatch && (
-                                                    <Check className="h-4 w-4 text-success" />
-                                                  )}
-                                                  <Button size="sm" variant="outline">
-                                                    Add
-                                                  </Button>
-                                                </div>
+                                          {searchResults.map((user) => (
+                                            <div 
+                                              key={user.user_id} 
+                                              className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
+                                              onClick={() => handleSendTeamRequest(user.user_id, team.id)}
+                                            >
+                                              <div className="flex-1">
+                                                <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
+                                                <p className="text-xs text-muted-foreground">Code: {user.unique_code}</p>
+                                                {user.bgmi_id && (
+                                                  <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
+                                                )}
                                               </div>
-                                            );
-                                          })}
+                                              <Button size="sm" variant="outline">
+                                                Add
+                                              </Button>
+                                            </div>
+                                          ))}
                                         </div>
                                       </div>
                                     )}
@@ -660,7 +657,7 @@ const Teams = () => {
                              </DialogHeader>
                              <div className="space-y-4">
                                <div>
-                                 <Label htmlFor="memberSearch">Search by Username or Email</Label>
+                                 <Label htmlFor="memberSearch">Enter User's 5-Digit Code</Label>
                                  <Input 
                                    id="memberSearch" 
                                    value={newMemberEmail} 
@@ -668,43 +665,37 @@ const Teams = () => {
                                      setNewMemberEmail(e.target.value);
                                      searchUsers(e.target.value);
                                    }}
-                                   placeholder="Enter username or email to search" 
+                                   placeholder="Enter 5-digit code (e.g., 12345)"
+                                   maxLength={5}
                                  />
-                                 <p className="text-xs text-muted-foreground mt-1">
-                                   Search for existing users to add to your team
-                                 </p>
-                               </div>
-                               
-                                {/* Search Results */}
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Ask the user for their unique 5-digit code from their profile
+                                  </p>
+                                </div>
+                                
+                                 {/* Search Results */}
                                 {searchResults.length > 0 && (
                                   <div className="border rounded-lg p-2 max-h-40 overflow-y-auto">
-                                    <p className="text-sm font-medium mb-2">Search Results:</p>
+                                    <p className="text-sm font-medium mb-2">User Found:</p>
                                     <div className="space-y-1">
-                                      {searchResults.map((user) => {
-                                        const isEmailMatch = user.email.toLowerCase().includes(newMemberEmail.toLowerCase());
-                                        return (
-                                          <div 
-                                            key={user.user_id} 
-                                            className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
-                                            onClick={() => handleSendTeamRequest(user.user_id, team.id)}
-                                          >
-                                            <div className="flex-1">
-                                              <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
-                                              {user.bgmi_id && (
-                                                <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
-                                              )}
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                              {isEmailMatch && (
-                                                <Check className="h-4 w-4 text-success" />
-                                              )}
-                                              <Button size="sm" variant="outline">
-                                                Add
-                                              </Button>
-                                            </div>
+                                      {searchResults.map((user) => (
+                                        <div 
+                                          key={user.user_id} 
+                                          className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
+                                          onClick={() => handleSendTeamRequest(user.user_id, team.id)}
+                                        >
+                                          <div className="flex-1">
+                                            <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
+                                            <p className="text-xs text-muted-foreground">Code: {user.unique_code}</p>
+                                            {user.bgmi_id && (
+                                              <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
+                                            )}
                                           </div>
-                                        );
-                                      })}
+                                          <Button size="sm" variant="outline">
+                                            Add
+                                          </Button>
+                                        </div>
+                                      ))}
                                     </div>
                                   </div>
                                 )}

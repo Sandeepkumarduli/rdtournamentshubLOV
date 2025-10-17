@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { User, CheckCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProfileData {
   username: string;
@@ -24,9 +25,22 @@ interface ProfileCardProps {
   onEdit: () => void;
   onSave: () => void;
   onCancel: () => void;
+  uniqueCode?: string;
 }
 
-const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneVerified, onVerifyEmail, onVerifyPhone, onEdit, onSave, onCancel }: ProfileCardProps) => {
+const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneVerified, onVerifyEmail, onVerifyPhone, onEdit, onSave, onCancel, uniqueCode }: ProfileCardProps) => {
+  const { toast } = useToast();
+
+  const copyToClipboard = () => {
+    if (uniqueCode) {
+      navigator.clipboard.writeText(uniqueCode);
+      toast({
+        title: "Code Copied!",
+        description: "Your unique code has been copied to clipboard",
+      });
+    }
+  };
+
   return (
     <Card className="gaming-card">
       <CardHeader>
@@ -36,6 +50,30 @@ const ProfileCard = ({ formData, isEditing, onInputChange, emailVerified, phoneV
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {uniqueCode && (
+          <div className="p-4 border border-primary/30 rounded-lg bg-primary/5">
+            <Label htmlFor="uniqueCode" className="text-base font-semibold">Your Unique Code</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                id="uniqueCode"
+                value={uniqueCode}
+                disabled={true}
+                className="opacity-100 text-2xl font-bold text-center tracking-widest flex-1"
+              />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={copyToClipboard}
+              >
+                Copy
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Share this code with team leaders to join their teams. This code is unique and cannot be changed.
+            </p>
+          </div>
+        )}
+
         <div>
           <Label htmlFor="username">Username</Label>
           <Input

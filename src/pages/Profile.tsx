@@ -271,6 +271,7 @@ const Profile = () => {
           onEdit={() => setIsEditing(true)}
           onSave={handleSave}
           onCancel={handleCancel}
+          uniqueCode={profile?.unique_code}
         />
 
         <AccountStats 

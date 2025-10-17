@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface UserSearchResult {
   user_id: string;
   display_name: string;
-  email: string;
+  unique_code: string;
   bgmi_id: string | null;
   role?: string | null;
 }
@@ -19,16 +19,22 @@ export const useUserSearch = () => {
       return;
     }
 
+    // Only search if exactly 5 digits
+    if (!/^\d{5}$/.test(query.trim())) {
+      setResults([]);
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, display_name, email, bgmi_id, role')
-        .or(`display_name.ilike.%${query}%,email.ilike.%${query}%`)
+        .select('user_id, display_name, unique_code, bgmi_id, role')
+        .eq('unique_code', query.trim())
         .not('role', 'in', '("admin","systemadmin")')
         .eq('email_verified', true)
         .eq('phone_verified', true)
-        .limit(10);
+        .limit(1);
 
       if (error) {
         console.error('Error searching users:', error);
