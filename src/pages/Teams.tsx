@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X, Trash2, Settings, UserMinus, Bell, Check } from 'lucide-react';
+import { AlertCircle, RefreshCw, Plus, Users, Copy, UserPlus, X, Trash2, Settings, UserMinus, Bell, Check, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTeams } from '@/hooks/useTeams';
 import { useTeamRequests } from '@/hooks/useTeamRequests';
@@ -14,6 +14,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import FrozenAccountBanner from '@/components/FrozenAccountBanner';
+import { CodeInput } from '@/components/CodeInput';
 
 const Teams = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -547,46 +548,52 @@ const Teams = () => {
                                     <h4 className="font-medium mb-2">Add New Member</h4>
                                     <div>
                                       <Label htmlFor="memberSearch">Enter User's 5-Digit Code</Label>
-                                      <Input 
-                                        id="memberSearch" 
-                                        value={newMemberEmail} 
-                                        onChange={(e) => {
-                                          setNewMemberEmail(e.target.value);
-                                          searchUsers(e.target.value);
-                                        }}
-                                        placeholder="Enter 5-digit code (e.g., 12345)"
-                                        maxLength={5}
-                                      />
-                                      <p className="text-xs text-muted-foreground mt-1">
+                                      <p className="text-xs text-muted-foreground mt-1 mb-3">
                                         Ask the user for their unique 5-digit code from their profile
                                       </p>
+                                      <CodeInput
+                                        value={newMemberEmail}
+                                        onChange={setNewMemberEmail}
+                                      />
+                                      <Button 
+                                        onClick={() => searchUsers(newMemberEmail)}
+                                        disabled={newMemberEmail.length !== 5 || searchLoading}
+                                        className="w-full mt-3"
+                                      >
+                                        <Search className="h-4 w-4 mr-2" />
+                                        {searchLoading ? 'Searching...' : 'Search User'}
+                                      </Button>
                                     </div>
                                     
                                     {/* Search Results */}
                                     {searchResults.length > 0 && (
-                                      <div className="border rounded-lg p-2 max-h-40 overflow-y-auto mt-2">
-                                        <p className="text-sm font-medium mb-2">User Found:</p>
+                                      <div className="border rounded-lg p-3 bg-accent/50 mt-3">
+                                        <p className="text-sm font-medium mb-2 text-primary">User Found:</p>
                                         <div className="space-y-1">
                                           {searchResults.map((user) => (
                                             <div 
                                               key={user.user_id} 
-                                              className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
+                                              className="flex items-center justify-between p-3 bg-background hover:bg-accent/50 rounded-lg cursor-pointer transition-colors"
                                               onClick={() => handleSendTeamRequest(user.user_id, team.id)}
                                             >
                                               <div className="flex-1">
-                                                <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
+                                                <p className="font-semibold text-sm">{user.display_name || 'No Name'}</p>
                                                 <p className="text-xs text-muted-foreground">Code: {user.unique_code}</p>
                                                 {user.bgmi_id && (
                                                   <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
                                                 )}
                                               </div>
-                                              <Button size="sm" variant="outline">
+                                              <Button size="sm" variant="default">
                                                 Add
                                               </Button>
                                             </div>
                                           ))}
                                         </div>
                                       </div>
+                                    )}
+                                    
+                                    {newMemberEmail.length === 5 && searchResults.length === 0 && !searchLoading && (
+                                      <p className="text-sm text-muted-foreground text-center mt-2">Click "Search User" to find the user</p>
                                     )}
                                   </div>
                                 )}
@@ -655,43 +662,45 @@ const Teams = () => {
                              <DialogHeader>
                                <DialogTitle>Add Team Member to {team.name}</DialogTitle>
                              </DialogHeader>
-                             <div className="space-y-4">
-                               <div>
-                                 <Label htmlFor="memberSearch">Enter User's 5-Digit Code</Label>
-                                 <Input 
-                                   id="memberSearch" 
-                                   value={newMemberEmail} 
-                                   onChange={(e) => {
-                                     setNewMemberEmail(e.target.value);
-                                     searchUsers(e.target.value);
-                                   }}
-                                   placeholder="Enter 5-digit code (e.g., 12345)"
-                                   maxLength={5}
-                                 />
-                                  <p className="text-xs text-muted-foreground mt-1">
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="memberSearch">Enter User's 5-Digit Code</Label>
+                                  <p className="text-xs text-muted-foreground mt-1 mb-3">
                                     Ask the user for their unique 5-digit code from their profile
                                   </p>
+                                  <CodeInput
+                                    value={newMemberEmail}
+                                    onChange={setNewMemberEmail}
+                                  />
+                                  <Button 
+                                    onClick={() => searchUsers(newMemberEmail)}
+                                    disabled={newMemberEmail.length !== 5 || searchLoading}
+                                    className="w-full mt-3"
+                                  >
+                                    <Search className="h-4 w-4 mr-2" />
+                                    {searchLoading ? 'Searching...' : 'Search User'}
+                                  </Button>
                                 </div>
-                                
-                                 {/* Search Results */}
+                                 
+                                {/* Search Results */}
                                 {searchResults.length > 0 && (
-                                  <div className="border rounded-lg p-2 max-h-40 overflow-y-auto">
-                                    <p className="text-sm font-medium mb-2">User Found:</p>
+                                  <div className="border rounded-lg p-3 bg-accent/50">
+                                    <p className="text-sm font-medium mb-2 text-primary">User Found:</p>
                                     <div className="space-y-1">
                                       {searchResults.map((user) => (
                                         <div 
                                           key={user.user_id} 
-                                          className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
+                                          className="flex items-center justify-between p-3 bg-background hover:bg-accent/50 rounded-lg cursor-pointer transition-colors"
                                           onClick={() => handleSendTeamRequest(user.user_id, team.id)}
                                         >
                                           <div className="flex-1">
-                                            <p className="font-medium text-sm">{user.display_name || 'No Name'}</p>
+                                            <p className="font-semibold text-sm">{user.display_name || 'No Name'}</p>
                                             <p className="text-xs text-muted-foreground">Code: {user.unique_code}</p>
                                             {user.bgmi_id && (
                                               <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
                                             )}
                                           </div>
-                                          <Button size="sm" variant="outline">
+                                          <Button size="sm" variant="default">
                                             Add
                                           </Button>
                                         </div>
@@ -699,10 +708,10 @@ const Teams = () => {
                                     </div>
                                   </div>
                                 )}
-                               
-                               {searchLoading && (
-                                 <p className="text-sm text-muted-foreground">Searching...</p>
-                               )}
+                                
+                                {newMemberEmail.length === 5 && searchResults.length === 0 && !searchLoading && (
+                                  <p className="text-sm text-muted-foreground text-center">Click "Search User" to find the user</p>
+                                )}
                                
                                <div className="flex gap-2">
                                  <Button variant="outline" onClick={() => {
