@@ -80,13 +80,16 @@ export const CodeInput: React.FC<CodeInputProps> = ({ value, onChange, length = 
           onPaste={handlePaste}
           autoFocus={index === 0}
           className={cn(
-            "w-12 h-14 text-center text-lg font-semibold",
-            "rounded-md border-2 border-primary",
-            "bg-background text-foreground",
+            "w-12 h-14 text-center text-xl font-bold",
+            "rounded-lg border-2",
+            "bg-card text-card-foreground",
+            "border-primary/40",
             "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
-            "transition-all duration-200 cursor-text",
-            "hover:border-primary/80",
-            digit && "border-primary bg-primary/5"
+            "focus:bg-primary/5",
+            "transition-all duration-200",
+            "hover:border-primary/60 hover:bg-primary/5",
+            "shadow-sm",
+            digit && "border-primary bg-primary/10 shadow-md"
           )}
         />
       ))}
