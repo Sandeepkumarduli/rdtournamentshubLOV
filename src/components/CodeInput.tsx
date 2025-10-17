@@ -72,17 +72,20 @@ export const CodeInput: React.FC<CodeInputProps> = ({ value, onChange, length = 
           ref={(el) => (inputRefs.current[index] = el)}
           type="text"
           inputMode="numeric"
+          pattern="[0-9]*"
           maxLength={1}
           value={digit}
           onChange={(e) => handleChange(index, e.target.value)}
           onKeyDown={(e) => handleKeyDown(index, e)}
           onPaste={handlePaste}
+          autoFocus={index === 0}
           className={cn(
             "w-12 h-14 text-center text-lg font-semibold",
             "rounded-md border-2 border-primary",
-            "bg-background",
+            "bg-background text-foreground",
             "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
-            "transition-all duration-200",
+            "transition-all duration-200 cursor-text",
+            "hover:border-primary/80",
             digit && "border-primary bg-primary/5"
           )}
         />
