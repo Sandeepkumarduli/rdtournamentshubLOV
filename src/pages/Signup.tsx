@@ -224,6 +224,7 @@ const Signup = () => {
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     placeholder="Choose a username"
                     className="pl-10"
+                    autoComplete="off"
                     required
                   />
                 </div>
@@ -240,6 +241,7 @@ const Signup = () => {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="your.email@example.com"
                     className="pl-10"
+                    autoComplete="off"
                     required
                   />
                 </div>
@@ -256,6 +258,7 @@ const Signup = () => {
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+91 9876543210"
                     className="pl-10"
+                    autoComplete="off"
                     required
                   />
                 </div>
@@ -272,6 +275,7 @@ const Signup = () => {
                   value={formData.bgmiId || ''}
                   onChange={(e) => setFormData({ ...formData, bgmiId: e.target.value })}
                   placeholder="Enter your BGMI ID"
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -287,6 +291,7 @@ const Signup = () => {
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Create a password"
                     className="pl-10 pr-10"
+                    autoComplete="new-password"
                     required
                   />
                   <Button
@@ -312,6 +317,7 @@ const Signup = () => {
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     placeholder="Confirm your password"
                     className="pl-10 pr-10"
+                    autoComplete="new-password"
                     required
                   />
                   <Button

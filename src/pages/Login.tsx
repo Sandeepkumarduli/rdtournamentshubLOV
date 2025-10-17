@@ -408,6 +408,7 @@ const Login = () => {
                         value={formData.email} 
                         onChange={e => setFormData({ ...formData, email: e.target.value })} 
                         placeholder="Enter your email or username" 
+                        autoComplete="off"
                         required 
                       />
                     </div>
@@ -421,6 +422,7 @@ const Login = () => {
                           value={formData.password} 
                           onChange={e => setFormData({ ...formData, password: e.target.value })} 
                           placeholder="Enter your password" 
+                          autoComplete="new-password"
                           required 
                         />
                         <Button 
@@ -514,6 +516,7 @@ const Login = () => {
                         value={phoneNumber} 
                         onChange={e => setPhoneNumber(e.target.value)} 
                         placeholder="+91 9876543210" 
+                        autoComplete="off"
                         required 
                       />
                       <p className="text-xs text-muted-foreground">
