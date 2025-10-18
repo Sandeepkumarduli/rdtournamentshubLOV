@@ -26,6 +26,7 @@ const Teams = () => {
   const [selectedTeamForEdit, setSelectedTeamForEdit] = useState<string | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<string | null>(null);
   const [isRequestsDialogOpen, setIsRequestsDialogOpen] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const { toast } = useToast();
   const { userTeams, teamMembersMap, loading, createTeam, joinTeam, deleteTeam, removeMemberFromTeam, leaveTeam, refetch } = useTeams();
   const { incomingRequests, sendRequest, acceptRequest, declineRequest, refetch: refetchRequests } = useTeamRequests();
@@ -134,6 +135,11 @@ const Teams = () => {
     });
   };
 
+  const handleSearchUser = async () => {
+    setHasSearched(true);
+    await searchUsers(newMemberEmail);
+  };
+
   const handleSendTeamRequest = async (selectedUserId: string, teamId: string) => {
     if (profile?.role === 'frozen') {
       toast({
@@ -161,6 +167,7 @@ const Teams = () => {
     });
     setNewMemberEmail('');
     setSelectedTeamForAddMember(null);
+    setHasSearched(false);
     clearResults();
   };
 
@@ -556,12 +563,16 @@ const Teams = () => {
                                        inputMode="numeric"
                                        maxLength={5}
                                        value={newMemberEmail}
-                                       onChange={(e) => setNewMemberEmail(e.target.value.replace(/\D/g, ''))}
+                                       onChange={(e) => {
+                                         setNewMemberEmail(e.target.value.replace(/\D/g, ''));
+                                         setHasSearched(false);
+                                         clearResults();
+                                       }}
                                        placeholder="Enter 5-digit code"
                                        className="text-center text-lg font-semibold tracking-widest"
                                      />
                                      <Button 
-                                       onClick={() => searchUsers(newMemberEmail)}
+                                       onClick={handleSearchUser}
                                        disabled={newMemberEmail.length !== 5 || searchLoading}
                                        className="w-full mt-3"
                                      >
@@ -570,48 +581,64 @@ const Teams = () => {
                                      </Button>
                                    </div>
                                     
-                                    {/* Search Results */}
-                                    {searchResults.length > 0 && (
-                                      <div className="border rounded-lg p-3 bg-accent/50 mt-3">
-                                        <p className="text-sm font-medium mb-2 text-primary">User Found:</p>
-                                        <div className="space-y-1">
-                                          {searchResults.map((user) => (
-                                            <div 
-                                              key={user.user_id} 
-                                              className="flex items-center justify-between p-3 bg-background hover:bg-accent/50 rounded-lg cursor-pointer transition-colors"
-                                              onClick={() => handleSendTeamRequest(user.user_id, team.id)}
-                                            >
-                                              <div className="flex-1">
-                                                <p className="font-semibold text-sm">{user.display_name || 'No Name'}</p>
-                                                <p className="text-xs text-muted-foreground">Code: {user.unique_code}</p>
-                                                {user.bgmi_id && (
-                                                  <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
-                                                )}
-                                              </div>
-                                              <Button size="sm" variant="default">
-                                                Add
-                                              </Button>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                    
-                                    {newMemberEmail.length === 5 && searchResults.length === 0 && !searchLoading && (
-                                      <p className="text-sm text-muted-foreground text-center mt-2">Click "Search User" to find the user</p>
-                                    )}
+                                     {/* Search Results */}
+                                     {searchResults.length > 0 && (
+                                       <div className="border rounded-lg p-4 bg-primary/5 border-primary/20 mt-3">
+                                         <p className="text-sm font-semibold mb-3 text-primary flex items-center gap-2">
+                                           <Check className="h-4 w-4" />
+                                           User Found
+                                         </p>
+                                         <div className="space-y-2">
+                                           {searchResults.map((user) => (
+                                             <div 
+                                               key={user.user_id} 
+                                               className="flex items-center justify-between p-3 bg-background rounded-lg border"
+                                             >
+                                               <div className="flex-1">
+                                                 <p className="font-semibold text-base">{user.display_name || 'No Name'}</p>
+                                                 <p className="text-sm text-muted-foreground">Code: {user.unique_code}</p>
+                                                 {user.bgmi_id && (
+                                                   <p className="text-sm text-muted-foreground">BGMI ID: {user.bgmi_id}</p>
+                                                 )}
+                                               </div>
+                                               <Button 
+                                                 size="sm" 
+                                                 variant="default"
+                                                 onClick={() => handleSendTeamRequest(user.user_id, team.id)}
+                                               >
+                                                 <UserPlus className="h-4 w-4 mr-1" />
+                                                 Add
+                                               </Button>
+                                             </div>
+                                           ))}
+                                         </div>
+                                       </div>
+                                     )}
+                                     
+                                     {hasSearched && searchResults.length === 0 && !searchLoading && (
+                                       <div className="border rounded-lg p-4 bg-destructive/5 border-destructive/20 mt-3">
+                                         <p className="text-sm font-semibold text-destructive flex items-center gap-2">
+                                           <AlertCircle className="h-4 w-4" />
+                                           User Not Found
+                                         </p>
+                                         <p className="text-xs text-muted-foreground mt-1">
+                                           No user found with code: {newMemberEmail}
+                                         </p>
+                                       </div>
+                                     )}
                                   </div>
                                 )}
 
-                                <div className="flex gap-2 pt-4">
-                                  <Button variant="outline" onClick={() => {
-                                    setSelectedTeamForEdit(null);
-                                    setNewMemberEmail('');
-                                    clearResults();
-                                  }}>
-                                    Close
-                                  </Button>
-                                </div>
+                                 <div className="flex gap-2 pt-4">
+                                   <Button variant="outline" onClick={() => {
+                                     setSelectedTeamForEdit(null);
+                                     setNewMemberEmail('');
+                                     setHasSearched(false);
+                                     clearResults();
+                                   }}>
+                                     Close
+                                   </Button>
+                                 </div>
                               </div>
                             </DialogContent>
                           </Dialog>
@@ -679,12 +706,16 @@ const Teams = () => {
                                     inputMode="numeric"
                                     maxLength={5}
                                     value={newMemberEmail}
-                                    onChange={(e) => setNewMemberEmail(e.target.value.replace(/\D/g, ''))}
+                                    onChange={(e) => {
+                                      setNewMemberEmail(e.target.value.replace(/\D/g, ''));
+                                      setHasSearched(false);
+                                      clearResults();
+                                    }}
                                     placeholder="Enter 5-digit code"
                                     className="text-center text-lg font-semibold tracking-widest"
                                   />
                                   <Button 
-                                    onClick={() => searchUsers(newMemberEmail)}
+                                    onClick={handleSearchUser}
                                     disabled={newMemberEmail.length !== 5 || searchLoading}
                                     className="w-full mt-3"
                                   >
@@ -693,46 +724,62 @@ const Teams = () => {
                                   </Button>
                                 </div>
                                  
-                                {/* Search Results */}
-                                {searchResults.length > 0 && (
-                                  <div className="border rounded-lg p-3 bg-accent/50">
-                                    <p className="text-sm font-medium mb-2 text-primary">User Found:</p>
-                                    <div className="space-y-1">
-                                      {searchResults.map((user) => (
-                                        <div 
-                                          key={user.user_id} 
-                                          className="flex items-center justify-between p-3 bg-background hover:bg-accent/50 rounded-lg cursor-pointer transition-colors"
-                                          onClick={() => handleSendTeamRequest(user.user_id, team.id)}
-                                        >
-                                          <div className="flex-1">
-                                            <p className="font-semibold text-sm">{user.display_name || 'No Name'}</p>
-                                            <p className="text-xs text-muted-foreground">Code: {user.unique_code}</p>
-                                            {user.bgmi_id && (
-                                              <p className="text-xs text-muted-foreground">BGMI: {user.bgmi_id}</p>
-                                            )}
-                                          </div>
-                                          <Button size="sm" variant="default">
-                                            Add
-                                          </Button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                                
-                                {newMemberEmail.length === 5 && searchResults.length === 0 && !searchLoading && (
-                                  <p className="text-sm text-muted-foreground text-center">Click "Search User" to find the user</p>
-                                )}
+                                 {/* Search Results */}
+                                 {searchResults.length > 0 && (
+                                   <div className="border rounded-lg p-4 bg-primary/5 border-primary/20 mt-3">
+                                     <p className="text-sm font-semibold mb-3 text-primary flex items-center gap-2">
+                                       <Check className="h-4 w-4" />
+                                       User Found
+                                     </p>
+                                     <div className="space-y-2">
+                                       {searchResults.map((user) => (
+                                         <div 
+                                           key={user.user_id} 
+                                           className="flex items-center justify-between p-3 bg-background rounded-lg border"
+                                         >
+                                           <div className="flex-1">
+                                             <p className="font-semibold text-base">{user.display_name || 'No Name'}</p>
+                                             <p className="text-sm text-muted-foreground">Code: {user.unique_code}</p>
+                                             {user.bgmi_id && (
+                                               <p className="text-sm text-muted-foreground">BGMI ID: {user.bgmi_id}</p>
+                                             )}
+                                           </div>
+                                           <Button 
+                                             size="sm" 
+                                             variant="default"
+                                             onClick={() => handleSendTeamRequest(user.user_id, team.id)}
+                                           >
+                                             <UserPlus className="h-4 w-4 mr-1" />
+                                             Add
+                                           </Button>
+                                         </div>
+                                       ))}
+                                     </div>
+                                   </div>
+                                 )}
+                                 
+                                 {hasSearched && searchResults.length === 0 && !searchLoading && (
+                                   <div className="border rounded-lg p-4 bg-destructive/5 border-destructive/20 mt-3">
+                                     <p className="text-sm font-semibold text-destructive flex items-center gap-2">
+                                       <AlertCircle className="h-4 w-4" />
+                                       User Not Found
+                                     </p>
+                                     <p className="text-xs text-muted-foreground mt-1">
+                                       No user found with code: {newMemberEmail}
+                                     </p>
+                                   </div>
+                                 )}
                                
-                               <div className="flex gap-2">
-                                 <Button variant="outline" onClick={() => {
-                                   setSelectedTeamForAddMember(null);
-                                   setNewMemberEmail('');
-                                   clearResults();
-                                 }}>
-                                   Cancel
-                                 </Button>
-                               </div>
+                                <div className="flex gap-2">
+                                  <Button variant="outline" onClick={() => {
+                                    setSelectedTeamForAddMember(null);
+                                    setNewMemberEmail('');
+                                    setHasSearched(false);
+                                    clearResults();
+                                  }}>
+                                    Cancel
+                                  </Button>
+                                </div>
                              </div>
                            </DialogContent>
                          </Dialog>
