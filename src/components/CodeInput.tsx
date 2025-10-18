@@ -67,7 +67,7 @@ export const CodeInput: React.FC<CodeInputProps> = ({ value, onChange, length = 
   console.log('🔢 CodeInput rendering with:', { code, length, value });
 
   return (
-    <div className="flex gap-3 justify-center my-4" style={{ minHeight: '80px' }}>
+    <div className="flex gap-3 justify-center my-4">
       {code.map((digit, index) => (
         <input
           key={index}
@@ -81,20 +81,17 @@ export const CodeInput: React.FC<CodeInputProps> = ({ value, onChange, length = 
           onKeyDown={(e) => handleKeyDown(index, e)}
           onPaste={handlePaste}
           autoFocus={index === 0}
-          style={{
-            width: '56px',
-            height: '64px',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            border: '3px solid hsl(var(--primary))',
-            borderRadius: '8px',
-            backgroundColor: digit ? 'hsl(var(--primary) / 0.1)' : 'hsl(var(--background))',
-            color: 'hsl(var(--foreground))',
-            outline: 'none',
-            transition: 'all 0.2s',
-          }}
-          className="focus:ring-4 focus:ring-primary/50 hover:shadow-lg"
+          className={cn(
+            "w-14 h-16",
+            "text-center text-2xl font-bold",
+            "rounded-lg",
+            "border-2 border-primary",
+            "bg-background text-foreground",
+            "focus:outline-none focus:ring-2 focus:ring-primary",
+            "transition-all",
+            "shadow-sm",
+            digit && "bg-primary/10 ring-1 ring-primary/30"
+          )}
         />
       ))}
     </div>
