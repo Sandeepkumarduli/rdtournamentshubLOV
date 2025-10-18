@@ -14,7 +14,6 @@ import { useProfile } from '@/hooks/useProfile';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import FrozenAccountBanner from '@/components/FrozenAccountBanner';
-import { CodeInput } from '@/components/CodeInput';
 
 const Teams = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -546,24 +545,30 @@ const Teams = () => {
                                 {teamMembers.length < 5 && (
                                   <div>
                                     <h4 className="font-medium mb-2">Add New Member</h4>
-                                    <div>
-                                      <Label htmlFor="memberSearch">Enter User's 5-Digit Code</Label>
-                                      <p className="text-xs text-muted-foreground mt-1 mb-3">
-                                        Ask the user for their unique 5-digit code from their profile
-                                      </p>
-                                      <CodeInput
-                                        value={newMemberEmail}
-                                        onChange={setNewMemberEmail}
-                                      />
-                                      <Button 
-                                        onClick={() => searchUsers(newMemberEmail)}
-                                        disabled={newMemberEmail.length !== 5 || searchLoading}
-                                        className="w-full mt-3"
-                                      >
-                                        <Search className="h-4 w-4 mr-2" />
-                                        {searchLoading ? 'Searching...' : 'Search User'}
-                                      </Button>
-                                    </div>
+                                   <div>
+                                     <Label htmlFor="memberSearch">Enter User's 5-Digit Code</Label>
+                                     <p className="text-xs text-muted-foreground mt-1 mb-3">
+                                       Ask the user for their unique 5-digit code from their profile
+                                     </p>
+                                     <Input
+                                       id="memberSearch"
+                                       type="text"
+                                       inputMode="numeric"
+                                       maxLength={5}
+                                       value={newMemberEmail}
+                                       onChange={(e) => setNewMemberEmail(e.target.value.replace(/\D/g, ''))}
+                                       placeholder="Enter 5-digit code"
+                                       className="text-center text-lg font-semibold tracking-widest"
+                                     />
+                                     <Button 
+                                       onClick={() => searchUsers(newMemberEmail)}
+                                       disabled={newMemberEmail.length !== 5 || searchLoading}
+                                       className="w-full mt-3"
+                                     >
+                                       <Search className="h-4 w-4 mr-2" />
+                                       {searchLoading ? 'Searching...' : 'Search User'}
+                                     </Button>
+                                   </div>
                                     
                                     {/* Search Results */}
                                     {searchResults.length > 0 && (
@@ -664,13 +669,19 @@ const Teams = () => {
                              </DialogHeader>
                               <div className="space-y-4">
                                 <div>
-                                  <Label htmlFor="memberSearch">Enter User's 5-Digit Code</Label>
+                                  <Label htmlFor="quickAddSearch">Enter User's 5-Digit Code</Label>
                                   <p className="text-xs text-muted-foreground mt-1 mb-3">
                                     Ask the user for their unique 5-digit code from their profile
                                   </p>
-                                  <CodeInput
+                                  <Input
+                                    id="quickAddSearch"
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={5}
                                     value={newMemberEmail}
-                                    onChange={setNewMemberEmail}
+                                    onChange={(e) => setNewMemberEmail(e.target.value.replace(/\D/g, ''))}
+                                    placeholder="Enter 5-digit code"
+                                    className="text-center text-lg font-semibold tracking-widest"
                                   />
                                   <Button 
                                     onClick={() => searchUsers(newMemberEmail)}
