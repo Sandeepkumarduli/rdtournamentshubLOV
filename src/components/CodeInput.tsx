@@ -64,8 +64,10 @@ export const CodeInput: React.FC<CodeInputProps> = ({ value, onChange, length = 
     inputRefs.current[focusIndex]?.focus();
   };
 
+  console.log('🔢 CodeInput rendering with:', { code, length, value });
+
   return (
-    <div className="flex gap-2 justify-center my-4">
+    <div className="flex gap-3 justify-center my-4" style={{ minHeight: '80px' }}>
       {code.map((digit, index) => (
         <input
           key={index}
@@ -79,19 +81,20 @@ export const CodeInput: React.FC<CodeInputProps> = ({ value, onChange, length = 
           onKeyDown={(e) => handleKeyDown(index, e)}
           onPaste={handlePaste}
           autoFocus={index === 0}
-          className={cn(
-            "w-14 h-16 text-center text-2xl font-bold",
-            "rounded-lg border-3",
-            "bg-white dark:bg-gray-800",
-            "text-gray-900 dark:text-gray-100",
-            "border-primary",
-            "focus:outline-none focus:ring-4 focus:ring-primary/50 focus:border-primary",
-            "transition-all duration-200",
-            "hover:border-primary hover:shadow-lg",
-            "shadow-md",
-            digit && "bg-primary/10 border-primary ring-2 ring-primary/30"
-          )}
-          style={{ borderWidth: '2px' }}
+          style={{
+            width: '56px',
+            height: '64px',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            border: '3px solid hsl(var(--primary))',
+            borderRadius: '8px',
+            backgroundColor: digit ? 'hsl(var(--primary) / 0.1)' : 'hsl(var(--background))',
+            color: 'hsl(var(--foreground))',
+            outline: 'none',
+            transition: 'all 0.2s',
+          }}
+          className="focus:ring-4 focus:ring-primary/50 hover:shadow-lg"
         />
       ))}
     </div>
