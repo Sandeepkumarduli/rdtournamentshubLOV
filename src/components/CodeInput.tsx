@@ -65,7 +65,7 @@ export const CodeInput: React.FC<CodeInputProps> = ({ value, onChange, length = 
   };
 
   return (
-    <div className="flex gap-2 justify-center">
+    <div className="flex gap-2 justify-center my-4">
       {code.map((digit, index) => (
         <input
           key={index}
@@ -80,17 +80,18 @@ export const CodeInput: React.FC<CodeInputProps> = ({ value, onChange, length = 
           onPaste={handlePaste}
           autoFocus={index === 0}
           className={cn(
-            "w-12 h-14 text-center text-xl font-bold",
-            "rounded-lg border-2",
-            "bg-card text-card-foreground",
-            "border-primary/40",
-            "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
-            "focus:bg-primary/5",
+            "w-14 h-16 text-center text-2xl font-bold",
+            "rounded-lg border-3",
+            "bg-white dark:bg-gray-800",
+            "text-gray-900 dark:text-gray-100",
+            "border-primary",
+            "focus:outline-none focus:ring-4 focus:ring-primary/50 focus:border-primary",
             "transition-all duration-200",
-            "hover:border-primary/60 hover:bg-primary/5",
-            "shadow-sm",
-            digit && "border-primary bg-primary/10 shadow-md"
+            "hover:border-primary hover:shadow-lg",
+            "shadow-md",
+            digit && "bg-primary/10 border-primary ring-2 ring-primary/30"
           )}
+          style={{ borderWidth: '2px' }}
         />
       ))}
     </div>
