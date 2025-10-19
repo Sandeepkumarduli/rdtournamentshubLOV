@@ -258,19 +258,33 @@ const Login = () => {
         });
 
         try {
+          // Check user roles first
+          const { data: userRoles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id);
+
+          const roles = userRoles?.map(r => r.role) || [];
+
+          // Check freeze status
           const { data: freezeRecord } = await supabase
             .from('user_freeze_status')
             .select('is_frozen')
             .eq('user_id', user.id)
             .maybeSingle();
           
-          if (freezeRecord?.is_frozen) {
+          // Redirect based on role
+          if (roles.includes('systemadmin')) {
+            navigate("/system-admin-dashboard");
+          } else if (roles.includes('admin')) {
+            navigate("/org-dashboard");
+          } else if (freezeRecord?.is_frozen) {
             navigate("/dashboard/report");
           } else {
             navigate("/dashboard");
           }
         } catch (err) {
-          console.error('Error checking freeze status:', err);
+          console.error('Error checking user status:', err);
           navigate("/dashboard");
         }
       }
@@ -336,19 +350,33 @@ const Login = () => {
         });
 
         try {
+          // Check user roles first
+          const { data: userRoles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', pendingUserId);
+
+          const roles = userRoles?.map(r => r.role) || [];
+
+          // Check freeze status
           const { data: freezeRecord } = await supabase
             .from('user_freeze_status')
             .select('is_frozen')
             .eq('user_id', pendingUserId)
             .maybeSingle();
           
-          if (freezeRecord?.is_frozen) {
+          // Redirect based on role
+          if (roles.includes('systemadmin')) {
+            navigate("/system-admin-dashboard");
+          } else if (roles.includes('admin')) {
+            navigate("/org-dashboard");
+          } else if (freezeRecord?.is_frozen) {
             navigate("/dashboard/report");
           } else {
             navigate("/dashboard");
           }
         } catch (err) {
-          console.error('Error checking freeze status:', err);
+          console.error('Error checking user status:', err);
           navigate("/dashboard");
         }
       }
