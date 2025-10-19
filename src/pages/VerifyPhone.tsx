@@ -21,14 +21,23 @@ const VerifyPhone = () => {
   const { phone: initialPhone, userId, password, email, needsPhoneSetup } = location.state || {};
   const [phone, setPhone] = useState(initialPhone || "");
 
+  const isValidPhone = (phoneNumber: string) => {
+    // Remove spaces and check if it's at least 10 digits
+    const digitsOnly = phoneNumber.replace(/\s/g, '');
+    // Support both +91XXXXXXXXXX and plain XXXXXXXXXX format
+    const phoneRegex = /^(\+91)?[0-9]{10,}$/;
+    return phoneRegex.test(digitsOnly);
+  };
+
   useEffect(() => {
     if (!userId) {
       navigate('/signup');
       return;
     }
 
-    // If phone is already set, ensure user has valid session before sending OTP
-    if (phone) {
+    // Only auto-send OTP if phone is already set AND valid (coming from signup flow)
+    // Don't auto-send if needsPhoneSetup is true (user needs to enter phone first)
+    if (phone && !needsPhoneSetup && isValidPhone(phone)) {
       const ensureSessionAndSendOTP = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         
@@ -62,6 +71,15 @@ const VerifyPhone = () => {
       toast({
         title: "Phone Number Required",
         description: "Please enter your phone number first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isValidPhone(phone)) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid phone number with at least 10 digits (e.g., +91 9876543210 or 9876543210)",
         variant: "destructive",
       });
       return;
@@ -190,13 +208,13 @@ const VerifyPhone = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Enter your phone number to receive OTP
+                  Enter phone number with at least 10 digits (e.g., +91 9876543210)
                 </p>
                 <Button 
                   onClick={sendPhoneOTP}
                   variant="gaming"
                   className="w-full"
-                  disabled={isSendingOTP || !phone || countdown > 0}
+                  disabled={isSendingOTP || !phone || !isValidPhone(phone) || countdown > 0}
                 >
                   {isSendingOTP ? "Sending OTP..." : "Send OTP"}
                 </Button>
