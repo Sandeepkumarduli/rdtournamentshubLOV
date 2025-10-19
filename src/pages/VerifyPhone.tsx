@@ -14,6 +14,7 @@ const VerifyPhone = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [otpSent, setOtpSent] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -56,6 +57,7 @@ const VerifyPhone = () => {
       };
 
       ensureSessionAndSendOTP();
+      setOtpSent(true);
     }
   }, [userId, email, password]);
 
@@ -95,6 +97,7 @@ const VerifyPhone = () => {
       if (error) throw error;
 
       setCountdown(60);
+      setOtpSent(true);
       
       toast({
         title: "OTP Sent",
@@ -192,7 +195,7 @@ const VerifyPhone = () => {
               </div>
             )}
             
-            {needsPhoneSetup && !phone && (
+            {needsPhoneSetup && !otpSent && (
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <div className="relative">
@@ -221,7 +224,7 @@ const VerifyPhone = () => {
               </div>
             )}
 
-            {phone && (
+            {otpSent && phone && (
               <>
                 <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                   <p className="text-sm font-medium">Verifying: {phone}</p>
