@@ -90,7 +90,6 @@ const SystemAdminDashboard = () => {
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="lg:hidden"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
