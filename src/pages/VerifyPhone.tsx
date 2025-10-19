@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GamepadIcon, Phone, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -16,34 +18,37 @@ const VerifyPhone = () => {
   const location = useLocation();
   const { toast } = useToast();
   
-  const { phone, userId, password, email } = location.state || {};
+  const { phone: initialPhone, userId, password, email, needsPhoneSetup } = location.state || {};
+  const [phone, setPhone] = useState(initialPhone || "");
 
   useEffect(() => {
-    if (!phone || !userId) {
+    if (!userId) {
       navigate('/signup');
       return;
     }
 
-    // Ensure user has valid session before sending OTP
-    const ensureSessionAndSendOTP = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // If no session, sign in first
-      if (!session && email && password) {
-        await supabase.auth.signInWithPassword({
-          email: email,
-          password: password,
-        });
-      }
-      
-      // Wait a moment for session to be ready, then send OTP
-      setTimeout(() => {
-        sendPhoneOTP();
-      }, 1000);
-    };
+    // If phone is already set, ensure user has valid session before sending OTP
+    if (phone) {
+      const ensureSessionAndSendOTP = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        // If no session, sign in first
+        if (!session && email && password) {
+          await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+          });
+        }
+        
+        // Wait a moment for session to be ready, then send OTP
+        setTimeout(() => {
+          sendPhoneOTP();
+        }, 1000);
+      };
 
-    ensureSessionAndSendOTP();
-  }, [phone, userId, email, password]);
+      ensureSessionAndSendOTP();
+    }
+  }, [userId, email, password]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -53,6 +58,15 @@ const VerifyPhone = () => {
   }, [countdown]);
 
   const sendPhoneOTP = async () => {
+    if (!phone) {
+      toast({
+        title: "Phone Number Required",
+        description: "Please enter your phone number first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSendingOTP(true);
     try {
       // Link phone number to existing account and send OTP
@@ -153,66 +167,99 @@ const VerifyPhone = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-              <p className="text-sm font-medium">Verifying: {phone}</p>
-              <p className="text-xs text-muted-foreground">
-                Enter the 6-digit OTP sent to your phone
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Enter 6-digit OTP</label>
-              <div className="flex justify-center">
-                <InputOTP
-                  maxLength={6}
-                  value={otp}
-                  onChange={(value) => setOtp(value)}
+            {needsPhoneSetup && !phone && (
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+91 9876543210"
+                    className="pl-10"
+                    autoComplete="off"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Enter your phone number to receive OTP
+                </p>
+                <Button 
+                  onClick={sendPhoneOTP}
+                  variant="gaming"
+                  className="w-full"
+                  disabled={isSendingOTP || !phone || countdown > 0}
                 >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
+                  {isSendingOTP ? "Sending OTP..." : "Send OTP"}
+                </Button>
               </div>
-            </div>
+            )}
 
-            <Button 
-              onClick={handleVerifyOTP} 
-              variant="gaming"
-              className="w-full"
-              disabled={isVerifying || otp.length !== 6}
-            >
-              {isVerifying ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                "Verify & Create Account"
-              )}
-            </Button>
+            {phone && (
+              <>
+                <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                  <p className="text-sm font-medium">Verifying: {phone}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Enter the 6-digit OTP sent to your phone
+                  </p>
+                </div>
 
-            <Button
-              variant="outline"
-              onClick={sendPhoneOTP}
-              className="w-full"
-              disabled={countdown > 0 || isSendingOTP}
-            >
-              {isSendingOTP ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : countdown > 0 ? (
-                `Resend OTP in ${countdown}s`
-              ) : (
-                "Resend OTP"
-              )}
-            </Button>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Enter 6-digit OTP</label>
+                  <div className="flex justify-center">
+                    <InputOTP
+                      maxLength={6}
+                      value={otp}
+                      onChange={(value) => setOtp(value)}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleVerifyOTP} 
+                  variant="gaming"
+                  className="w-full"
+                  disabled={isVerifying || otp.length !== 6}
+                >
+                  {isVerifying ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    needsPhoneSetup ? "Verify & Complete Setup" : "Verify & Create Account"
+                  )}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={sendPhoneOTP}
+                  className="w-full"
+                  disabled={countdown > 0 || isSendingOTP}
+                >
+                  {isSendingOTP ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : countdown > 0 ? (
+                    `Resend OTP in ${countdown}s`
+                  ) : (
+                    "Resend OTP"
+                  )}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
 

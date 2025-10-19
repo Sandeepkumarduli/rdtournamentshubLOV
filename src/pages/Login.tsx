@@ -104,10 +104,20 @@ const Login = () => {
       if (profileError || !profile?.phone) {
         toast({
           title: "Phone Number Required",
-          description: "Please update your profile with a phone number to enable two-factor authentication.",
-          variant: "destructive",
+          description: "You need to add a phone number to complete your account setup.",
         });
         setIsLoading(false);
+        
+        // Redirect to phone verification to add phone number
+        navigate('/verify-phone', {
+          state: {
+            phone: '',
+            userId: data.user.id,
+            email: emailToUse,
+            password: formData.password,
+            needsPhoneSetup: true
+          }
+        });
         return;
       }
 
