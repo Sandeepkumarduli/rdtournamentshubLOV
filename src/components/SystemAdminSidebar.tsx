@@ -68,8 +68,7 @@ const SystemAdminSidebar = ({ isOpen = true }: SystemAdminSidebarProps) => {
   return (
     <div className={cn(
       "w-64 bg-card border-r border-border h-screen flex flex-col transition-transform duration-300",
-      "lg:translate-x-0",
-      !isOpen && "max-lg:-translate-x-full max-lg:absolute max-lg:z-50"
+      !isOpen && "-translate-x-full absolute z-50"
     )}>
       {/* Logo/Brand */}
       <div className="p-6 border-b border-border">
