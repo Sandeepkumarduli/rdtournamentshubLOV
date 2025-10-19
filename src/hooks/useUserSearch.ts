@@ -31,10 +31,10 @@ export const useUserSearch = () => {
         .from('profiles')
         .select('user_id, display_name, unique_code, bgmi_id, role')
         .eq('unique_code', query.trim())
-        .not('role', 'in', '("admin","systemadmin")')
-        .eq('email_verified', true)
-        .eq('phone_verified', true)
+        .not('role', 'in', '("admin","systemadmin","frozen")')
         .limit(1);
+
+      console.log('🔍 User search for code:', query.trim(), 'Result:', data);
 
       if (error) {
         console.error('Error searching users:', error);
