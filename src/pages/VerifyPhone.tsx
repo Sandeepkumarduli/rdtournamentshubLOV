@@ -288,13 +288,21 @@ const VerifyPhone = () => {
           </CardContent>
         </Card>
 
-        {!needsPhoneSetup && (
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <Link to="/verify-email" className="text-primary hover:underline">
-              ← Back to Email Verification
+        <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
+          {!needsPhoneSetup && (
+            <div>
+              <Link to="/verify-email" className="text-primary hover:underline">
+                ← Back to Email Verification
+              </Link>
+            </div>
+          )}
+          <div>
+            Already verified?{" "}
+            <Link to="/login" className="text-primary hover:underline">
+              Login here
             </Link>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
