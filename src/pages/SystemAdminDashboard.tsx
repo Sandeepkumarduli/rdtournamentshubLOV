@@ -16,7 +16,8 @@ import {
   DollarSign,
   BarChart3,
   AlertTriangle,
-  Target
+  Target,
+  Menu
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
@@ -27,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 const SystemAdminDashboard = () => {
   const [systemAdminData, setSystemAdminData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -77,13 +79,21 @@ const SystemAdminDashboard = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <SystemAdminSidebar />
+      <SystemAdminSidebar isOpen={isSidebarOpen} />
       
       <div className="flex-1 flex flex-col">
         <header className="border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="lg:hidden"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
                 <div>
                   <h1 className="text-xl font-bold">System Administration</h1>
                   <p className="text-muted-foreground">Master Control Panel</p>

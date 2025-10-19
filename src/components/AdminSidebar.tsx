@@ -71,7 +71,11 @@ const sidebarItems = [
   }
 ];
 
-const AdminSidebar = () => {
+interface AdminSidebarProps {
+  isOpen?: boolean;
+}
+
+const AdminSidebar = ({ isOpen = true }: AdminSidebarProps) => {
   const location = useLocation();
   const currentPath = location.pathname + location.search;
   const { profile } = useProfile();
@@ -99,7 +103,11 @@ const AdminSidebar = () => {
   };
 
   return (
-    <div className="w-64 bg-card border-r border-border h-screen flex flex-col">
+    <div className={cn(
+      "w-64 bg-card border-r border-border h-screen flex flex-col transition-transform duration-300",
+      "lg:translate-x-0",
+      !isOpen && "max-lg:-translate-x-full max-lg:absolute max-lg:z-50"
+    )}>
       {/* Logo/Brand */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-3">

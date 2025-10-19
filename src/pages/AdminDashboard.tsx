@@ -16,7 +16,7 @@ import AdminReportsTab from "@/components/admin/AdminReportsTab";
 import AdminViewReportsTab from "@/components/admin/AdminViewReportsTab";
 import TopBar from "@/components/TopBar";
 import PageTransition from "@/components/PageTransition";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,6 +24,7 @@ const AdminDashboard = () => {
   const [adminData, setAdminData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -122,7 +123,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar */}
-      <AdminSidebar />
+      <AdminSidebar isOpen={isSidebarOpen} />
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -130,9 +131,19 @@ const AdminDashboard = () => {
         <header className="border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xl font-bold">Welcome back, {adminData?.organization || 'ORG'} Admin!</h1>
-                <p className="text-muted-foreground">Manage your ORG tournaments</p>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="lg:hidden"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <div>
+                  <h1 className="text-xl font-bold">Welcome back, {adminData?.organization || 'ORG'} Admin!</h1>
+                  <p className="text-muted-foreground">Manage your ORG tournaments</p>
+                </div>
               </div>
               
               {/* Page Links in Center */}
