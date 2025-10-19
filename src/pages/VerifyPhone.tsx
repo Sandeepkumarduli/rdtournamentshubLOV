@@ -167,6 +167,13 @@ const VerifyPhone = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {email && (
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-sm text-muted-foreground">Logged in as:</p>
+                <p className="text-sm font-medium">{email}</p>
+              </div>
+            )}
+            
             {needsPhoneSetup && !phone && (
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
@@ -263,11 +270,13 @@ const VerifyPhone = () => {
           </CardContent>
         </Card>
 
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          <Link to="/verify-email" className="text-primary hover:underline">
-            ← Back to Email Verification
-          </Link>
-        </div>
+        {!needsPhoneSetup && (
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            <Link to="/verify-email" className="text-primary hover:underline">
+              ← Back to Email Verification
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
