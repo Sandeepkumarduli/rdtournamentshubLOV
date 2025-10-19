@@ -49,43 +49,58 @@ const ProtectedRoute = ({
         return;
       }
 
-      // Always check user role for protected routes
+      // Check user roles using the new user_roles table
       try {
+        const { data: userRoles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+
+        if (rolesError) throw rolesError;
+
+        const roles = userRoles?.map(r => r.role) || [];
+        console.log('🔒 User roles check:', { roles, requiredRole, userId: user.id });
+
+        // Check if user is frozen (still using profiles table for freeze status)
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('user_id', user.id)
           .single();
 
-        const userRole = profile?.role;
-        console.log('🔒 User role check:', { userRole, requiredRole, userId: user.id });
-
-        // Block frozen users from accessing any protected routes
-        if (userRole === 'frozen') {
+        if (profile?.role === 'frozen') {
           console.log('🔒 User is frozen, redirecting to login');
           navigate('/login');
           return;
         }
 
         // Strict role-based access control
-        if (requiredRole === 'user' && userRole !== 'user') {
-          console.log('🔒 User role mismatch, redirecting to login');
-          navigate('/login');
-          return;
+        if (requiredRole === 'user') {
+          // Users must have the 'user' role OR any higher role
+          const hasValidRole = roles.includes('user') || roles.includes('admin') || roles.includes('systemadmin');
+          if (!hasValidRole) {
+            console.log('🔒 User role mismatch, redirecting to login');
+            navigate('/login');
+            return;
+          }
         }
 
-        if (requiredRole === 'admin' && userRole !== 'admin') {
-          navigate('/admin-login');
-          return;
+        if (requiredRole === 'admin') {
+          if (!roles.includes('admin') && !roles.includes('systemadmin')) {
+            navigate('/admin-login');
+            return;
+          }
         }
 
-        if (requiredRole === 'systemadmin' && userRole !== 'systemadmin') {
-          navigate('/system-admin-login');
-          return;
+        if (requiredRole === 'systemadmin') {
+          if (!roles.includes('systemadmin')) {
+            navigate('/system-admin-login');
+            return;
+          }
         }
-        console.log('✅ Access granted for user role:', userRole);
+        console.log('✅ Access granted for user roles:', roles);
       } catch (error) {
-        console.error('❌ Error checking user role:', error);
+        console.error('❌ Error checking user roles:', error);
         navigate('/login');
       }
     };

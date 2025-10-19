@@ -14,24 +14,49 @@ import {
   ChevronLeft,
   ChevronRight,
   Snowflake,
-  AlertTriangle
+  AlertTriangle,
+  Shield
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import UserDetailsDialog from "@/components/UserDetailsDialog";
+import RoleManagementDialog from "@/components/admin/RoleManagementDialog";
 import { useSystemUsers, SystemUser } from "@/hooks/useSystemUsers";
+import { supabase } from "@/integrations/supabase/client";
 
 const SystemUserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
   const [userToFreeze, setUserToFreeze] = useState<{id: string, username: string, status: string} | null>(null);
+  const [roleManagementUser, setRoleManagementUser] = useState<{id: string, username: string} | null>(null);
+  const [userRoles, setUserRoles] = useState<any[]>([]);
   const { toast } = useToast();
   const { users, loading: usersLoading, refetch, deleteUser, freezeUser, unfreezeUser } = useSystemUsers();
   
   const usersPerPage = 20;
+
+  const fetchUserRoles = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      setUserRoles(data || []);
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+      setUserRoles([]);
+    }
+  };
+
+  const handleManageRoles = async (userId: string, username: string) => {
+    await fetchUserRoles(userId);
+    setRoleManagementUser({ id: userId, username });
+  };
 
   const handleDeleteUser = async (userId: string) => {
     const result = await deleteUser(userId);
@@ -239,6 +264,13 @@ const SystemUserManagement = () => {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleManageRoles(user.id, user.username)}
+                      >
+                        <Shield className="h-4 w-4" />
+                      </Button>
                       {/* Only show freeze button for non-system admins */}
                       {user.role !== 'systemadmin' && (
                         <Button 
@@ -334,6 +366,21 @@ const SystemUserManagement = () => {
           onClose={() => setSelectedUser(null)}
           user={selectedUser}
         />
+
+        {/* Role Management Dialog */}
+        {roleManagementUser && (
+          <RoleManagementDialog
+            open={!!roleManagementUser}
+            onOpenChange={(open) => !open && setRoleManagementUser(null)}
+            userId={roleManagementUser.id}
+            userName={roleManagementUser.username}
+            currentRoles={userRoles}
+            onRolesUpdated={() => {
+              fetchUserRoles(roleManagementUser.id);
+              refetch();
+            }}
+          />
+        )}
 
         {/* Freeze Confirmation Dialog */}
         <AlertDialog open={!!userToFreeze} onOpenChange={() => setUserToFreeze(null)}>
