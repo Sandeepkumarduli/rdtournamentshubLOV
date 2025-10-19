@@ -185,9 +185,18 @@ const VerifyPhone = () => {
 
       setTimeout(() => navigate('/login'), 2000);
     } catch (error: any) {
+      console.error('Verification error:', error);
+      
+      // Check if it's an OTP-related error
+      const isOTPError = error.message?.toLowerCase().includes('token') || 
+                         error.message?.toLowerCase().includes('otp') ||
+                         error.message?.toLowerCase().includes('invalid') ||
+                         error.code === 'otp_expired' ||
+                         error.status === 401;
+      
       toast({
-        title: "Verification Failed",
-        description: error.message || "Invalid OTP. Please try again.",
+        title: isOTPError ? "Wrong OTP" : "Verification Failed",
+        description: isOTPError ? "The OTP you entered is incorrect. Please try again." : error.message,
         variant: "destructive",
       });
     } finally {
