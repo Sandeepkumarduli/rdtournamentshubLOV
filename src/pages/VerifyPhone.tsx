@@ -89,9 +89,37 @@ const VerifyPhone = () => {
 
     setIsSendingOTP(true);
     try {
+      // Format phone number properly
+      let formattedPhone = phone.trim().replace(/\s/g, '');
+      if (!formattedPhone.startsWith('+')) {
+        // Remove leading 91 if present, then add +91
+        formattedPhone = formattedPhone.replace(/^91/, '');
+        formattedPhone = '+91' + formattedPhone;
+      }
+
+      // Check if phone number already exists for another user
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('user_id, phone')
+        .eq('phone', formattedPhone)
+        .maybeSingle();
+
+      if (existingProfile && existingProfile.user_id !== userId) {
+        toast({
+          title: "Phone Number Already Exists",
+          description: "This phone number is already registered with another account. Please login to that account.",
+          variant: "destructive",
+        });
+        setIsSendingOTP(false);
+        return;
+      }
+
+      // Update phone in formatted version
+      setPhone(formattedPhone);
+
       // Link phone number to existing account and send OTP
       const { error } = await supabase.auth.updateUser({
-        phone: phone
+        phone: formattedPhone
       });
 
       if (error) throw error;
