@@ -12,7 +12,9 @@ import VerifyEmail from "./pages/VerifyEmail";
 import VerifyPhone from "./pages/VerifyPhone";
 import AdminLogin from "./pages/AdminLogin";
 import AdminSignup from "./pages/AdminSignup";
+import AdminOTPVerification from "./pages/AdminOTPVerification";
 import SystemAdminLogin from "./pages/SystemAdminLogin";
+import SystemAdminOTPVerification from "./pages/SystemAdminOTPVerification";
 import DashboardLayout from "./pages/DashboardLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import SystemAdminDashboard from "./pages/SystemAdminDashboard";
@@ -58,7 +60,9 @@ const App = () => (
           <Route path="/otp-verification-login" element={<OTPVerificationLogin />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin-signup" element={<AdminSignup />} />
+          <Route path="/admin-otp-verification" element={<AdminOTPVerification />} />
           <Route path="/system-admin-login" element={<SystemAdminLogin />} />
+          <Route path="/system-admin-otp-verification" element={<SystemAdminOTPVerification />} />
           <Route path="/dashboard" element={
             <ProtectedRoute requiredRole="user">
               <DashboardLayout />

@@ -17,18 +17,20 @@ import {
   BarChart3,
   AlertTriangle,
   Target,
-  Menu
+  Menu,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SystemAdminSidebar from "@/components/SystemAdminSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useSystemStats } from '@/hooks/useSystemStats';
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 const SystemAdminDashboard = () => {
   const [systemAdminData, setSystemAdminData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -78,20 +80,40 @@ const SystemAdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
-      <SystemAdminSidebar isOpen={isSidebarOpen} />
+    <div className="min-h-screen flex w-full bg-background">
+      {/* Overlay for mobile sidebar */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       
-      <div className="flex-1 flex flex-col">
-        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+      {/* Sidebar */}
+      <div className={cn(
+        "fixed z-50 transition-all duration-300 ease-in-out",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <SystemAdminSidebar isOpen={true} />
+      </div>
+      
+      {/* Main Content */}
+      <div className={cn(
+        "flex-1 flex flex-col w-full min-w-0 transition-all duration-300 ease-in-out",
+        "md:ml-0",
+        sidebarOpen && "md:ml-64"
+      )}>
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="bg-muted hover:bg-muted/80"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
                 >
-                  <Menu className="h-5 w-5" />
+                  {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
                 <div>
                   <h1 className="text-xl font-bold">System Administration</h1>

@@ -16,15 +16,16 @@ import AdminReportsTab from "@/components/admin/AdminReportsTab";
 import AdminViewReportsTab from "@/components/admin/AdminViewReportsTab";
 import TopBar from "@/components/TopBar";
 import PageTransition from "@/components/PageTransition";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 const AdminDashboard = () => {
   const [adminData, setAdminData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -121,23 +122,41 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex w-full bg-background">
+      {/* Overlay for mobile sidebar */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
-      <AdminSidebar isOpen={isSidebarOpen} />
+      <div className={cn(
+        "fixed z-50 transition-all duration-300 ease-in-out",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <AdminSidebar isOpen={true} />
+      </div>
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className={cn(
+        "flex-1 flex flex-col w-full min-w-0 transition-all duration-300 ease-in-out",
+        "md:ml-0",
+        sidebarOpen && "md:ml-64"
+      )}>
         {/* Header */}
-        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="bg-muted hover:bg-muted/80"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
                 >
-                  <Menu className="h-5 w-5" />
+                  {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
                 <div>
                   <h1 className="text-xl font-bold">Welcome back, {adminData?.organization || 'ORG'} Admin!</h1>
