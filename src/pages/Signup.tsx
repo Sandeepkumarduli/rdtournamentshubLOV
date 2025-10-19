@@ -64,16 +64,35 @@ const Signup = () => {
         .maybeSingle();
 
       if (existingEmailProfile) {
-        // If email is verified but phone is not, redirect to phone verification
+        // If email is verified but phone is not, update phone and redirect to phone verification
         if (existingEmailProfile.email_verified && !existingEmailProfile.phone_verified) {
+          // Update the phone number in the profile
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ phone: formattedPhone })
+            .eq('user_id', existingEmailProfile.user_id);
+
+          if (updateError) {
+            console.error('Error updating phone number:', updateError);
+            toast({
+              title: "Error",
+              description: "Failed to update phone number. Please try again.",
+              variant: "destructive",
+            });
+            setIsCreatingAccount(false);
+            return;
+          }
+
           toast({
             title: "Email Already Verified",
-            description: "Your email is already verified. Please verify your phone number to complete registration.",
+            description: "Redirecting to phone verification...",
           });
           setIsCreatingAccount(false);
+          
+          // Navigate to phone verification with the new phone number
           navigate('/verify-phone', {
             state: {
-              phone: existingEmailProfile.phone || formattedPhone,
+              phone: formattedPhone,
               userId: existingEmailProfile.user_id,
               email: formData.email,
               password: formData.password
