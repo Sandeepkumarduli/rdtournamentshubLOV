@@ -14,8 +14,8 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "admin@example.com",
-    password: "password123",
+    email: "",
+    password: "",
   });
   const [phoneNumber, setPhoneNumber] = useState("");
   const navigate = useNavigate();
@@ -171,12 +171,6 @@ const AdminLogin = () => {
                         )}
                       </Button>
                     </div>
-                  </div>
-
-                  <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
-                    <p className="font-medium mb-1">Demo Credentials:</p>
-                    <p>Email: admin@example.com</p>
-                    <p>Password: password123</p>
                   </div>
 
                   <Button type="submit" variant="gaming" className="w-full" disabled={isLoading}>
