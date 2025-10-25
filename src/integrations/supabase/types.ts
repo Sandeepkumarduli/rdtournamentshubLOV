@@ -270,6 +270,7 @@ export type Database = {
           id: string
           organization: string | null
           phone: string | null
+          phone_number: string | null
           phone_verified: boolean | null
           role: string | null
           unique_code: string | null
@@ -288,6 +289,7 @@ export type Database = {
           id?: string
           organization?: string | null
           phone?: string | null
+          phone_number?: string | null
           phone_verified?: boolean | null
           role?: string | null
           unique_code?: string | null
@@ -306,6 +308,7 @@ export type Database = {
           id?: string
           organization?: string | null
           phone?: string | null
+          phone_number?: string | null
           phone_verified?: boolean | null
           role?: string | null
           unique_code?: string | null
@@ -798,10 +801,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_unique_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_unique_code: { Args: never; Returns: string }
       get_admin_organization: {
         Args: { admin_user_id: string }
         Returns: string
