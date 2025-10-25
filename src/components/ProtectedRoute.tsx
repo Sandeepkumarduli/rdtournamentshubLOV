@@ -107,12 +107,14 @@ const ProtectedRoute = ({
     checkAccess();
   }, [user, session, loading, navigate, requiredRole, redirectTo]);
 
-  // Show loading spinner while checking authentication or authorization
-  if (loading || isChecking || !isAuthorized) {
+  if (loading) {
     return <LoadingSpinner fullScreen />;
   }
 
-  // Only render children if authorized
+  if (!session || !user) {
+    return <LoadingSpinner fullScreen />;
+  }
+
   return <>{children}</>;
 };
 
