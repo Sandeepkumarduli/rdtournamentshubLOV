@@ -42,7 +42,7 @@ const AdminLogin = () => {
       // Check if user has admin role
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, phone_number')
         .eq('user_id', data.user.id)
         .single();
 
@@ -57,11 +57,46 @@ const AdminLogin = () => {
         return;
       }
 
-      toast({
-        title: "Admin Login Successful!",
-        description: "Welcome to the admin dashboard",
-      });
-      navigate("/org-dashboard");
+      // Check if user has a phone number
+      if (!profile.phone_number) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Phone Verification Required",
+          description: "Please contact system admin to add phone number to your account",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Sign out temporarily and send OTP for mandatory verification
+      await supabase.auth.signOut();
+
+      try {
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          phone: profile.phone_number,
+        });
+
+        if (otpError) throw otpError;
+
+        toast({
+          title: "Phone Verification Required",
+          description: "OTP sent to your registered phone number for security verification",
+        });
+        
+        navigate("/admin-otp-verification", { 
+          state: { 
+            phone: profile.phone_number,
+            email: formData.email 
+          } 
+        });
+      } catch (error: any) {
+        toast({
+          title: "Failed to Send OTP",
+          description: error.message || "Please try again later",
+          variant: "destructive",
+        });
+      }
     }
     
     setIsLoading(false);
