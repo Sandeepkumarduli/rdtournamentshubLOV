@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,15 +17,10 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, session, loading } = useAuth();
   const navigate = useNavigate();
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     const checkAccess = async () => {
       console.log('🔒 ProtectedRoute checkAccess:', { loading, hasSession: !!session, hasUser: !!user, requiredRole });
-      
-      setIsChecking(true);
-      setIsAuthorized(false);
       
       if (loading) {
         console.log('🔒 Still loading, waiting...');
@@ -35,7 +30,6 @@ const ProtectedRoute = ({
       // If no session, redirect to appropriate login
       if (!session || !user) {
         console.log('🔒 No session/user, redirecting to login');
-        setIsChecking(false);
         if (redirectTo) {
           navigate(redirectTo);
         } else {
@@ -76,56 +70,36 @@ const ProtectedRoute = ({
 
         if (profile?.role === 'frozen') {
           console.log('🔒 User is frozen, redirecting to login');
-          setIsChecking(false);
-          setIsAuthorized(false);
           navigate('/login');
           return;
         }
 
         // Strict role-based access control
-        let hasAccess = false;
-        
         if (requiredRole === 'user') {
-          // Users must have the 'user' role OR any higher role
-          hasAccess = roles.includes('user') || roles.includes('admin') || roles.includes('systemadmin');
-          if (!hasAccess) {
+          const hasValidRole = roles.includes('user') || roles.includes('admin') || roles.includes('systemadmin');
+          if (!hasValidRole) {
             console.log('🔒 User role mismatch, redirecting to login');
-            setIsChecking(false);
-            setIsAuthorized(false);
             navigate('/login');
             return;
           }
         }
 
         if (requiredRole === 'admin') {
-          hasAccess = roles.includes('admin') || roles.includes('systemadmin');
-          if (!hasAccess) {
-            console.log('🔒 Admin role required, redirecting');
-            setIsChecking(false);
-            setIsAuthorized(false);
+          if (!roles.includes('admin') && !roles.includes('systemadmin')) {
             navigate('/admin-login');
             return;
           }
         }
 
         if (requiredRole === 'systemadmin') {
-          hasAccess = roles.includes('systemadmin');
-          if (!hasAccess) {
-            console.log('🔒 System admin role required, redirecting');
-            setIsChecking(false);
-            setIsAuthorized(false);
+          if (!roles.includes('systemadmin')) {
             navigate('/system-admin-login');
             return;
           }
         }
-        
         console.log('✅ Access granted for user roles:', roles);
-        setIsAuthorized(true);
-        setIsChecking(false);
       } catch (error) {
         console.error('❌ Error checking user roles:', error);
-        setIsChecking(false);
-        setIsAuthorized(false);
         navigate('/login');
       }
     };
