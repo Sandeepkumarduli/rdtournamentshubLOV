@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +17,7 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, session, loading } = useAuth();
   const navigate = useNavigate();
+  const [isAuthorized, setIsAuthorized] = React.useState<boolean | null>(null);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -30,19 +31,20 @@ const ProtectedRoute = ({
       // If no session, redirect to appropriate login
       if (!session || !user) {
         console.log('🔒 No session/user, redirecting to login');
+        setIsAuthorized(false);
         if (redirectTo) {
-          navigate(redirectTo);
+          navigate(redirectTo, { replace: true });
         } else {
           // Default redirects based on required role
           switch (requiredRole) {
             case 'systemadmin':
-              navigate('/system-admin-login');
+              navigate('/system-admin-login', { replace: true });
               break;
             case 'admin':
-              navigate('/admin-login');
+              navigate('/admin-login', { replace: true });
               break;
             default:
-              navigate('/login');
+              navigate('/login', { replace: true });
               break;
           }
         }
@@ -70,7 +72,9 @@ const ProtectedRoute = ({
 
         if (profile?.role === 'frozen') {
           console.log('🔒 User is frozen, redirecting to login');
-          navigate('/login');
+          setIsAuthorized(false);
+          await supabase.auth.signOut();
+          navigate('/login', { replace: true });
           return;
         }
 
@@ -79,39 +83,51 @@ const ProtectedRoute = ({
           const hasValidRole = roles.includes('user') || roles.includes('admin') || roles.includes('systemadmin');
           if (!hasValidRole) {
             console.log('🔒 User role mismatch, redirecting to login');
-            navigate('/login');
+            setIsAuthorized(false);
+            await supabase.auth.signOut();
+            navigate('/login', { replace: true });
             return;
           }
         }
 
         if (requiredRole === 'admin') {
           if (!roles.includes('admin') && !roles.includes('systemadmin')) {
-            navigate('/admin-login');
+            setIsAuthorized(false);
+            await supabase.auth.signOut();
+            navigate('/admin-login', { replace: true });
             return;
           }
         }
 
         if (requiredRole === 'systemadmin') {
           if (!roles.includes('systemadmin')) {
-            navigate('/system-admin-login');
+            setIsAuthorized(false);
+            await supabase.auth.signOut();
+            navigate('/system-admin-login', { replace: true });
             return;
           }
         }
+        
         console.log('✅ Access granted for user roles:', roles);
+        setIsAuthorized(true);
       } catch (error) {
         console.error('❌ Error checking user roles:', error);
-        navigate('/login');
+        setIsAuthorized(false);
+        await supabase.auth.signOut();
+        navigate('/login', { replace: true });
       }
     };
 
     checkAccess();
   }, [user, session, loading, navigate, requiredRole, redirectTo]);
 
-  if (loading) {
+  // Show loading while checking authentication or authorization
+  if (loading || isAuthorized === null) {
     return <LoadingSpinner fullScreen />;
   }
 
-  if (!session || !user) {
+  // Don't render children if not authorized
+  if (!isAuthorized || !session || !user) {
     return <LoadingSpinner fullScreen />;
   }
 
