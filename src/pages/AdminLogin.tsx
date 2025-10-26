@@ -42,7 +42,7 @@ const AdminLogin = () => {
       // Check if user has admin role
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role, phone_number')
+        .select('role, phone_number, phone')
         .eq('user_id', data.user.id)
         .single();
 
@@ -57,15 +57,17 @@ const AdminLogin = () => {
         return;
       }
 
-      // Check if user has a phone number
-      if (!profile.phone_number) {
+      // Check both phone_number and phone fields
+      const userPhone = profile.phone_number || profile.phone;
+      
+      if (!userPhone) {
         await supabase.auth.signOut();
         toast({
           title: "Phone Verification Required",
-          description: "Please contact system admin to add phone number to your account",
-          variant: "destructive",
+          description: "Redirecting to add phone number...",
         });
         setIsLoading(false);
+        navigate('/verify-phone', { state: { email: formData.email } });
         return;
       }
 
@@ -74,7 +76,7 @@ const AdminLogin = () => {
 
       try {
         const { error: otpError } = await supabase.auth.signInWithOtp({
-          phone: profile.phone_number,
+          phone: userPhone,
         });
 
         if (otpError) throw otpError;
@@ -86,7 +88,7 @@ const AdminLogin = () => {
         
         navigate("/admin-otp-verification", { 
           state: { 
-            phone: profile.phone_number,
+            phone: userPhone,
             email: formData.email 
           } 
         });
