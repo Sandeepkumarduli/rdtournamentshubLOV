@@ -15,6 +15,15 @@ const SystemAdminOTPVerification = () => {
   const { toast } = useToast();
   const phone = location.state?.phone || "";
 
+  // Mask phone number: show first digit and last 2 digits
+  const maskPhoneNumber = (phoneNumber: string) => {
+    if (!phoneNumber || phoneNumber.length < 4) return phoneNumber;
+    const firstChar = phoneNumber.substring(0, 2); // +9
+    const lastTwo = phoneNumber.slice(-2);
+    const masked = '*'.repeat(phoneNumber.length - 4);
+    return `${firstChar}${masked}${lastTwo}`;
+  };
+
   const handleVerifyOTP = async () => {
     if (otp.length !== 6) {
       toast({
@@ -80,7 +89,7 @@ const SystemAdminOTPVerification = () => {
             <Crown className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold">System Admin OTP Verification</h1>
           </div>
-          <p className="text-muted-foreground">Enter the 6-digit code sent to {phone}</p>
+          <p className="text-muted-foreground">Enter the 6-digit code sent to {maskPhoneNumber(phone)}</p>
         </div>
 
         <Card className="gaming-card-glow border-2 border-primary/30">
