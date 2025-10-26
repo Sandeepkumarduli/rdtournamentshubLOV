@@ -120,7 +120,7 @@ const DashboardLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-3 md:p-6 overflow-x-hidden">
+        <main className="flex-1 p-2 md:p-6 overflow-x-hidden">
           <PageTransition trigger={location.pathname}>
             <Outlet />
           </PageTransition>

@@ -305,7 +305,7 @@ const Teams = () => {
   const isFrozen = profile?.role === 'frozen';
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-3 md:space-y-6">
       {/* Frozen Account Banner */}
       <FrozenAccountBanner />
       
@@ -460,14 +460,14 @@ const Teams = () => {
             </DialogContent>
           </Dialog>
         ) : !canCreateTeam ? (
-          <div className="flex items-center gap-2 p-3 border border-destructive/50 bg-destructive/10 rounded-lg">
-            <AlertCircle className="h-4 w-4 text-destructive" />
-            <span className="text-sm text-destructive">Maximum 2 teams allowed per user</span>
+          <div className="flex items-center justify-center gap-2 p-3 border border-destructive/50 bg-destructive/10 rounded-lg w-full">
+            <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+            <span className="text-xs md:text-sm text-destructive text-center">Maximum 2 teams allowed per user</span>
           </div>
         ) : isFrozen ? (
-          <div className="flex items-center gap-2 p-3 border border-destructive/50 bg-destructive/10 rounded-lg">
-            <AlertCircle className="h-4 w-4 text-destructive" />
-            <span className="text-sm text-destructive">Account frozen - Team management disabled</span>
+          <div className="flex items-center justify-center gap-2 p-3 border border-destructive/50 bg-destructive/10 rounded-lg w-full">
+            <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+            <span className="text-xs md:text-sm text-destructive text-center">Account frozen - Team management disabled</span>
           </div>
         ) : null}
       </div>
