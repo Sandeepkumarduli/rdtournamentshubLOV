@@ -147,37 +147,48 @@ const AdminDashboard = () => {
       )}>
         {/* Header */}
         <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className="px-3 md:px-6 py-3 md:py-4">
+            <div className="flex items-center justify-between md:justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-4 min-w-0 md:flex-1">
                 <Button
                   variant="outline"
                   size="icon"
-                  className="bg-muted hover:bg-muted/80"
+                  className="bg-muted hover:bg-muted/80 flex-shrink-0"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                 >
-                  {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                  {sidebarOpen ? <X className="h-4 w-4 md:h-5 md:w-5" /> : <Menu className="h-4 w-4 md:h-5 md:w-5" />}
                 </Button>
-                <div>
-                  <h1 className="text-xl font-bold">Welcome back, {adminData?.organization || 'ORG'} Admin!</h1>
-                  <p className="text-muted-foreground">Manage your ORG tournaments</p>
+                <div className="min-w-0 text-center md:text-left flex-1 md:flex-none">
+                  <h1 className="text-sm md:text-xl font-bold truncate">Welcome, {adminData?.organization || 'ORG'} Admin!</h1>
+                  <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Manage your ORG tournaments</p>
                 </div>
               </div>
               
-              {/* Page Links in Center */}
-              <TopBar userType="admin" />
+              {/* Page Links - Hidden on mobile */}
+              <div className="hidden lg:block">
+                <TopBar userType="admin" />
+              </div>
               
-              <div className="flex items-center gap-3">
-                <Badge variant="outline" className="border-primary text-primary">
-                  ORG Administrator
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Badge variant="outline" className="border-primary text-primary text-xs md:text-sm hidden sm:inline-flex">
+                  ORG Admin
                 </Badge>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleLogout}
+                  className="bg-muted hover:bg-destructive hover:text-destructive-foreground transition-colors h-8 w-8 md:h-10 md:w-10"
+                  title="Logout"
+                >
+                  <LogOut className="h-3 w-3 md:h-4 md:w-4" />
+                </Button>
               </div>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-2 md:p-6 overflow-x-hidden">
           <PageTransition trigger={activeTab}>
             {renderContent()}
           </PageTransition>
