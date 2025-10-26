@@ -310,16 +310,16 @@ const Teams = () => {
       <FrozenAccountBanner />
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="text-center md:text-left w-full md:w-auto">
+      <div className="flex flex-col gap-4">
+        <div className="text-center md:text-left">
           <h1 className="text-xl md:text-3xl lg:text-4xl font-bold">My Teams</h1>
           <p className="text-xs md:text-base lg:text-lg text-muted-foreground">Create and manage your gaming teams (Max 2 teams)</p>
         </div>
-        <div className="flex flex-wrap gap-2 justify-center md:justify-start w-full md:w-auto">
+        <div className="flex flex-wrap gap-2 justify-center md:justify-start">
           {/* Requests Button */}
           <Dialog open={isRequestsDialogOpen} onOpenChange={setIsRequestsDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="relative text-xs md:text-sm">
+              <Button variant="outline" size="sm" className="relative text-xs md:text-sm min-w-[80px]">
                 <Bell className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                 <span className="hidden sm:inline">Requests</span>
                 {incomingRequests.length > 0 && (
@@ -375,7 +375,7 @@ const Teams = () => {
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline" size="sm" className="text-xs md:text-sm" onClick={handleRefresh} disabled={isRefreshing}>
+          <Button variant="outline" size="sm" className="text-xs md:text-sm min-w-[80px]" onClick={handleRefresh} disabled={isRefreshing}>
             <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline ml-1">Refresh</span>
           </Button>
@@ -383,13 +383,13 @@ const Teams = () => {
       </div>
 
       {/* Create Team Section */}
-      <div className="flex flex-wrap gap-2 md:gap-4">
+      <div className="flex flex-wrap gap-2">
         {canCreateTeam && !isFrozen && (
           <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <UserPlus className="h-4 w-4" />
-                Join Team
+              <Button variant="outline" size="sm" className="text-xs md:text-sm">
+                <UserPlus className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="ml-1">Join Team</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -425,9 +425,9 @@ const Teams = () => {
         {canCreateTeam && !isFrozen ? (
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="default">
-                <Plus className="h-4 w-4" />
-                Create Team
+              <Button variant="default" size="sm" className="text-xs md:text-sm">
+                <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="ml-1">Create Team</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -497,12 +497,14 @@ const Teams = () => {
             return (
               <Card key={team.id} className="gaming-card">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-3">
-                      {team.name}
-                      {isLeader && <Badge variant="default">Leader</Badge>}
-                    </CardTitle>
-                    <div className="flex gap-2">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                        <span className="truncate">{team.name}</span>
+                        {isLeader && <Badge variant="default" className="text-xs">Leader</Badge>}
+                      </CardTitle>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       {isLeader && !isFrozen && (
                         <>
                           <Dialog 
@@ -510,9 +512,10 @@ const Teams = () => {
                             onOpenChange={(open) => setSelectedTeamForEdit(open ? team.id : null)}
                           >
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <Settings className="h-4 w-4" />
-                                Manage Team
+                              <Button variant="outline" size="sm" className="text-xs">
+                                <Settings className="h-3 w-3 md:h-4 md:w-4" />
+                                <span className="hidden sm:inline ml-1">Manage Team</span>
+                                <span className="sm:hidden ml-1">Manage</span>
                               </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl">
@@ -646,9 +649,10 @@ const Teams = () => {
                           {/* Delete Team - Only for Leaders */}
                           <Dialog open={teamToDelete === team.id} onOpenChange={(open) => setTeamToDelete(open ? team.id : null)}>
                             <DialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                                Delete Team
+                              <Button variant="destructive" size="sm" className="text-xs">
+                                <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
+                                <span className="hidden sm:inline ml-1">Delete</span>
+                                <span className="sm:hidden ml-1">Delete</span>
                               </Button>
                             </DialogTrigger>
                             <DialogContent>
@@ -673,9 +677,9 @@ const Teams = () => {
 
                        {/* Leave Team - Only for Non-Leaders */}
                        {!isLeader && !isFrozen && (
-                         <Button variant="destructive" size="sm" onClick={() => handleLeaveTeam(team.id)}>
-                           <UserMinus className="h-4 w-4" />
-                           Leave Team
+                         <Button variant="destructive" size="sm" className="text-xs" onClick={() => handleLeaveTeam(team.id)}>
+                           <UserMinus className="h-3 w-3 md:h-4 md:w-4" />
+                           <span className="ml-1">Leave</span>
                          </Button>
                        )}
 
@@ -685,9 +689,10 @@ const Teams = () => {
                            onOpenChange={(open) => setSelectedTeamForAddMember(open ? team.id : null)}
                          >
                            <DialogTrigger asChild>
-                             <Button variant="outline" size="sm">
-                               <UserPlus className="h-4 w-4" />
-                               Quick Add
+                             <Button variant="outline" size="sm" className="text-xs">
+                               <UserPlus className="h-3 w-3 md:h-4 md:w-4" />
+                               <span className="hidden sm:inline ml-1">Quick Add</span>
+                               <span className="sm:hidden ml-1">Add</span>
                              </Button>
                            </DialogTrigger>
                            <DialogContent>
@@ -785,9 +790,10 @@ const Teams = () => {
                          </Dialog>
                        )}
                       
-                      <Button variant="outline" size="sm" onClick={() => copyTeamId(team.id)}>
-                        <Copy className="h-4 w-4" />
-                        Copy ID
+                      <Button variant="outline" size="sm" className="text-xs" onClick={() => copyTeamId(team.id)}>
+                        <Copy className="h-3 w-3 md:h-4 md:w-4" />
+                        <span className="hidden sm:inline ml-1">Copy ID</span>
+                        <span className="sm:hidden ml-1">ID</span>
                       </Button>
                     </div>
                   </div>
