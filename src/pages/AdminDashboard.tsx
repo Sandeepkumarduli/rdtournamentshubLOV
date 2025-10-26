@@ -72,12 +72,12 @@ const AdminDashboard = () => {
   }, [activeTab]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     toast({
       title: "Admin logged out",
       description: "Admin session ended",
     });
-    navigate("/");
+    window.location.href = "/admin-login";
   };
 
   const refreshData = () => {
