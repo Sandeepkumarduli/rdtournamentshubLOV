@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
-import { Wallet, Menu, X } from "lucide-react";
+import { Wallet, Menu, X, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UserSidebar from "@/components/UserSidebar";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -11,13 +11,24 @@ import { useProfile } from "@/hooks/useProfile";
 import { useWallet } from "@/hooks/useWallet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardLayout = () => {
   const location = useLocation();
   const { user, loading: authLoading, isFrozen } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { balance } = useWallet();
+  const { toast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut({ scope: 'local' });
+    toast({
+      title: "Logged out",
+      description: "You have been logged out successfully"
+    });
+    window.location.href = "/login";
+  };
 
   if (authLoading || profileLoading) {
     return <LoadingSpinner fullScreen />;
@@ -94,6 +105,15 @@ const DashboardLayout = () => {
                   <span className="hidden sm:inline">{balance?.balance || 0} rdCoins</span>
                   <span className="sm:hidden">{balance?.balance || 0}</span>
                 </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleLogout}
+                  className="bg-muted hover:bg-destructive hover:text-destructive-foreground transition-colors h-8 w-8 md:h-10 md:w-10"
+                  title="Logout"
+                >
+                  <LogOut className="h-3 w-3 md:h-4 md:w-4" />
+                </Button>
               </div>
             </div>
           </div>
